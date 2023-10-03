@@ -31,7 +31,9 @@ GAY_STICKERS = [
     "https://cdn.discordapp.com/attachments/1117346551644295239/1158876917836042290/20230926_012018.gif?ex=651dd7bc&is=651c863c&hm=9bbace8884217e3c582c89d5e5f61496baced80d0c462790f82bbb64c65d2d95&",
     "https://cdn.discordapp.com/attachments/1117346551644295239/1158877082860912661/ruanmeidead.png?ex=651dd7e3&is=651c8663&hm=3690617f2abd9143677c348a9c947d1cc6f0d4b1393296fac131c4df86e5e14d&",
     "https://cdn.discordapp.com/attachments/1117346551644295239/1158877083657846824/ruanpackwatch.png?ex=651dd7e3&is=651c8663&hm=876634884d7a439207bafbc26916a03f6b1c1b68d029a94b57168463ddda3208&",
-    "https://cdn.discordapp.com/emojis/1153489300051202198.png"
+    "https://cdn.discordapp.com/emojis/1153489300051202198.png",
+    "https://cdn.discordapp.com/emojis/1155737942506078278.png",
+    "https://cdn.discordapp.com/emojis/1155740644040519690.png"
 ]
 EIGHT_BALL_TITLES = [
     'Ruan Mei has calculated..',
