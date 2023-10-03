@@ -73,15 +73,15 @@ class Misc(commands.Cog):
             ans = json.load(f)
 
         if num < 3:
-            thumbnail = "https://img-os-static.hoyolab.com/communityWeb/upload/19dacf2bf7dad6cea3b4a1d8d68045a0.png"
+            thumbnail = "https://media.discordapp.net/attachments/1106793246748848199/1156482828620537866/20230926_231635.png?ex=65152210&is=6513d090&hm=4d60abc6fc8a9fd4359bc6f4b1e5d0e40978ec2575ecee3e429d8084e8dd183a&=&width=315&height=315"
             emote = discord.utils.get(ctx.guild.emojis, id=1085605320065302630)
             answer = random.choice(ans[2]["negative"])
         elif num < 6:
-            thumbnail = "https://img-os-static.hoyolab.com/communityWeb/upload/e92fbe1a02852189373f0c0f48f9fe5b.png"
+            thumbnail = https://media.discordapp.net/attachments/1106785083379171372/1156341810868793505/20230926_002553.png?ex=65149ebb&is=65134d3b&hm=71997888a7a9399fc9443d2b454c55aaa409d95b8bfeb9c83f90017265284d64&=&width=655&height=655"
             emote = discord.utils.get(ctx.guild.emojis, id=1085593631584432178)
             answer = random.choice(ans[1]["neutral"])
         elif num < 10:
-            thumbnail = "https://img-os-static.hoyolab.com/communityWeb/upload/c4422f55fa7b4596174a0e2568e50d4b.png"
+            thumbnail = "https://media.discordapp.net/attachments/1106785083379171372/1156341810315149395/20230926_013109.png?ex=65149ebb&is=65134d3b&hm=b30994a003ffd066581127220f869c6d90ad41810e86034e0117df45a4748500&=&width=655&height=655"
             emote = discord.utils.get(ctx.guild.emojis, id=1087154553255895040)
             answer = random.choice(ans[0]["positive"])
         else:  # Easter egg
