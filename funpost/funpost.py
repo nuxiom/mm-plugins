@@ -77,7 +77,7 @@ class Misc(commands.Cog):
             emote = discord.utils.get(ctx.guild.emojis, id=1085605320065302630)
             answer = random.choice(ans[2]["negative"])
         elif num < 6:
-            thumbnail = https://media.discordapp.net/attachments/1106785083379171372/1156341810868793505/20230926_002553.png?ex=65149ebb&is=65134d3b&hm=71997888a7a9399fc9443d2b454c55aaa409d95b8bfeb9c83f90017265284d64&=&width=655&height=655"
+            thumbnail = "https://media.discordapp.net/attachments/1106785083379171372/1156341810868793505/20230926_002553.png?ex=65149ebb&is=65134d3b&hm=71997888a7a9399fc9443d2b454c55aaa409d95b8bfeb9c83f90017265284d64&=&width=655&height=655"
             emote = discord.utils.get(ctx.guild.emojis, id=1085593631584432178)
             answer = random.choice(ans[1]["neutral"])
         elif num < 10:
