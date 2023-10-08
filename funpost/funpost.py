@@ -86,15 +86,15 @@ class Misc(commands.Cog):
 
         if num < 3:
             thumbnail = "https://media.discordapp.net/attachments/1106793246748848199/1156482828620537866/20230926_231635.png?ex=65152210&is=6513d090&hm=4d60abc6fc8a9fd4359bc6f4b1e5d0e40978ec2575ecee3e429d8084e8dd183a&=&width=315&height=315"
-            emote = discord.utils.get(ctx.guild.emojis, id=1085605320065302630)
+            emote = discord.utils.get(ctx.guild.emojis, id=1156150407228309564)
             answer = random.choice(ans[2]["negative"])
         elif num < 6:
             thumbnail = "https://cdn.discordapp.com/attachments/1117346551644295239/1158876241093464264/ruan_mei_nerd.png?ex=651dd71a&is=651c859a&hm=06c83048f9ec6c405cd1c5ebf169214cf4db9b9e655d6711854ee1003febd15d&"
-            emote = discord.utils.get(ctx.guild.emojis, id=1085593631584432178)
+            emote = discord.utils.get(ctx.guild.emojis, id=1156716062461661314)
             answer = random.choice(ans[1]["neutral"])
         elif num < 10:
             thumbnail = "https://media.discordapp.net/attachments/1106785083379171372/1156341810315149395/20230926_013109.png?ex=65149ebb&is=65134d3b&hm=b30994a003ffd066581127220f869c6d90ad41810e86034e0117df45a4748500&=&width=655&height=655"
-            emote = discord.utils.get(ctx.guild.emojis, id=1087154553255895040)
+            emote = discord.utils.get(ctx.guild.emojis, id=1152230094312591360)
             answer = random.choice(ans[0]["positive"])
         else:  # Easter egg
             thumbnail = "https://s3.blankdvth.com/74b72448-f31f-4d85-a765-fa04bca84edd.jpg"
