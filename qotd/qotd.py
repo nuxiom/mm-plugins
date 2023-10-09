@@ -37,7 +37,7 @@ QOTD_STICKERS = [
 ]
 
 
-class QOTD(commands.Cog):
+class QOTDs(commands.Cog):
     """Manages quotes of the day and sends them periodically."""
 
     def __init__(self, bot: commands.Bot):
@@ -158,12 +158,18 @@ class QOTD(commands.Cog):
             await self.warn_admins("QOTD channel was not set!")
 
 
-    # TODO: merge all qotd commands in one?
+    @commands.group(aliases=["qotd"], invoke_without_command=True)
+    async def qotds(self, ctx):
+        """
+        Manage Quotes of the Day.
+        """
+
+        await ctx.send_help(ctx.command)
 
 
     # Add quote of the day
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @commands.command(aliases=['qotdadd'])
+    @qotds.command(name="add")
     async def add_qotd(self, ctx: commands.Context, *, quote: str):
         """Adds a quote of the day and saves it"""
 
@@ -191,7 +197,7 @@ class QOTD(commands.Cog):
 
     # List quotes of the day
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    @commands.command(aliases=['qotdlist'])
+    @qotds.command(name="list")
     async def list_qotd(self, ctx: commands.Context):
         """Lists upcoming quotes of the day"""
 
@@ -213,7 +219,7 @@ class QOTD(commands.Cog):
 
     # Remove a quote of the day
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @commands.command(aliases=['qotdrm'])
+    @qotds.command(name="remove")
     async def remove_qotd(self, ctx: commands.Context, number: int):
         """Removes a quote (use `?qotdlist` to find the number)"""
 
@@ -242,7 +248,7 @@ class QOTD(commands.Cog):
 
     # Set the schedule for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @commands.command(aliases=['qotdtime'])
+    @qotds.command(name="set_time")
     async def set_qotd_time(self, ctx: commands.Context, *, cron: str):
         """Sets the cron time to send the quote (UTC)"""
 
@@ -273,8 +279,8 @@ class QOTD(commands.Cog):
 
     # Set the channel for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @commands.command(aliases=['qotdchannel'])
-    async def set_qotd_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
+    @qotds.command(name="set_channel")
+    async def set_qotd_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter):
         """Sets the channel to send the quotes to"""
 
         if channel is None:
@@ -298,8 +304,8 @@ class QOTD(commands.Cog):
 
     # Set the channel for qotd admin info
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @commands.command(aliases=['qotdadchannel'])
-    async def set_qotd_admin_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
+    @qotds.command(name="set_admin_channel")
+    async def set_qotd_admin_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter):
         """Sets the channel to send admin info to"""
 
         if channel is None:
@@ -323,7 +329,7 @@ class QOTD(commands.Cog):
 
     # Set the admin role to mention for info 
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @commands.command(aliases=['qotdrole'])
+    @qotds.command(name="set_admin_role")
     async def set_qotd_admin_role(self, ctx: commands.Context, role: commands.RoleConverter = None):
         """Sets the role to ping for admin info"""
 
@@ -350,7 +356,7 @@ class QOTD(commands.Cog):
 
     # Set the channel for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @commands.command(aliases=['qotdthreshold'])
+    @qotds.command(name="set_threshold")
     async def set_qotd_warning_threshold(self, ctx: commands.Context, threshold: int):
         """Sets the number of quotes at which it starts to warn admins about low quotes count"""
 
@@ -372,7 +378,7 @@ class QOTD(commands.Cog):
 
     # Show bot configuration
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    @commands.command(aliases=['qotdconf'])
+    @qotds.command(name="conf")
     async def qotd_conf(self, ctx: commands.Context):
         """Shows the QOTD configuration"""
 
@@ -384,6 +390,8 @@ class QOTD(commands.Cog):
         if self.channel_id is not None:
             channel = self.bot.get_channel(self.channel_id)
             qotd_channel_desc = f"Quotes will be sent to {channel.mention}."
+        else:
+            qotd_channel_desc = f":warning: **No QOTD channel configured !** Use `?qotd set_channel <channel>`."
         
         if self.admin_channel_id is not None:
             admin_channel = self.bot.get_channel(self.admin_channel_id)
@@ -428,4 +436,4 @@ class QOTD(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(QOTD(bot))
+    await bot.add_cog(QOTDs(bot))
