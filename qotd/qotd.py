@@ -78,15 +78,15 @@ class QOTD(commands.Cog):
 
             description = f'Quote "{quote}" added '
             emote = discord.utils.get(ctx.guild.emojis, id=1160566321306673233)
-            colour = discord.Colour.dark_green
+            colour = discord.Colour.dark_green()
         else:
             description = f"Quote can't be empty "
             emote = discord.utils.get(ctx.guild.emojis, id=1160588883516473464)
-            colour = discord.Colour.red
+            colour = discord.Colour.red()
 
         embed = discord.Embed(
             title="New quote",
-            description=description + emote,
+            description=f"{description}{emote}",
             colour=colour
         )
         embed.set_footer(text=self.footer)
@@ -109,7 +109,7 @@ class QOTD(commands.Cog):
         embed = discord.Embed(
             title="Upcoming quotes of the day",
             description=description.strip(),
-            colour=discord.Colour.dark_green
+            colour=discord.Colour.dark_green()
         )
         embed.set_footer(text=self.footer)
 
@@ -124,20 +124,20 @@ class QOTD(commands.Cog):
 
         if number > 0 and number <= len(self.quotes):
             idx = number - 1
-            quote = self.quotes.pop(number)
+            quote = self.quotes.pop(idx)
             self.save_conf()
 
             description = f'Quote "{quote}" removed '
             emote = discord.utils.get(ctx.guild.emojis, id=1153489300051202198)
-            colour = discord.Colour.dark_green
+            colour = discord.Colour.dark_green()
         else:
             description = f"Quote number {number} doesn't exist "
             emote = discord.utils.get(ctx.guild.emojis, id=1156319608630935584)
-            colour = discord.Colour.red
+            colour = discord.Colour.red()
 
         embed = discord.Embed(
             title="Remove quote",
-            description=description + emote,
+            description=f"{description}{emote}",
             colour=colour
         )
         embed.set_footer(text=self.footer)
@@ -161,15 +161,15 @@ class QOTD(commands.Cog):
 
             description = f'Quotes scheduled to `{cron}`! '
             emote = discord.utils.get(ctx.guild.emojis, id=1154897211235258390)
-            colour = discord.Colour.dark_green
+            colour = discord.Colour.dark_green()
         else:
             description = f"`{cron}` is an invalid cron format. You may want to check [Crontab Guru](https://crontab.guru/) "
             emote = discord.utils.get(ctx.guild.emojis, id=1157943933683384382)
-            colour = discord.Colour.red
+            colour = discord.Colour.red()
 
         embed = discord.Embed(
             title="Update quote schedule",
-            description=description + emote,
+            description=f"{description}{emote}",
             colour=colour
         )
         embed.set_footer(text=self.footer)
@@ -194,9 +194,13 @@ class QOTD(commands.Cog):
 
         embed = discord.Embed(
             title="Update channel",
-            description=description + emote,
-            colour=discord.Colour.dark_green
+            description=f"{description}{emote}",
+            colour=discord.Colour.dark_green()
         )
         embed.set_footer(text=self.footer)
 
         await ctx.send(embed=embed)
+
+
+async def setup(bot):
+    await bot.add_cog(QOTD(bot))
