@@ -1,6 +1,7 @@
 import json
 import os
 import random
+from datetime import datetime
 
 import aiocron
 import discord
@@ -31,7 +32,8 @@ QOTD_STICKERS = [
     "https://cdn.discordapp.com/attachments/1117346551644295239/1158877083657846824/ruanpackwatch.png?ex=651dd7e3&is=651c8663&hm=876634884d7a439207bafbc26916a03f6b1c1b68d029a94b57168463ddda3208&",
     "https://cdn.discordapp.com/emojis/1153489300051202198.png",
     "https://cdn.discordapp.com/emojis/1155737942506078278.png",
-    "https://cdn.discordapp.com/emojis/1155740644040519690.png"
+    "https://cdn.discordapp.com/emojis/1155740644040519690.png",
+    "https://media.discordapp.net/attachments/1135997360695152690/1160583122589589674/ruan_mei_bugcat_flower_raw.gif",
 ]
 
 
@@ -109,7 +111,9 @@ class QOTD(commands.Cog):
             if channel is None:
                 return
 
-            role = channel.guild.get_role(self.admin_role_id).mention
+            role = None
+            if self.admin_role_id is not None:
+                role = channel.guild.get_role(self.admin_role_id).mention
             if role is None:
                 role = ""
 
@@ -147,7 +151,7 @@ class QOTD(commands.Cog):
             embed.set_footer(text=self.footer)
 
             if len(self.quotes) <= self.warning_threshold:
-                await self.warn_admins(f"Only {len(self.quotes)} left!")
+                await self.warn_admins(f"Only {len(self.quotes)} upcoming quotes left!")
 
             await channel.send(embed=embed) # TODO: make embed
         else:
@@ -323,14 +327,16 @@ class QOTD(commands.Cog):
     async def set_qotd_admin_role(self, ctx: commands.Context, role: commands.RoleConverter = None):
         """Sets the role to ping for admin info"""
 
-        if channel is None:
-            channel = ctx.channel
-
-        self.admin_channel_id = channel.id
-        self.save_conf()
-
-        description = f'Admin info will be sent in {channel.mention}! '
         emote = discord.utils.get(ctx.guild.emojis, id=1154671375970209852)
+
+        if role is not None:
+            self.admin_role_id = role.id
+            description = f'Will ping {role.mention} for admin news '
+        else:
+            self.admin_role_id = None
+            description = f'No role will pinged for admin news '
+
+        self.save_conf()
 
         embed = discord.Embed(
             title="Update admin channel",
@@ -362,6 +368,63 @@ class QOTD(commands.Cog):
         embed.set_footer(text=self.footer)
 
         await ctx.send(embed=embed)
+
+
+    # Show bot configuration
+    @checks.has_permissions(PermissionLevel.MODERATOR)
+    @commands.command(aliases=['qotdconf'])
+    async def qotd_conf(self, ctx: commands.Context):
+        """Shows the QOTD configuration"""
+
+        base = datetime.now()
+        iter = aiocron.croniter(self.time, base)
+        ts = int(iter.get_next(datetime).timestamp())
+        time_desc = f"The quote of the day cron schedule is `{self.time}`.\nWhich means the next quote will be posted on <t:{ts}:f>."
+
+        if self.channel_id is not None:
+            channel = self.bot.get_channel(self.channel_id)
+            qotd_channel_desc = f"Quotes will be sent to {channel.mention}."
+        
+        if self.admin_channel_id is not None:
+            admin_channel = self.bot.get_channel(self.admin_channel_id)
+            if admin_channel is not None:
+                admin_channel_desc = f"Admin warnings will be sent to {admin_channel.mention}."
+
+                role = None
+                if self.admin_role_id is not None:
+                    role = channel.guild.get_role(self.admin_role_id).mention
+
+                if role is not None:
+                    admin_role_desc = f"{role} will be pinged for admin warnings."
+                else:
+                    admin_role_desc = "No role will be pinged."
+
+                threshold_desc = f"Admins will be pinged if there's {self.warning_threshold} quotes or less queued."
+            else:
+                admin_channel_desc = "Invalid admin channel setup."
+                admin_role_desc = "Invalid admin channel setup."
+                threshold_desc = "Invalid admin channel setup."
+        else:
+                admin_channel_desc = "No admin channel setup."
+                admin_role_desc = "No admin channel setup."
+                threshold_desc = "No admin channel setup."
+
+
+        embed = discord.Embed(
+            title="QOTD configuration",
+            colour=discord.Colour.dark_green()
+        )
+        embed.set_footer(text=self.footer)
+
+        embed.add_field(name="Quotes", value=f"There are currently {len(self.quotes)} quotes queued.")
+        embed.add_field(name="Schedule", value=time_desc)
+        embed.add_field(name="QOTD channel", value=qotd_channel_desc)
+        embed.add_field(name="Admin channel", value=admin_channel_desc)
+        embed.add_field(name="Admin role", value=admin_role_desc)
+        embed.add_field(name="Warning threshold", value=threshold_desc)
+
+        await ctx.send(embed=embed)
+
 
 
 async def setup(bot):
