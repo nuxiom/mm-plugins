@@ -69,7 +69,7 @@ class QOTD(commands.Cog):
     # Add quote of the day
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @commands.command(aliases=['qotdadd'])
-    async def add_qotd(self, ctx: commands.Context, quote: str):
+    async def add_qotd(self, ctx: commands.Context, *, quote: str):
         """Adds a quote of the day and saves it"""
 
         if quote is not None and len(quote) > 0:
@@ -148,7 +148,7 @@ class QOTD(commands.Cog):
     # Set the schedule for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @commands.command(aliases=['qotdtime'])
-    async def set_qotd_time(self, ctx: commands.Context, cron: str):
+    async def set_qotd_time(self, ctx: commands.Context, *, cron: str):
         """Sets the cron time to send the quote (UTC)"""
 
         if aiocron.croniter.is_valid(cron):
