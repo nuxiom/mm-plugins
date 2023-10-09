@@ -158,8 +158,8 @@ class QOTDs(commands.Cog):
             await self.warn_admins("QOTD channel was not set!")
 
 
-    @commands.group(aliases=["qotd"], invoke_without_command=True)
-    async def qotds(self, ctx):
+    @commands.group(invoke_without_command=True)
+    async def qotd(self, ctx):
         """
         Manage Quotes of the Day.
         """
@@ -169,7 +169,7 @@ class QOTDs(commands.Cog):
 
     # Add quote of the day
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @qotds.command(name="add")
+    @qotd.command(name="add")
     async def add_qotd(self, ctx: commands.Context, *, quote: str):
         """Adds a quote of the day and saves it"""
 
@@ -197,7 +197,7 @@ class QOTDs(commands.Cog):
 
     # List quotes of the day
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    @qotds.command(name="list")
+    @qotd.command(name="list")
     async def list_qotd(self, ctx: commands.Context):
         """Lists upcoming quotes of the day"""
 
@@ -219,9 +219,9 @@ class QOTDs(commands.Cog):
 
     # Remove a quote of the day
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @qotds.command(name="remove")
+    @qotd.command(name="remove")
     async def remove_qotd(self, ctx: commands.Context, number: int):
-        """Removes a quote (use `?qotdlist` to find the number)"""
+        """Removes a quote (use `?qotd list` to find the number)"""
 
         if number > 0 and number <= len(self.quotes):
             idx = number - 1
@@ -248,7 +248,7 @@ class QOTDs(commands.Cog):
 
     # Set the schedule for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @qotds.command(name="set_time")
+    @qotd.command(name="set_time")
     async def set_qotd_time(self, ctx: commands.Context, *, cron: str):
         """Sets the cron time to send the quote (UTC)"""
 
@@ -279,7 +279,7 @@ class QOTDs(commands.Cog):
 
     # Set the channel for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @qotds.command(name="set_channel")
+    @qotd.command(name="set_channel")
     async def set_qotd_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter):
         """Sets the channel to send the quotes to"""
 
@@ -304,7 +304,7 @@ class QOTDs(commands.Cog):
 
     # Set the channel for qotd admin info
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @qotds.command(name="set_admin_channel")
+    @qotd.command(name="set_admin_channel")
     async def set_qotd_admin_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter):
         """Sets the channel to send admin info to"""
 
@@ -315,7 +315,7 @@ class QOTDs(commands.Cog):
         self.save_conf()
 
         description = f'Admin info will be sent in {channel.mention}! '
-        emote = discord.utils.get(ctx.guild.emojis, id=1154671375970209852)
+        emote = discord.utils.get(ctx.guild.emojis, id=1155737942506078278)
 
         embed = discord.Embed(
             title="Update admin channel",
@@ -329,11 +329,11 @@ class QOTDs(commands.Cog):
 
     # Set the admin role to mention for info 
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @qotds.command(name="set_admin_role")
+    @qotd.command(name="set_admin_role")
     async def set_qotd_admin_role(self, ctx: commands.Context, role: commands.RoleConverter = None):
         """Sets the role to ping for admin info"""
 
-        emote = discord.utils.get(ctx.guild.emojis, id=1154671375970209852)
+        emote = discord.utils.get(ctx.guild.emojis, id=1147153985275437056)
 
         if role is not None:
             self.admin_role_id = role.id
@@ -356,7 +356,7 @@ class QOTDs(commands.Cog):
 
     # Set the channel for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
-    @qotds.command(name="set_threshold")
+    @qotd.command(name="set_threshold")
     async def set_qotd_warning_threshold(self, ctx: commands.Context, threshold: int):
         """Sets the number of quotes at which it starts to warn admins about low quotes count"""
 
@@ -364,7 +364,7 @@ class QOTDs(commands.Cog):
         self.save_conf()
 
         description = f"Admins will be warned when there's less than {threshold} quotes left "
-        emote = discord.utils.get(ctx.guild.emojis, id=1154671375970209852)
+        emote = discord.utils.get(ctx.guild.emojis, id=1157946531773681704)
 
         embed = discord.Embed(
             title="Update threshold",
@@ -378,7 +378,7 @@ class QOTDs(commands.Cog):
 
     # Show bot configuration
     @checks.has_permissions(PermissionLevel.MODERATOR)
-    @qotds.command(name="conf")
+    @qotd.command(name="conf")
     async def qotd_conf(self, ctx: commands.Context):
         """Shows the QOTD configuration"""
 
