@@ -77,6 +77,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 "questions": [],
                 "time": "0 8 * * *",
                 "channel": None,
+                "react_channel": None,
                 "admin_channel": None,
                 "admin_role": None,
                 "warning_threshold": 2
@@ -85,6 +86,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
         self.questions: list = self.conf["questions"]
         self.time: str = self.conf["time"]
         self.channel_id: int = self.conf["channel"]
+        self.react_channel_id: int = self.conf["react_channel"]
         self.admin_channel_id: int = self.conf["admin_channel"]
         self.admin_role_id: int = self.conf["admin_role"]
         self.warning_threshold: int = self.conf["warning_threshold"]
@@ -100,12 +102,26 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
         if "questions" not in self.conf:
             self.conf["questions"] = []
+        else:
+            bad_idx = []
+            for idx, question in enumerate(self.conf["questions"]):
+                if not isinstance(question, dict) \
+                            or "title" not in question.keys() \
+                            or "options" not in question.keys() \
+                            or not isinstance(question["options"], list):
+                    bad_idx.append(idx)
+
+            for idx in bad_idx:
+                self.conf["questions"].pop(idx)
 
         if "time" not in self.conf:
             self.conf["time"] = "0 8 * * *"
 
         if "channel" not in self.conf:
             self.conf["channel"] = None
+
+        if "channel" not in self.conf:
+            self.conf["react_channel"] = None
 
         if "admin_channel" not in self.conf:
             self.conf["admin_channel"] = None
@@ -122,6 +138,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             "questions": self.questions,
             "time": self.time,
             "channel": self.channel_id,
+            "react_channel": self.react_channel_id,
             "admin_channel": self.admin_channel_id,
             "admin_role": self.admin_role_id,
             "warning_threshold": self.warning_threshold
@@ -171,6 +188,10 @@ class QOTDs(commands.Cog, name=COG_NAME):
             if len(self.questions) == 0:
                 await self.warn_admins("No questions to send today :frowning:")
                 return
+            
+            react_channel = None
+            if self.react_channel_id is not None:
+                react_channel: discord.TextChannel = self.bot.get_channel(self.react_channel_id)
 
             question = self.questions.pop(0)
             self.save_conf()
@@ -182,6 +203,9 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 emote = discord.utils.get(channel.guild.emojis, id=reactions[index])
                 react_emotes.append(emote)
                 description.append(f"{emote} {option}")
+
+            if react_channel is not None:
+                description.append(f"*You can discuss in {react_channel.mention}*")
 
             embed = discord.Embed(
                 title=question["title"],
@@ -334,8 +358,8 @@ class QOTDs(commands.Cog, name=COG_NAME):
     # Set the channel for qotd
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="set_channel")
-    async def set_qotd_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter):
-        """Sets the channel to send the questions to"""
+    async def set_qotd_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
+        """Sets the channel to send the questions to (here if none specified)"""
 
         if channel is None:
             channel = ctx.channel
@@ -358,9 +382,34 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
     # Set the channel for qotd admin info
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @qotd.command(name="set_react_channel")
+    async def set_qotd_react_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
+        """Sets the channel to where people can discuss (here if none specified)"""
+
+        if channel is None:
+            channel = ctx.channel
+
+        self.react_channel_id = channel.id
+        self.save_conf()
+
+        description = f'People will be told to discuss in {channel.mention}! '
+        emote = discord.utils.get(ctx.guild.emojis, id=1155737942506078278)
+
+        embed = discord.Embed(
+            title="Update react channel",
+            description=f"{description}{emote}",
+            colour=discord.Colour.dark_green()
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
+
+
+    # Set the channel for qotd admin info
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="set_admin_channel")
-    async def set_qotd_admin_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter):
-        """Sets the channel to send admin info to"""
+    async def set_qotd_admin_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
+        """Sets the channel to send admin info to (here if none specified)"""
 
         if channel is None:
             channel = ctx.channel
@@ -385,7 +434,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="set_admin_role")
     async def set_qotd_admin_role(self, ctx: commands.Context, role: commands.RoleConverter = None):
-        """Sets the role to ping for admin info"""
+        """Sets the role to ping for admin info (disable it if none specified)"""
 
         emote = discord.utils.get(ctx.guild.emojis, id=1147153985275437056)
 
