@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import uuid
 from datetime import datetime
 
 import aiocron
@@ -36,12 +37,16 @@ QOTD_STICKERS = [
     "https://media.discordapp.net/attachments/1135997360695152690/1160583122589589674/ruan_mei_bugcat_flower_raw.gif",
 ]
 
+COG_NAME = "QOTD"
 
-class QOTDs(commands.Cog):
+
+class QOTDs(commands.Cog, name=COG_NAME):
     """Manages quotes of the day and sends them periodically."""
+
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.cog_id = uuid.uuid4()
 
         if os.path.exists(QUOTES_FILE):
             self.load_conf()
@@ -128,6 +133,12 @@ class QOTDs(commands.Cog):
 
 
     async def send_quote(self):
+        cog: QOTDs = self.bot.get_cog(COG_NAME)
+        if cog is None or cog.cog_id != self.cog_id:
+            # We are in an old cog after update and don't have to send QOTD anymore
+            self.cron.stop()
+            return
+
         if self.channel_id is not None:
             channel: discord.TextChannel = self.bot.get_channel(self.channel_id)
 
