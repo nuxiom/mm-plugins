@@ -120,7 +120,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
         if "channel" not in self.conf:
             self.conf["channel"] = None
 
-        if "channel" not in self.conf:
+        if "react_channel" not in self.conf:
             self.conf["react_channel"] = None
 
         if "admin_channel" not in self.conf:
