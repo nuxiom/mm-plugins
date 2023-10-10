@@ -495,6 +495,12 @@ class QOTDs(commands.Cog, name=COG_NAME):
             qotd_channel_desc = f"Questions will be sent to {channel.mention}."
         else:
             qotd_channel_desc = f":warning: **No QOTD channel configured !** Use `?qotd set_channel <channel>`."
+
+        if self.react_channel_id is not None:
+            react_channel = self.bot.get_channel(self.react_channel_id)
+            react_channel_desc = f"People will be told to discuss in {react_channel.mention}."
+        else:
+            react_channel_desc = f":warning: No discussion channel configured."
         
         if self.admin_channel_id is not None:
             admin_channel = self.bot.get_channel(self.admin_channel_id)
@@ -503,7 +509,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
                 role = None
                 if self.admin_role_id is not None:
-                    role = channel.guild.get_role(self.admin_role_id).mention
+                    role = admin_channel.guild.get_role(self.admin_role_id).mention
 
                 if role is not None:
                     admin_role_desc = f"{role} will be pinged for admin warnings."
@@ -530,6 +536,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
         embed.add_field(name="Questions", value=f"There are currently {len(self.questions)} questions queued.")
         embed.add_field(name="Schedule", value=time_desc)
         embed.add_field(name="QOTD channel", value=qotd_channel_desc)
+        embed.add_field(name="React channel", value=react_channel_desc)
         embed.add_field(name="Admin channel", value=admin_channel_desc)
         embed.add_field(name="Admin role", value=admin_role_desc)
         embed.add_field(name="Warning threshold", value=threshold_desc)
