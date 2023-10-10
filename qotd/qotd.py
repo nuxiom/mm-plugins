@@ -12,7 +12,7 @@ from core import checks
 from core.models import PermissionLevel
 
 
-QUOTES_FILE = os.path.dirname(__file__) + "/qotd.json"
+QUESTIONS_FILE = os.path.dirname(__file__) + "/qotd.json"
 
 QOTD_STICKERS = [
     "https://media.discordapp.net/attachments/1106785083379171372/1157133462331985961/20230928_174023.png?ex=65178003&is=65162e83&hm=dc1d01d630f54b13f7bea3dc29be717a279dd46929041dd34745880963379621&",
@@ -37,22 +37,44 @@ QOTD_STICKERS = [
     "https://media.discordapp.net/attachments/1135997360695152690/1160583122589589674/ruan_mei_bugcat_flower_raw.gif",
 ]
 
+"""QOTD_REACT_EMOTES = [
+    1160566321306673233,
+    1160588883516473464,
+    1153489300051202198,
+    1156319608630935584,
+    1154897211235258390,
+    1157943933683384382,
+    1154671375970209852,
+    1155737942506078278,
+    1147153985275437056,
+    1157946531773681704,
+]"""
+
+QOTD_REACT_EMOTES = [
+    868784549826560010,
+    1008807782356623450,
+    530764978211520533,
+    527426932476870661,
+    530700705384759297,
+    532999384716279819
+]
+
 COG_NAME = "QOTD"
 
 
 class QOTDs(commands.Cog, name=COG_NAME):
-    """Manages quotes of the day and sends them periodically."""
+    """Manages questions of the day and sends them periodically."""
 
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.cog_id = uuid.uuid4()
 
-        if os.path.exists(QUOTES_FILE):
+        if os.path.exists(QUESTIONS_FILE):
             self.load_conf()
         else:
             self.conf = {
-                "quotes": [],
+                "questions": [],
                 "time": "0 8 * * *",
                 "channel": None,
                 "admin_channel": None,
@@ -60,24 +82,24 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 "warning_threshold": 2
             }
 
-        self.quotes: list = self.conf["quotes"]
+        self.questions: list = self.conf["questions"]
         self.time: str = self.conf["time"]
         self.channel_id: int = self.conf["channel"]
         self.admin_channel_id: int = self.conf["admin_channel"]
         self.admin_role_id: int = self.conf["admin_role"]
         self.warning_threshold: int = self.conf["warning_threshold"]
 
-        self.cron = aiocron.crontab(self.time, func=self.send_quote)
+        self.cron = aiocron.crontab(self.time, func=self.send_question)
 
         self.footer = ""  # TODO: added just in case we do something with it someday
 
 
     def load_conf(self):
-        with open(QUOTES_FILE, "r") as f:
+        with open(QUESTIONS_FILE, "r") as f:
             self.conf = json.load(f)
 
-        if "quotes" not in self.conf:
-            self.conf["quotes"] = []
+        if "questions" not in self.conf:
+            self.conf["questions"] = []
 
         if "time" not in self.conf:
             self.conf["time"] = "0 8 * * *"
@@ -97,7 +119,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
     def save_conf(self):
         self.conf = {
-            "quotes": self.quotes,
+            "questions": self.questions,
             "time": self.time,
             "channel": self.channel_id,
             "admin_channel": self.admin_channel_id,
@@ -105,7 +127,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             "warning_threshold": self.warning_threshold
         }
 
-        with open(QUOTES_FILE, "w+") as f:
+        with open(QUESTIONS_FILE, "w+") as f:
             json.dump(self.conf, f)
 
 
@@ -132,7 +154,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             await channel.send(content=role, embed=embed)
 
 
-    async def send_quote(self):
+    async def send_question(self):
         cog: QOTDs = self.bot.get_cog(COG_NAME)
         if cog is None or cog.cog_id != self.cog_id:
             # We are in an old cog after update and don't have to send QOTD anymore
@@ -146,25 +168,34 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 await self.warn_admins("QOTD channel does not exist (anymore)")
                 return
 
-            if len(self.quotes) == 0:
-                await self.warn_admins("No quotes to send today :frowning:")
+            if len(self.questions) == 0:
+                await self.warn_admins("No questions to send today :frowning:")
                 return
 
-            quote = self.quotes.pop(0)
+            question = self.questions.pop(0)
             self.save_conf()
 
+            reactions = random.sample(QOTD_REACT_EMOTES, len(question["options"]))
+            description = []
+            for index, option in enumerate(question["options"]):
+                emote = discord.utils.get(channel.guild.emojis, id=reactions[index])
+                description.append(f"{emote} {option}")
+
             embed = discord.Embed(
-                title=f"Ruan Mei once said...",
-                description=quote,
+                title=question["title"],
+                description="\n\n".join(description),
                 colour=discord.Colour.random()
             )
             embed.set_thumbnail(url=random.choice(QOTD_STICKERS))
             embed.set_footer(text=self.footer)
 
-            if len(self.quotes) <= self.warning_threshold:
-                await self.warn_admins(f"Only {len(self.quotes)} upcoming quotes left!")
+            if len(self.questions) <= self.warning_threshold:
+                await self.warn_admins(f"Only {len(self.questions)} upcoming questions left!")
 
-            await channel.send(embed=embed) # TODO: make embed
+            message = await channel.send(embed=embed)
+
+            for emote in reactions:
+                await message.add_reaction(emote)
         else:
             await self.warn_admins("QOTD channel was not set!")
 
@@ -172,32 +203,37 @@ class QOTDs(commands.Cog, name=COG_NAME):
     @commands.group(invoke_without_command=True)
     async def qotd(self, ctx):
         """
-        Manage Quotes of the Day.
+        Manage Questions of the Day.
         """
 
         await ctx.send_help(ctx.command)
 
 
-    # Add quote of the day
+    # Add question of the day
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="add")
-    async def add_qotd(self, ctx: commands.Context, *, quote: str):
-        """Adds a quote of the day and saves it"""
+    async def add_qotd(self, ctx: commands.Context, title: str, *options: str):
+        """Adds a question of the day and saves it"""
 
-        if quote is not None and len(quote) > 0:
-            self.quotes.append(quote)
+        if len(options) <= len(QOTD_REACT_EMOTES):
+            question = {
+                "title": title,
+                "options": list(options)
+            }
+
+            self.questions.append(question)
             self.save_conf()
 
-            description = f'Quote "{quote}" added '
+            description = f'Question "{title}" added '
             emote = discord.utils.get(ctx.guild.emojis, id=1160566321306673233)
             colour = discord.Colour.dark_green()
         else:
-            description = f"Quote can't be empty "
+            description = f"Max {len(QOTD_REACT_EMOTES)} options! "
             emote = discord.utils.get(ctx.guild.emojis, id=1160588883516473464)
             colour = discord.Colour.red()
 
         embed = discord.Embed(
-            title="New quote",
+            title="New question",
             description=f"{description}{emote}",
             colour=colour
         )
@@ -206,20 +242,22 @@ class QOTDs(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
-    # List quotes of the day
+    # List questions of the day
     @checks.has_permissions(PermissionLevel.MODERATOR)
     @qotd.command(name="list")
     async def list_qotd(self, ctx: commands.Context):
-        """Lists upcoming quotes of the day"""
+        """Lists upcoming questions of the day"""
+
+        # TODO: Use modmail pagination
 
         description = ""
-        for index, quote in enumerate(self.quotes):
+        for index, question in enumerate(self.questions):
             description += str(index + 1) + ". "
-            description += quote
+            description += question["title"]
             description += "\n"
 
         embed = discord.Embed(
-            title="Upcoming quotes of the day",
+            title="Upcoming questions of the day",
             description=description.strip(),
             colour=discord.Colour.dark_green()
         )
@@ -228,27 +266,27 @@ class QOTDs(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
-    # Remove a quote of the day
+    # Remove a question of the day
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="remove")
     async def remove_qotd(self, ctx: commands.Context, number: int):
-        """Removes a quote (use `?qotd list` to find the number)"""
+        """Removes a question (use `?qotd list` to find the number)"""
 
-        if number > 0 and number <= len(self.quotes):
+        if number > 0 and number <= len(self.questions):
             idx = number - 1
-            quote = self.quotes.pop(idx)
+            question = self.questions.pop(idx)
             self.save_conf()
 
-            description = f'Quote "{quote}" removed '
+            description = f'Question "{question["title"]}" removed '
             emote = discord.utils.get(ctx.guild.emojis, id=1153489300051202198)
             colour = discord.Colour.dark_green()
         else:
-            description = f"Quote number {number} doesn't exist "
+            description = f"Question number {number} doesn't exist "
             emote = discord.utils.get(ctx.guild.emojis, id=1156319608630935584)
             colour = discord.Colour.red()
 
         embed = discord.Embed(
-            title="Remove quote",
+            title="Remove question",
             description=f"{description}{emote}",
             colour=colour
         )
@@ -261,16 +299,19 @@ class QOTDs(commands.Cog, name=COG_NAME):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="set_time")
     async def set_qotd_time(self, ctx: commands.Context, *, cron: str):
-        """Sets the cron time to send the quote (UTC)"""
+        """Sets the cron time to send the question"""
 
         if aiocron.croniter.is_valid(cron):
             self.time = cron
             self.save_conf()
 
             self.cron.stop()
-            self.cron = aiocron.crontab(self.time, func=self.send_quote)
+            self.cron = aiocron.crontab(self.time, func=self.send_question)
 
-            description = f'Quotes scheduled to `{cron}`! '
+            base = datetime.now()
+            iter = aiocron.croniter(self.time, base)
+            ts = int(iter.get_next(datetime).timestamp())
+            description = f'Questions scheduled to `{cron}`! Next question will be sent on <t:{ts}:f> '
             emote = discord.utils.get(ctx.guild.emojis, id=1154897211235258390)
             colour = discord.Colour.dark_green()
         else:
@@ -279,7 +320,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             colour = discord.Colour.red()
 
         embed = discord.Embed(
-            title="Update quote schedule",
+            title="Update questions schedule",
             description=f"{description}{emote}",
             colour=colour
         )
@@ -292,7 +333,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="set_channel")
     async def set_qotd_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter):
-        """Sets the channel to send the quotes to"""
+        """Sets the channel to send the questions to"""
 
         if channel is None:
             channel = ctx.channel
@@ -300,7 +341,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
         self.channel_id = channel.id
         self.save_conf()
 
-        description = f'Quotes will be sent in {channel.mention}! '
+        description = f'Questions will be sent in {channel.mention}! '
         emote = discord.utils.get(ctx.guild.emojis, id=1154671375970209852)
 
         embed = discord.Embed(
@@ -369,12 +410,12 @@ class QOTDs(commands.Cog, name=COG_NAME):
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="set_threshold")
     async def set_qotd_warning_threshold(self, ctx: commands.Context, threshold: int):
-        """Sets the number of quotes at which it starts to warn admins about low quotes count"""
+        """Sets the number of questions at which it starts to warn admins about low questions count"""
 
         self.warning_threshold = threshold
         self.save_conf()
 
-        description = f"Admins will be warned when there's less than {threshold} quotes left "
+        description = f"Admins will be warned when there's less than {threshold} questions left "
         emote = discord.utils.get(ctx.guild.emojis, id=1157946531773681704)
 
         embed = discord.Embed(
@@ -396,11 +437,11 @@ class QOTDs(commands.Cog, name=COG_NAME):
         base = datetime.now()
         iter = aiocron.croniter(self.time, base)
         ts = int(iter.get_next(datetime).timestamp())
-        time_desc = f"The quote of the day cron schedule is `{self.time}`.\nWhich means the next quote will be posted on <t:{ts}:f>."
+        time_desc = f"The question of the day cron schedule is `{self.time}`.\nWhich means the next question will be posted on <t:{ts}:f>."
 
         if self.channel_id is not None:
             channel = self.bot.get_channel(self.channel_id)
-            qotd_channel_desc = f"Quotes will be sent to {channel.mention}."
+            qotd_channel_desc = f"Questions will be sent to {channel.mention}."
         else:
             qotd_channel_desc = f":warning: **No QOTD channel configured !** Use `?qotd set_channel <channel>`."
         
@@ -418,7 +459,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 else:
                     admin_role_desc = "No role will be pinged."
 
-                threshold_desc = f"Admins will be pinged if there's {self.warning_threshold} quotes or less queued."
+                threshold_desc = f"Admins will be pinged if there's {self.warning_threshold} questions or less queued."
             else:
                 admin_channel_desc = "Invalid admin channel setup."
                 admin_role_desc = "Invalid admin channel setup."
@@ -435,7 +476,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
         )
         embed.set_footer(text=self.footer)
 
-        embed.add_field(name="Quotes", value=f"There are currently {len(self.quotes)} quotes queued.")
+        embed.add_field(name="Questions", value=f"There are currently {len(self.questions)} questions queued.")
         embed.add_field(name="Schedule", value=time_desc)
         embed.add_field(name="QOTD channel", value=qotd_channel_desc)
         embed.add_field(name="Admin channel", value=admin_channel_desc)
