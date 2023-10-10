@@ -176,9 +176,11 @@ class QOTDs(commands.Cog, name=COG_NAME):
             self.save_conf()
 
             reactions = random.sample(QOTD_REACT_EMOTES, len(question["options"]))
+            react_emotes = []
             description = []
             for index, option in enumerate(question["options"]):
                 emote = discord.utils.get(channel.guild.emojis, id=reactions[index])
+                react_emotes.append(emote)
                 description.append(f"{emote} {option}")
 
             embed = discord.Embed(
@@ -194,7 +196,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
             message = await channel.send(embed=embed)
 
-            for emote in reactions:
+            for emote in react_emotes:
                 await message.add_reaction(emote)
         else:
             await self.warn_admins("QOTD channel was not set!")
