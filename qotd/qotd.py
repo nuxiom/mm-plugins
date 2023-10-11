@@ -78,6 +78,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 "time": "0 8 * * *",
                 "channel": None,
                 "react_channel": None,
+                "ping_role": None,
                 "admin_channel": None,
                 "admin_role": None,
                 "warning_threshold": 2
@@ -87,6 +88,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
         self.time: str = self.conf["time"]
         self.channel_id: int = self.conf["channel"]
         self.react_channel_id: int = self.conf["react_channel"]
+        self.ping_role_id: int = self.conf["ping_role"]
         self.admin_channel_id: int = self.conf["admin_channel"]
         self.admin_role_id: int = self.conf["admin_role"]
         self.warning_threshold: int = self.conf["warning_threshold"]
@@ -123,6 +125,9 @@ class QOTDs(commands.Cog, name=COG_NAME):
         if "react_channel" not in self.conf:
             self.conf["react_channel"] = None
 
+        if "ping_role" not in self.conf:
+            self.conf["ping_role"] = None
+
         if "admin_channel" not in self.conf:
             self.conf["admin_channel"] = None
 
@@ -139,6 +144,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             "time": self.time,
             "channel": self.channel_id,
             "react_channel": self.react_channel_id,
+            "ping_role": self.ping_role_id,
             "admin_channel": self.admin_channel_id,
             "admin_role": self.admin_role_id,
             "warning_threshold": self.warning_threshold
@@ -188,7 +194,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             if len(self.questions) == 0:
                 await self.warn_admins("No questions to send today :frowning:")
                 return
-            
+
             react_channel = None
             if self.react_channel_id is not None:
                 react_channel: discord.TextChannel = self.bot.get_channel(self.react_channel_id)
@@ -215,10 +221,14 @@ class QOTDs(commands.Cog, name=COG_NAME):
             embed.set_thumbnail(url=random.choice(QOTD_STICKERS))
             embed.set_footer(text=self.footer)
 
+            content = ""
+            if self.ping_role_id is not None:
+                content = channel.guild.get_role(self.ping_role_id).mention
+
+            message = await channel.send(content=content, embed=embed)
+
             if len(self.questions) <= self.warning_threshold:
                 await self.warn_admins(f"Only {len(self.questions)} upcoming questions left!")
-
-            message = await channel.send(embed=embed)
 
             for emote in react_emotes:
                 await message.add_reaction(emote)
@@ -405,6 +415,33 @@ class QOTDs(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
+    # Set the role to mention for qotd
+    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @qotd.command(name="set_ping_role")
+    async def set_qotd_ping_role(self, ctx: commands.Context, role: commands.RoleConverter = None):
+        """Sets the role to ping for QOTD (disable it if none specified)"""
+
+        emote = discord.utils.get(ctx.guild.emojis, id=1147153985275437056)
+
+        if role is not None:
+            self.ping_role_id = role.id
+            description = f'Will ping {role.mention} for QOTD '
+        else:
+            self.ping_role_id = None
+            description = f'No role will be pinged for QOTD '
+
+        self.save_conf()
+
+        embed = discord.Embed(
+            title="Update ping role",
+            description=f"{description}{emote}",
+            colour=discord.Colour.dark_green()
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
+
+
     # Set the channel for qotd admin info
     @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
     @qotd.command(name="set_admin_channel")
@@ -443,12 +480,12 @@ class QOTDs(commands.Cog, name=COG_NAME):
             description = f'Will ping {role.mention} for admin news '
         else:
             self.admin_role_id = None
-            description = f'No role will pinged for admin news '
+            description = f'No role will be pinged for admin news '
 
         self.save_conf()
 
         embed = discord.Embed(
-            title="Update admin channel",
+            title="Update admin role",
             description=f"{description}{emote}",
             colour=discord.Colour.dark_green()
         )
@@ -500,8 +537,16 @@ class QOTDs(commands.Cog, name=COG_NAME):
             react_channel = self.bot.get_channel(self.react_channel_id)
             react_channel_desc = f"People will be told to discuss in {react_channel.mention}."
         else:
-            react_channel_desc = f":warning: No discussion channel configured."
-        
+            react_channel_desc = f"No discussion channel configured."
+
+        ping_role = None
+        if self.ping_role_id is not None:
+            ping_role = ctx.guild.get_role(self.ping_role_id).mention
+        if ping_role is not None:
+            ping_role_desc = f"{ping_role} will be pinged when sending QOTD."
+        else:
+            ping_role_desc = "No role will be pinged."
+
         if self.admin_channel_id is not None:
             admin_channel = self.bot.get_channel(self.admin_channel_id)
             if admin_channel is not None:
@@ -537,6 +582,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
         embed.add_field(name="Schedule", value=time_desc)
         embed.add_field(name="QOTD channel", value=qotd_channel_desc)
         embed.add_field(name="React channel", value=react_channel_desc)
+        embed.add_field(name="Ping role", value=ping_role_desc)
         embed.add_field(name="Admin channel", value=admin_channel_desc)
         embed.add_field(name="Admin role", value=admin_role_desc)
         embed.add_field(name="Warning threshold", value=threshold_desc)
