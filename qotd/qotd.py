@@ -178,7 +178,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             await channel.send(content=role, embed=embed)
 
 
-    async def make_question(self, question, guild):
+    def make_question(self, question, guild):
         react_channel = None
         if self.react_channel_id is not None:
             react_channel: discord.TextChannel = self.bot.get_channel(self.react_channel_id)
