@@ -299,6 +299,9 @@ class QOTDs(commands.Cog, name=COG_NAME):
             description += str(index + 1) + ". "
             description += question["title"]
             description += "\n"
+        
+        if len(description) == 0:
+            description = "*No upcoming questions* :frowning:"
 
         embed = discord.Embed(
             title="Upcoming questions of the day",
@@ -601,8 +604,11 @@ class QOTDs(commands.Cog, name=COG_NAME):
     # Set the role to mention for qotd
     @commands.has_role("QOTD Manager")
     @qotd.command(name="preview")
-    async def preview_qotd(self, ctx: commands.Context, number = 1):
+    async def preview_qotd(self, ctx: commands.Context, number = None):
         """Previews a question of the day"""
+
+        if number is None:
+            number = len(self.questions)
 
         if number > 0 and number <= len(self.questions):
             idx = number - 1
