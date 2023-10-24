@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands
 
 from core import checks
+from core.paginator import EmbedPaginatorSession
 from core.models import PermissionLevel
 
 
@@ -292,25 +293,35 @@ class QOTDs(commands.Cog, name=COG_NAME):
     async def list_qotd(self, ctx: commands.Context):
         """Lists upcoming questions of the day"""
 
-        # TODO: Use modmail pagination
-
+        embeds = []
         description = ""
         for index, question in enumerate(self.questions):
             description += str(index + 1) + ". "
             description += question["title"]
             description += "\n"
+
+            if index % 5 == 4 or index == len(self.questions) - 1:
+                embed = discord.Embed(
+                    title="Upcoming questions of the day",
+                    description=description.strip(),
+                    colour=discord.Colour.dark_green()
+                )
+                embed.set_footer(text=self.footer)
+                embeds.append(embed)
+                description = ""
         
-        if len(description) == 0:
+        if len(embeds) == 0:
             description = "*No upcoming questions* :frowning:"
-
-        embed = discord.Embed(
-            title="Upcoming questions of the day",
-            description=description.strip(),
-            colour=discord.Colour.dark_green()
-        )
-        embed.set_footer(text=self.footer)
-
-        await ctx.send(embed=embed)
+            embed = discord.Embed(
+                title="Upcoming questions of the day",
+                description=description.strip(),
+                colour=discord.Colour.dark_green()
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
+        else:
+            paginator = EmbedPaginatorSession(ctx, *embeds)
+            await paginator.run()
 
 
     # Remove a question of the day
