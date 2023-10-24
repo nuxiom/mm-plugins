@@ -178,6 +178,33 @@ class QOTDs(commands.Cog, name=COG_NAME):
             await channel.send(content=role, embed=embed)
 
 
+    async def make_question(self, question, guild):
+        react_channel = None
+        if self.react_channel_id is not None:
+            react_channel: discord.TextChannel = self.bot.get_channel(self.react_channel_id)
+
+        reactions = random.sample(QOTD_REACT_EMOTES, len(question["options"]))
+        react_emotes = []
+        description = []
+        for index, option in enumerate(question["options"]):
+            emote = discord.utils.get(guild.emojis, id=reactions[index])
+            react_emotes.append(emote)
+            description.append(f"{emote} {option}")
+
+        if react_channel is not None:
+            description.append(f"*You can discuss in {react_channel.mention}*")
+
+        embed = discord.Embed(
+            title=question["title"],
+            description="\n\n".join(description),
+            colour=discord.Colour.random()
+        )
+        embed.set_thumbnail(url=random.choice(QOTD_STICKERS))
+        embed.set_footer(text=self.footer)
+
+        return react_emotes, embed
+
+
     async def send_question(self):
         cog: QOTDs = self.bot.get_cog(COG_NAME)
         if cog is None or cog.cog_id != self.cog_id:
@@ -196,31 +223,10 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 await self.warn_admins("No questions to send today :frowning:")
                 return
 
-            react_channel = None
-            if self.react_channel_id is not None:
-                react_channel: discord.TextChannel = self.bot.get_channel(self.react_channel_id)
 
             question = self.questions.pop(0)
             self.save_conf()
-
-            reactions = random.sample(QOTD_REACT_EMOTES, len(question["options"]))
-            react_emotes = []
-            description = []
-            for index, option in enumerate(question["options"]):
-                emote = discord.utils.get(channel.guild.emojis, id=reactions[index])
-                react_emotes.append(emote)
-                description.append(f"{emote} {option}")
-
-            if react_channel is not None:
-                description.append(f"*You can discuss in {react_channel.mention}*")
-
-            embed = discord.Embed(
-                title=question["title"],
-                description="\n\n".join(description),
-                colour=discord.Colour.random()
-            )
-            embed.set_thumbnail(url=random.choice(QOTD_STICKERS))
-            embed.set_footer(text=self.footer)
+            react_emotes, embed = self.make_question(question, channel.guild)
 
             content = ""
             if self.ping_role_id is not None:
@@ -238,6 +244,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     @commands.group(invoke_without_command=True)
+    @commands.has_role("QOTD Manager")
     async def qotd(self, ctx):
         """
         Manage Questions of the Day.
@@ -247,7 +254,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Add question of the day
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="add")
     async def add_qotd(self, ctx: commands.Context, title: str, *options: str):
         """Adds a question of the day and saves it"""
@@ -280,7 +287,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # List questions of the day
-    @checks.has_permissions(PermissionLevel.MODERATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="list")
     async def list_qotd(self, ctx: commands.Context):
         """Lists upcoming questions of the day"""
@@ -304,7 +311,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Remove a question of the day
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="remove")
     async def remove_qotd(self, ctx: commands.Context, number: int):
         """Removes a question (use `?qotd list` to find the number)"""
@@ -333,7 +340,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Set the schedule for qotd
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="set_time")
     async def set_qotd_time(self, ctx: commands.Context, *, cron: str):
         """Sets the cron time to send the question"""
@@ -367,7 +374,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Set the channel for qotd
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="set_channel")
     async def set_qotd_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
         """Sets the channel to send the questions to (here if none specified)"""
@@ -392,7 +399,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Set the channel for qotd admin info
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="set_react_channel")
     async def set_qotd_react_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
         """Sets the channel to where people can discuss (here if none specified)"""
@@ -417,7 +424,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Set the role to mention for qotd
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="set_ping_role")
     async def set_qotd_ping_role(self, ctx: commands.Context, role: commands.RoleConverter = None):
         """Sets the role to ping for QOTD (disable it if none specified)"""
@@ -444,7 +451,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Set the channel for qotd admin info
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="set_admin_channel")
     async def set_qotd_admin_channel(self, ctx: commands.Context, channel: commands.TextChannelConverter = None):
         """Sets the channel to send admin info to (here if none specified)"""
@@ -469,7 +476,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Set the admin role to mention for info 
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="set_admin_role")
     async def set_qotd_admin_role(self, ctx: commands.Context, role: commands.RoleConverter = None):
         """Sets the role to ping for admin info (disable it if none specified)"""
@@ -496,7 +503,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Set the channel for qotd
-    @checks.has_permissions(PermissionLevel.ADMINISTRATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="set_threshold")
     async def set_qotd_warning_threshold(self, ctx: commands.Context, threshold: int):
         """Sets the number of questions at which it starts to warn admins about low questions count"""
@@ -518,7 +525,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
 
     # Show bot configuration
-    @checks.has_permissions(PermissionLevel.MODERATOR)
+    @commands.has_role("QOTD Manager")
     @qotd.command(name="conf")
     async def qotd_conf(self, ctx: commands.Context):
         """Shows the QOTD configuration"""
@@ -590,6 +597,37 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
         await ctx.send(embed=embed)
 
+
+    # Set the role to mention for qotd
+    @commands.has_role("QOTD Manager")
+    @qotd.command(name="preview")
+    async def preview_qotd(self, ctx: commands.Context, number = 1):
+        """Previews a question of the day"""
+
+        if number > 0 and number <= len(self.questions):
+            idx = number - 1
+            question = self.questions[idx]
+
+            react_emotes, embed = self.make_question(question, ctx.guild)
+            embed.set_footer(text="Emotes are random and will differ when the question is sent")
+
+            message = await ctx.send(embed=embed)
+
+            for emote in react_emotes:
+                await message.add_reaction(emote)
+        else:
+            description = f"Question number {number} doesn't exist "
+            emote = discord.utils.get(ctx.guild.emojis, id=1156319608630935584)
+            colour = discord.Colour.red()
+
+            embed = discord.Embed(
+                title="Preview error",
+                description=f"{description}{emote}",
+                colour=colour
+            )
+            embed.set_footer(text=self.footer)
+
+            await ctx.send(embed=embed)
 
 
 async def setup(bot):
