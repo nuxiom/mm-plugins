@@ -604,7 +604,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
     # Set the role to mention for qotd
     @commands.has_role("QOTD Manager")
     @qotd.command(name="preview")
-    async def preview_qotd(self, ctx: commands.Context, number = None):
+    async def preview_qotd(self, ctx: commands.Context, number: int = None):
         """Previews a question of the day"""
 
         if number is None:
@@ -615,7 +615,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
             question = self.questions[idx]
 
             react_emotes, embed = self.make_question(question, ctx.guild)
-            embed.set_footer(text="Emotes are random and will differ when the question is sent")
+            embed.set_footer(text="Emotes and image are random and will differ when the question is sent")
 
             message = await ctx.send(embed=embed)
 
