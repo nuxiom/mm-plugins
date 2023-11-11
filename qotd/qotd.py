@@ -256,7 +256,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
     # Add question of the day
     @commands.has_role("QOTD Manager")
-    @qotd.command(name="add")
+    @qotd.command(name="add", aliases=["create"])
     async def add_qotd(self, ctx: commands.Context, title: str, *options: str):
         """Adds a question of the day and saves it"""
 
@@ -326,7 +326,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
 
     # Remove a question of the day
     @commands.has_role("QOTD Manager")
-    @qotd.command(name="remove")
+    @qotd.command(name="remove", aliases=['delete', 'del', 'rm'])
     async def remove_qotd(self, ctx: commands.Context, number: int):
         """Removes a question (use `?qotd list` to find the number)"""
 
@@ -353,9 +353,90 @@ class QOTDs(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
+    # Edit question of the day
+    @commands.has_role("QOTD Manager")
+    @qotd.command(name="edit")
+    async def edit_qotd(self, ctx: commands.Context, number: int, title: str = None, *options: str):
+        """Edits a question. Use `?qotd edit number` to show the command used to create the question."""
+
+        if number > 0 and number <= len(self.questions):
+            idx = number - 1
+
+            if title is not None:
+                if len(options) <= len(QOTD_REACT_EMOTES):
+                    question = {
+                        "title": title,
+                        "options": list(options)
+                    }
+
+                    self.questions[idx] = question
+                    self.save_conf()
+
+                    description = f'Question "{question["title"]}" edited '
+                    emote = discord.utils.get(ctx.guild.emojis, id=1153489300051202198)
+                    colour = discord.Colour.dark_green()
+                else:
+                    description = f"Max {len(QOTD_REACT_EMOTES)} options! "
+                    emote = discord.utils.get(ctx.guild.emojis, id=1160588883516473464)
+                    colour = discord.Colour.red()
+            else:
+                description = f"Here is the command used:\n\n```?qotd add \"{question['title']}\" {' '.join(['"' + option + '"' for option in question['options']])}```"
+                emote = discord.utils.get(ctx.guild.emojis, id=1153489300051202198)
+                colour = discord.Colour.dark_green()
+        else:
+            description = f"Question number {number} doesn't exist "
+            emote = discord.utils.get(ctx.guild.emojis, id=1156319608630935584)
+            colour = discord.Colour.red()
+
+        embed = discord.Embed(
+            title="Edit question",
+            description=f"{description}{emote}",
+            colour=colour
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
+
+
+    # Move a question of the day
+    @commands.has_role("QOTD Manager")
+    @qotd.command(name="move")
+    async def move_qotd(self, ctx: commands.Context, number: int, position: int):
+        """Moves a question to the specified position"""
+
+        if number > 0 and number <= len(self.questions):
+            if position > 0 and position <= len(self.questions):
+                idx = number - 1
+                new_idx = position - 1
+                question = self.questions.pop(idx)
+                self.questions.insert(new_idx, question)
+                self.save_conf()
+
+                description = f'Question "{question["title"]}" moved to position {position}'
+                emote = discord.utils.get(ctx.guild.emojis, id=1153489300051202198)
+                colour = discord.Colour.dark_green()
+            else:
+                description = f"{position} is not a valid position "
+                emote = discord.utils.get(ctx.guild.emojis, id=1156319608630935584)
+                colour = discord.Colour.red()
+        else:
+            description = f"Question number {number} doesn't exist "
+            emote = discord.utils.get(ctx.guild.emojis, id=1156319608630935584)
+            colour = discord.Colour.red()
+
+        embed = discord.Embed(
+            title="Remove question",
+            description=f"{description}{emote}",
+            colour=colour
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
+
+
     # Set the schedule for qotd
     @commands.has_role("QOTD Manager")
-    @qotd.command(name="set_time")
+    @qotd.command(name="set_time", aliases=['set_schedule'])
     async def set_qotd_time(self, ctx: commands.Context, *, cron: str):
         """Sets the cron time to send the question"""
 
