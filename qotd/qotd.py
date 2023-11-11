@@ -380,8 +380,10 @@ class QOTDs(commands.Cog, name=COG_NAME):
                     emote = discord.utils.get(ctx.guild.emojis, id=1160588883516473464)
                     colour = discord.Colour.red()
             else:
+                question = self.questions[idx]
+
                 description = f"Here is the command used:\n\n```?qotd add \"{question['title']}\" {' '.join([chr(34) + option + chr(34) for option in question['options']])}```"
-                emote = discord.utils.get(ctx.guild.emojis, id=1153489300051202198)
+                emote = ""
                 colour = discord.Colour.dark_green()
         else:
             description = f"Question number {number} doesn't exist "
@@ -412,7 +414,7 @@ class QOTDs(commands.Cog, name=COG_NAME):
                 self.questions.insert(new_idx, question)
                 self.save_conf()
 
-                description = f'Question "{question["title"]}" moved to position {position}'
+                description = f'Question "{question["title"]}" moved to position {position} '
                 emote = discord.utils.get(ctx.guild.emojis, id=1153489300051202198)
                 colour = discord.Colour.dark_green()
             else:
