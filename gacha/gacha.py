@@ -8,9 +8,9 @@ from discord.ext import commands
 from core.paginator import EmbedPaginatorSession
 
 
+COG_NAME = "Gacha"
 GACHA_FILE = os.path.dirname(__file__) + "/gacha.json"
-
-COG_NAME="Gacha"
+CURRENCY_NAME = "Cosmic Fragment"
 
 
 class Item():
@@ -39,15 +39,19 @@ class Player():
     """ Player id """
     player_id: int
 
-    """ Currencies (dict  name -> amount) """
+    """ Pull currency """
+    pull_currency: int
+
+    """ Shop currencies (dict  name -> amount) """
     currencies: dict[str, int]
 
     """ Inventory (dict  item_id -> amount) """
     inventory: dict[str, int]
 
 
-    def __init__(self, player_id: int, currencies: dict = {}, inventory: dict = {}):
+    def __init__(self, player_id: int, pull_currency: int = 0, currencies: dict = {}, inventory: dict = {}):
         self.player_id = player_id
+        self.pull_currency = pull_currency
         self.currencies = currencies
         self.inventory = inventory
 
@@ -55,6 +59,7 @@ class Player():
     def to_dict(self):
         res = {
             "player_id": self.player_id,
+            "pull_currency": self.pull_currency,
             "currencies": self.currencies,
             "inventory": self.inventory
         }
@@ -98,14 +103,18 @@ class Banner():
     """ Items (dict  drop_weight -> list[item_id]) """
     drop_weights: dict[int, list[str]] # eg: if weight is 1 and sum of weights is 3000, 1 among 3000 chances to get one in the list
 
+    """ Pull cost """
+    pull_cost: int
 
-    def __init__(self, name: str, drop_weights: dict = {}):
+
+    def __init__(self, name: str, pull_cost: int, drop_weights: dict = {}):
         self.name = name
+        self.pull_cost = pull_cost
         self.drop_weights = drop_weights
 
 
     def get_rates_text(self, items: dict[str, Item]):
-        text = ""
+        text = f"### Pulls cost: {self.pull_cost} {CURRENCY_NAME}{'s' if self.pull_cost > 1 else ''}\n\n"
 
         sorted_rates = sorted(self.drop_weights.keys())
         total_weight = sum(sorted_rates)
@@ -155,6 +164,7 @@ class Data:
     banners = [
         Banner(
             "Standard banner",
+            100,
             {
                 1: ["5starRole"],
                 2999: ["4starCollectible"]
