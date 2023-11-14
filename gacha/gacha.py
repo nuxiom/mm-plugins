@@ -8,8 +8,8 @@ from discord.ext import commands
 from core.paginator import EmbedPaginatorSession
 
 sys.path.append(os.path.dirname(__file__))
-from data import Data
-from banner import Banner
+from gachalib.data import Data
+from gachalib.banner import Banner
 
 
 GACHA_FILE = os.path.dirname(__file__) + "/gacha.json"

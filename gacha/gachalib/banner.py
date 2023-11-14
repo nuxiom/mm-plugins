@@ -1,4 +1,4 @@
-from item import Item
+from gachalib.item import Item
 
 
 class Banner():

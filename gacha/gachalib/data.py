@@ -1,6 +1,6 @@
-from banner import Banner
-from item import Item
-from shop import Shop
+from gachalib.banner import Banner
+from gachalib.item import Item
+from gachalib.shop import Shop
 
 class Data:
 
