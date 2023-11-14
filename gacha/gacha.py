@@ -107,7 +107,7 @@ class Banner():
     def get_rates_text(self, items: dict[str, Item]):
         text = ""
 
-        sorted_rates: sorted(self.drop_weights.keys())
+        sorted_rates = sorted(self.drop_weights.keys())
         total_weight = sum(sorted_rates)
 
         for weight in sorted_rates:
@@ -220,10 +220,11 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         if bann is None:
             description = f'Banner "{banner}" not found!'
-            colour = discord.Colour.red
+            colour = discord.Colour.red()
         else:
             bann_description = bann.get_rates_text(Data.items)
             description = f"# {bann.name}\n\n{bann_description}"
+            colour = discord.Colour.green()
 
 
         embed = discord.Embed(
