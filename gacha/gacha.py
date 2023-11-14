@@ -1,20 +1,168 @@
 import json
 import os
-import sys
+from typing import Optional
 
 import discord
 from discord.ext import commands
 
 from core.paginator import EmbedPaginatorSession
 
-sys.path.append(os.path.dirname(__file__))
-from gachalib.data import Data
-from gachalib.banner import Banner
-
 
 GACHA_FILE = os.path.dirname(__file__) + "/gacha.json"
 
 COG_NAME="Gacha"
+
+
+class Item():
+
+    """ Name of the item """
+    name: str
+
+    """ Description in shop """
+    description: str
+
+    """ Icon in shop / collection """
+    image: str
+
+    """ Role (optional) """
+    role: Optional[str]
+
+
+    def __init__(self, name: str, description: str, image: str, role: Optional[str] = None) -> None:
+        self.name = name
+        self.description = description
+        self.image = image
+        self.role = role
+
+
+class Player():
+    """ Player id """
+    player_id: int
+
+    """ Currencies (dict  name -> amount) """
+    currencies: dict[str, int]
+
+    """ Inventory (dict  item_id -> amount) """
+    inventory: dict[str, int]
+
+
+    def __init__(self, player_id: int, currencies: dict = {}, inventory: dict = {}):
+        self.player_id = player_id
+        self.currencies = currencies
+        self.inventory = inventory
+
+
+    def to_dict(self):
+        res = {
+            "player_id": self.player_id,
+            "currencies": self.currencies,
+            "inventory": self.inventory
+        }
+
+        return res
+
+
+    @staticmethod
+    def from_dict(d: dict):
+        return Player(**d)
+
+
+class Shop():
+    """ Currency name """
+    currency: str
+
+    """ Shop name """
+    name: str
+
+    """ Items you can buy (dict  item_id -> price) """
+    to_buy: dict[str, int]
+
+    """ Items you can sell (dict  item_id -> price) """
+    to_sell: dict[str, int]
+
+
+    def __init__(self, currency: str, name: str = None, to_buy: dict = {}, to_sell: dict = {}):
+        if name is None:
+            name = f"{currency.title()} shop"
+
+        self.currency = currency
+        self.name = name
+        self.to_buy = to_buy
+        self.to_sell = to_sell
+
+
+class Banner():
+    """ Banner/event name """
+    name: str
+
+    """ Items (dict  drop_weight -> list[item_id]) """
+    drop_weights: dict[int, list[str]] # eg: if weight is 1 and sum of weights is 3000, 1 among 3000 chances to get one in the list
+
+
+    def __init__(self, name: str, drop_weights: dict = {}):
+        self.name = name
+        self.drop_weights = drop_weights
+
+
+    def get_rates_text(self, items: dict[str, Item]):
+        text = ""
+
+        sorted_rates: sorted(self.drop_weights.keys())
+        total_weight = sum(sorted_rates)
+
+        for weight in sorted_rates:
+            rate = weight / total_weight * 100
+            text += f"{rate:.2f}% chance to get one of the following:\n"
+
+            for item_id in self.drop_weights[weight]:
+                text += f"- {items[item_id].name}\n"
+
+            text += "\n"
+
+        return text.strip()
+
+
+class Data:
+
+    items = {
+        "5starRole": Item(
+            "5⭐ Role",
+            "This is a super rare role!",
+            "https://media.discordapp.net/attachments/1106786214608109669/1173895704821907517/ruan_mei_mooncake.png?ex=65659e91&is=65532991&hm=5a9e5f513c124acfbdf05a2c1f02b14df757395aaa0725ca2d1fb25184073f94&=&width={size}&height={size}",
+            "Super Lucky Player"
+        ),
+        "4starCollectible": Item(
+            "4⭐ Collectible",
+            "This is just a collectible, doesn't give a role but it's nice to have!",
+            "https://media.discordapp.net/attachments/1106786214608109669/1173895705329405952/ruan_mei_dumpling.png?ex=65659e92&is=65532992&hm=4a134dee3c3568714b8654fd3109840937589664a2a8bfd1a1a5c3ff892b55ec&=&width={size}&height={size}"
+        )
+    }
+
+
+    shops = [
+        Shop(
+            currency="Plum Blossom",
+            to_buy={
+                "5starRole": 1e6
+            },
+            to_sell={
+                "4starCollectible": 300
+            }
+        )
+    ]
+
+
+    banners = [
+        Banner(
+            "Standard banner",
+            {
+                1: ["5starRole"],
+                2999: ["4starCollectible"]
+            }
+        )
+    ]
+
+
 
 
 class Gacha(commands.Cog, name=COG_NAME):
