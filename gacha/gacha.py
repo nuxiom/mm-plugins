@@ -1,11 +1,13 @@
 import json
 import os
+import sys
 
 import discord
 from discord.ext import commands
 
 from core.paginator import EmbedPaginatorSession
 
+sys.path.append(os.path.dirname(__file__))
 from data import Data
 from banner import Banner
 
