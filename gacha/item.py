@@ -1,9 +1,7 @@
 from typing import Optional
 
-from pydantic import BaseModel
 
-
-class Item(BaseModel):
+class Item():
 
     """ Name of the item """
     name: str
@@ -19,6 +17,7 @@ class Item(BaseModel):
 
 
     def __init__(self, name: str, description: str, image: str, role: Optional[str] = None) -> None:
-        sup = super()
-        print("Initializing Item, sup is: ", str(sup))
-        sup.__init__(name=name, description=description, image=image, role=role)
+        self.name = name
+        self.description = description
+        self.image = image
+        self.role = role

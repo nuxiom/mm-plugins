@@ -1,7 +1,4 @@
-from pydantic import BaseModel
-
-
-class Shop(BaseModel):
+class Shop():
     """ Currency name """
     currency: str
 
@@ -19,4 +16,7 @@ class Shop(BaseModel):
         if name is None:
             name = f"{currency.title()} shop"
 
-        super().__init__(currency=currency.title(), name=name, to_buy=to_buy, to_sell=to_sell)
+        self.currency = currency
+        self.name = name
+        self.to_buy = to_buy
+        self.to_sell = to_sell

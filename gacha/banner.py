@@ -1,9 +1,7 @@
-from pydantic import BaseModel
-
 from item import Item
 
 
-class Banner(BaseModel):
+class Banner():
     """ Banner/event name """
     name: str
 
@@ -12,7 +10,8 @@ class Banner(BaseModel):
 
 
     def __init__(self, name: str, drop_weights: dict = {}):
-        super().__init__(name=name, drop_weights=drop_weights)
+        self.name = name
+        self.drop_weights = drop_weights
 
 
     def get_rates_text(self, items: dict[str, Item]):

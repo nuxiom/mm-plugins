@@ -1,7 +1,4 @@
-from pydantic import BaseModel
-
-
-class Player(BaseModel):
+class Player():
     """ Player id """
     player_id: int
 
@@ -13,4 +10,21 @@ class Player(BaseModel):
 
 
     def __init__(self, player_id: int, currencies: dict = {}, inventory: dict = {}):
-        super().__init__(player_id=player_id, currencies=currencies, inventory=inventory)
+        self.player_id = player_id
+        self.currencies = currencies
+        self.inventory = inventory
+
+
+    def to_dict(self):
+        res = {
+            "player_id": self.player_id,
+            "currencies": self.currencies,
+            "inventory": self.inventory
+        }
+
+        return res
+
+
+    @staticmethod
+    def from_dict(d: dict):
+        return Player(**d)
