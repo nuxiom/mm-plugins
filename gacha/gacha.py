@@ -222,7 +222,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             description = f'Banner "{banner}" not found!'
             colour = discord.Colour.red
         else:
-            bann_description = bann.get_rates_text()
+            bann_description = bann.get_rates_text(Data.items)
             description = f"# {bann.name}\n\n{bann_description}"
 
 
