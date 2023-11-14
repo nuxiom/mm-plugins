@@ -36,8 +36,8 @@ class Data:
         Banner(
             "Standard banner",
             {
-                1: "5starRole",
-                2999: "4starCollectible"
+                1: ["5starRole"],
+                2999: ["4starCollectible"]
             }
         )
     ]

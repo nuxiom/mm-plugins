@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -13,11 +15,10 @@ class Item(BaseModel):
     image: str
 
     """ Role (optional) """
-    role: str
+    role: Optional[str]
 
 
-    def __init__(self, name: str, description: str, image: str, role: str = None):
-        self.name = name
-        self.description = description
-        self.image = image
-        self.role = role
+    def __init__(self, name: str, description: str, image: str, role: Optional[str] = None) -> None:
+        sup = super()
+        print("Initializing Item, sup is: ", str(sup))
+        sup.__init__(name=name, description=description, image=image, role=role)

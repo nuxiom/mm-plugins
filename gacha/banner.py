@@ -12,8 +12,7 @@ class Banner(BaseModel):
 
 
     def __init__(self, name: str, drop_weights: dict = {}):
-        self.name = name
-        self.drop_weights = drop_weights
+        super().__init__(name=name, drop_weights=drop_weights)
 
 
     def get_rates_text(self, items: dict[str, Item]):

@@ -16,12 +16,7 @@ class Shop(BaseModel):
 
 
     def __init__(self, currency: str, name: str = None, to_buy: dict = {}, to_sell: dict = {}):
-        self.currency = currency
-        
         if name is None:
-            self.name = f"{self.currency} shop"
-        else:
-            self.name = name
+            name = f"{currency.title()} shop"
 
-        self.to_buy = to_buy
-        self.to_sell = to_sell
+        super().__init__(currency=currency.title(), name=name, to_buy=to_buy, to_sell=to_sell)

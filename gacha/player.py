@@ -13,6 +13,4 @@ class Player(BaseModel):
 
 
     def __init__(self, player_id: int, currencies: dict = {}, inventory: dict = {}):
-        self.player_id = player_id
-        self.currencies = currencies
-        self.inventory = inventory
+        super().__init__(player_id=player_id, currencies=currencies, inventory=inventory)
