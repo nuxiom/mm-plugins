@@ -108,7 +108,7 @@ class Shop():
         img = Image.new("RGB", (1280, 720), (49, 51, 56))
         draw = ImageDraw.Draw(img)
 
-        for i, itemprice in enumerate(self.to_sell):
+        for i, itemprice in enumerate(self.to_sell.items()):
             itm, price = itemprice
             item = items[itm]
 
