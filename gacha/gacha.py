@@ -137,7 +137,7 @@ class Shop():
             img.paste(itemimg, (x, y), itemimg)
 
             _, _, w, _ = draw.textbbox((0, 0), item.name, font=font)
-            tx = x + 80 - w / 2
+            tx = x + 80 - w // 2
             ty = y + 170
             draw.text((tx, ty), item.name, font=font, fill='white')
 
@@ -145,7 +145,7 @@ class Shop():
 
             pricetxt = f"{price} "
             _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
-            tx = x + 80 - w / 2 - currency_img.size[0] / 2
+            tx = x + 80 - w // 2 - currency_img.size[0] // 2
             ty = y + 210
             draw.text((tx, ty), pricetxt, font=font, fill='white')
             img.paste(currency_img, (tx + w, ty - 8), currency_img)
