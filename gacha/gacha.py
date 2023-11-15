@@ -104,7 +104,7 @@ class Shop():
         self.to_sell = to_sell
 
     def get_shop_image(self, items: dict[str, Item]):
-        font = ImageFont.truetype("gg.ttf", 16)
+        font = ImageFont.truetype(os.path.join(DIR, "gg.ttf"), 16)
         img = Image.new("RGB", (1280, 720), (49, 51, 56))
         draw = ImageDraw.Draw(img)
 
