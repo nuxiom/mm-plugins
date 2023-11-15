@@ -19,14 +19,14 @@ CURRENCY_EMOJI = "cosmic.png"
 
 def get_emoji_img(emoji: str, size: tuple) -> Image.Image:
     if ".png" in emoji:
-        return Image.open(os.path.join(DIR, "img", emoji)).resize(size)
+        return Image.open(os.path.join(DIR, "img", emoji)).convert("RGBA").resize(size)
 
     name = "-".join(map(lambda e: hex(ord(e))[2:], emoji)) + ".png"
     path = os.path.join(DIR, "img", "72x72", name)
     print(path)
 
     if os.path.exists(path):
-        return Image.open(path).resize(size)
+        return Image.open(path).convert("RGBA").resize(size)
     else:
         font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 24)
         img = Image.new("RGBA", size, (0, 0, 0, 0))
