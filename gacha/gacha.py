@@ -38,7 +38,7 @@ class Item():
         self.role = role
 
     def get_image(self):
-        return Image.open(os.path.join(DIR, self.image))
+        return Image.open(os.path.join(DIR, "img", self.image))
 
 
 class Player():
