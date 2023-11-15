@@ -318,7 +318,7 @@ class Gacha(commands.Cog, name=COG_NAME):
         #     await paginator.run()
 
         with BytesIO() as image_binary:
-            Data.shops[0].get_shop_image(Data.items).save(image_binary)
+            Data.shops[0].get_shop_image(Data.items).save(image_binary, "PNG")
             image_binary.seek(0)
             await ctx.send("# Items to buy", file=discord.File(fp=image_binary, filename='shop.png'))
 
