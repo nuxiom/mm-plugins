@@ -104,17 +104,18 @@ class Shop():
         self.to_sell = to_sell
 
     def get_shop_image(self, items: dict[str, Item]):
-        font = ImageFont.truetype(os.path.join(DIR, "gg.ttf"), 16)
+        font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 24)
         img = Image.new("RGB", (1280, 720), (49, 51, 56))
         draw = ImageDraw.Draw(img)
 
-        for i, itemprice in enumerate(self.to_sell.items()):
+        for i, itemprice in enumerate(self.to_buy.items()):
             itm, price = itemprice
             item = items[itm]
 
             x = (i % 4) * 300 + 110
             y = (i // 4) * 300 + 110
-            img.paste(item.get_image().resize((160, 160)), (x, y))
+            itemimg = item.get_image().resize((160, 160))
+            img.paste(itemimg, (x, y), itemimg)
 
             _, _, w, _ = draw.textbbox((0, 0), item.name, font=font)
             tx = x + 80 - w / 2
