@@ -14,6 +14,25 @@ COG_NAME = "Gacha"
 DIR = os.path.dirname(__file__)
 GACHA_FILE = DIR + "/gacha.json"
 CURRENCY_NAME = "Cosmic Fragment"
+CURRENCY_EMOJI = "cosmic.png"
+
+
+def get_emoji_img(emoji: str, size: tuple) -> Image.Image:
+    if ".png" in emoji:
+        return Image.open(os.path.join(DIR, "img", emoji)).resize(size)
+
+    name = "-".join(map(lambda e: hex(ord(e))[2:], emoji)) + ".png"
+    path = os.path.join(DIR, "img", "72x72", name)
+    print(path)
+
+    if os.path.exists(path):
+        return Image.open(path).resize(size)
+    else:
+        font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 24)
+        img = Image.new("RGBA", size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        draw.text((0, 0), emoji, font=font, fill="white")
+        return img
 
 
 class Item():
@@ -104,8 +123,8 @@ class Shop():
         self.to_sell = to_sell
 
     def get_shop_image(self, items: dict[str, Item]):
-        font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 24)
-        img = Image.new("RGB", (1280, 720), (49, 51, 56))
+        font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 32)
+        img = Image.open(os.path.join(DIR, "img", "background.png"))
         draw = ImageDraw.Draw(img)
 
         for i, itemprice in enumerate(self.to_buy.items()):
@@ -122,11 +141,14 @@ class Shop():
             ty = y + 170
             draw.text((tx, ty), item.name, font=font, fill='white')
 
-            pricetxt = f"{price}{self.currency_emoji}"
+            currency_img = get_emoji_img(self.currency_emoji, (48, 48))
+
+            pricetxt = f"{price} "
             _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
-            tx = x + 80 - w / 2
-            ty = y + 200
+            tx = x + 80 - w / 2 - currency_img.size[0] / 2
+            ty = y + 210
             draw.text((tx, ty), pricetxt, font=font, fill='white')
+            img.paste(currency_img, (tx + w, ty - 8), currency_img)
 
         return img
 
@@ -170,13 +192,13 @@ class Data:
 
     items = {
         "5starRole": Item(
-            "5⭐ Role",
+            "5* Role",
             "This is a super rare role!",
             "000.png",
             "Super Lucky Player"
         ),
         "4starCollectible": Item(
-            "4⭐ Collectible",
+            "4* Collectible",
             "This is just a collectible, doesn't give a role but it's nice to have!",
             "001.png"
         )
