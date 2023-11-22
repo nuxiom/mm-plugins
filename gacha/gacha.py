@@ -267,7 +267,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         msg: str = message.content
         if not msg.startswith("?") and player._talked_this_minute < 10:
-            score = msg.split()
+            score = len(msg.split())
             player.pull_currency += score
             self.save_conf()
             player._talked_this_minute += 1
