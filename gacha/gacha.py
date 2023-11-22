@@ -260,7 +260,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             self.save[message.author.id] = player
 
         t = datetime.datetime.now()
-        if player._last_talked.minute != t.minute or player._last_talked.hour != t.hour or player._last_talked.date != t.date:
+        if player._last_talked.minute != t.minute or player._last_talked.hour != t.hour or player._last_talked.date() != t.date():
             player._last_talked = t
             player._talked_this_minute = 0
 
@@ -357,7 +357,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             description=f"{description}",
             colour=colour
         )
-        embed.set_footer(text=f"{player._talked_this_minute}")
+        embed.set_footer(text=self.footer)
 
         await ctx.send(embed=embed)
 
