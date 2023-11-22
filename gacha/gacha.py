@@ -358,7 +358,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             description=f"{description}",
             colour=colour
         )
-        embed.set_footer(text=self.footer)
+        embed.set_footer(text=f"{player._talked_this_minute}")
 
         await ctx.send(embed=embed)
 
