@@ -1,38 +1,23 @@
+import datetime
 import json
 import os
+import subprocess
+import sys
 from io import BytesIO
 from typing import Optional
 
 import discord
 from discord.ext import commands
-from PIL import Image, ImageDraw, ImageFont
 
 from core.paginator import EmbedPaginatorSession
 
 
 COG_NAME = "Gacha"
 DIR = os.path.dirname(__file__)
-GACHA_FILE = DIR + "/gacha.json"
+GACHA_FILE = os.path.join(os.path.expanduser("~"), "gacha.json")
 CURRENCY_NAME = "Cosmic Fragment"
 CURRENCY_EMOJI = "cosmic.png"
 
-
-def get_emoji_img(emoji: str, size: tuple) -> Image.Image:
-    if ".png" in emoji:
-        return Image.open(os.path.join(DIR, "img", emoji)).convert("RGBA").resize(size)
-
-    name = "-".join(map(lambda e: hex(ord(e))[2:], emoji)) + ".png"
-    path = os.path.join(DIR, "img", "72x72", name)
-    print(path)
-
-    if os.path.exists(path):
-        return Image.open(path).convert("RGBA").resize(size)
-    else:
-        font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 24)
-        img = Image.new("RGBA", size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        draw.text((0, 0), emoji, font=font, fill="white")
-        return img
 
 
 class Item():
@@ -56,8 +41,21 @@ class Item():
         self.image = image
         self.role = role
 
-    def get_image(self):
-        return Image.open(os.path.join(DIR, "img", self.image))
+    def to_dict(self):
+        res = {
+            "name": self.name,
+            "description": self.description,
+            "image": self.image
+        }
+
+        if self.role is not None:
+            res["role"] = self.role
+
+        return res
+
+    @staticmethod
+    def from_dict(d: dict):
+        return Item(**d)
 
 
 class Player():
@@ -73,6 +71,9 @@ class Player():
     """ Inventory (dict  item_id -> amount) """
     inventory: dict[str, int]
 
+    # Internal variables
+    _last_talked: datetime.datetime
+    _talked_this_minute: int
 
     def __init__(self, player_id: int, pull_currency: int = 0, currencies: dict = {}, inventory: dict = {}):
         self.player_id = player_id
@@ -80,15 +81,16 @@ class Player():
         self.currencies = currencies
         self.inventory = inventory
 
+        self._last_talked = datetime.datetime.now()
+        self._talked_this_minute = 0
+
     def to_dict(self):
-        res = {
+        return {
             "player_id": self.player_id,
             "pull_currency": self.pull_currency,
             "currencies": self.currencies,
             "inventory": self.inventory
         }
-
-        return res
 
     @staticmethod
     def from_dict(d: dict):
@@ -122,36 +124,18 @@ class Shop():
         self.to_buy = to_buy
         self.to_sell = to_sell
 
-    def get_shop_image(self, items: dict[str, Item]):
-        font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 32)
-        img = Image.open(os.path.join(DIR, "img", "background.png"))
-        draw = ImageDraw.Draw(img)
+    def to_dict(self):
+        return {
+            "currency": self.currency,
+            "currency_emoji": self.currency_emoji,
+            "name": self.name,
+            "to_buy": self.to_buy,
+            "to_sell": self.to_sell
+        }
 
-        for i, itemprice in enumerate(self.to_buy.items()):
-            itm, price = itemprice
-            item = items[itm]
-
-            x = (i % 4) * 300 + 110
-            y = (i // 4) * 300 + 110
-            itemimg = item.get_image().resize((160, 160))
-            img.paste(itemimg, (x, y), itemimg)
-
-            _, _, w, _ = draw.textbbox((0, 0), item.name, font=font)
-            tx = x + 80 - w // 2
-            ty = y + 170
-            draw.text((tx, ty), item.name, font=font, fill='white')
-
-            currency_img = get_emoji_img(self.currency_emoji, (48, 48))
-
-            pricetxt = f"{price} "
-            _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
-            tx = x + 80 - w // 2 - currency_img.size[0] // 2
-            ty = y + 210
-            draw.text((tx, ty), pricetxt, font=font, fill='white')
-            img.paste(currency_img, (tx + w, ty - 8), currency_img)
-
-        return img
-
+    @staticmethod
+    def from_dict(d: dict):
+        return Shop(**d)
 
 
 class Banner():
@@ -169,6 +153,26 @@ class Banner():
         self.name = name
         self.pull_cost = pull_cost
         self.drop_weights = drop_weights
+
+    def to_dict(self):
+        new_drop_weights = {}
+        for weight, lst in self.drop_weights.items():
+            new_drop_weights[str(weight)] = lst
+
+        return {
+            "name": self.name,
+            "pull_cost": self.pull_cost,
+            "drop_weights": new_drop_weights
+        }
+
+    @staticmethod
+    def from_dict(d: dict):
+        new_drop_weights = {}
+        for weight, lst in d["drop_weights"].items():
+            new_drop_weights[int(weight)] = lst
+
+        d["drop_weights"] = new_drop_weights
+        return Banner(**d)
 
     def get_rates_text(self, items: dict[str, Item]):
         text = f"### Pulls cost: {self.pull_cost} {CURRENCY_NAME}{'s' if self.pull_cost > 1 else ''}\n\n"
@@ -190,53 +194,29 @@ class Banner():
 
 class Data:
 
-    items = {
-        "5starRole": Item(
-            "5* Role",
-            "This is a super rare role!",
-            "000.png",
-            "Super Lucky Player"
-        ),
-        "4starCollectible": Item(
-            "4* Collectible",
-            "This is just a collectible, doesn't give a role but it's nice to have!",
-            "001.png"
-        )
-    }
+    items = {}
 
+    shops = []
 
-    shops = [
-        Shop(
-            currency="Plum Blossom",
-            currency_emoji="🌸",
-            to_buy={
-                "5starRole": 1e6
-            },
-            to_sell={
-                "4starCollectible": 300
-            }
-        )
-    ]
+    banners = []
 
+    with open(os.path.join(DIR, "data.json"), encoding='utf8') as f:
+        o = json.load(f)
 
-    banners = [
-        Banner(
-            "Standard banner",
-            100,
-            {
-                1: ["5starRole"],
-                2999: ["4starCollectible"]
-            }
-        )
-    ]
+        for k, v in o["items"].items():
+            items[k] = Item.from_dict(v)
 
+        for s in o["shops"]:
+            shops.append(Shop.from_dict(s))
 
+        for b in o["banners"]:
+            banners.append(Banner.from_dict(b))
 
 
 class Gacha(commands.Cog, name=COG_NAME):
     """Earn currency, gacha-it, and win roles!"""
 
-    save: dict
+    save: dict[int, Player]
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -246,17 +226,50 @@ class Gacha(commands.Cog, name=COG_NAME):
         else:
             self.save = {}
 
+        subprocess.run([sys.executable, os.path.join(DIR, 'generate_shop.py')])
+
         self.footer = ""  # TODO: added just in case we do something with it someday
 
 
     def load_conf(self):
         with open(GACHA_FILE, "r") as f:
-            self.save = json.load(f)
+            save = json.load(f)
+
+        for k, v in save.items():
+            self.save[int(k)] = Player.from_dict(v)
 
 
     def save_conf(self):
+        save = {}
+        for k, v in self.save.items():
+            save[str(k)] = v.to_dict()
+
         with open(GACHA_FILE, "w+") as f:
-            json.dump(self.save, f)
+            json.dump(save, f)
+
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        try:
+            if message.author.id in self.save:
+                player = self.save[message.author.id]
+            else:
+                player = Player(message.author.id)
+                self.save[message.author.id] = player
+
+            t = datetime.datetime.now()
+            if player._last_talked.minute != t.minute or player._last_talked.hour != t.hour or player._last_talked.date != t.date:
+                player._last_talked = t
+                player._talked_this_minute = 0
+
+            msg: str = message.content
+            if not msg.startswith("?") and player._talked_this_minute < 10:
+                score = msg.split()
+                player.pull_currency += score
+                self.save_conf()
+                player._talked_this_minute += 1
+        except:
+            pass
 
 
     @commands.group(invoke_without_command=True)
@@ -309,41 +322,44 @@ class Gacha(commands.Cog, name=COG_NAME):
     @gacha.command(name="shop")
     async def shop(self, ctx: commands.Context):
         """Lists upcoming questions of the day"""
+        shop = Data.shops[0]
+        filename = f"to_buy_{hash(json.dumps(shop.to_dict()))}.png"
+        path = os.path.join(DIR, "img", "shops", filename)
+        with open(path, "rb") as f:
+            await ctx.send("# Items to buy", file=discord.File(fp=f, filename='shop.png'))
 
-        # embeds = []
-        # description = ""
-        # for index, question in enumerate(self.questions):
-        #     description += str(index + 1) + ". "
-        #     description += question["title"]
-        #     description += "\n"
+        filename = f"to_sell_{hash(json.dumps(shop.to_dict()))}.png"
+        path = os.path.join(DIR, "img", "shops", filename)
+        with open(path, "rb") as f:
+            await ctx.send("# Items to sell", file=discord.File(fp=f, filename='shop.png'))
 
-        #     if index % 5 == 4 or index == len(self.questions) - 1:
-        #         embed = discord.Embed(
-        #             title="Upcoming questions of the day",
-        #             description=description.strip(),
-        #             colour=discord.Colour.dark_green()
-        #         )
-        #         embed.set_footer(text=self.footer)
-        #         embeds.append(embed)
-        #         description = ""
-        
-        # if len(embeds) == 0:
-        #     description = "*No upcoming questions* :frowning:"
-        #     embed = discord.Embed(
-        #         title="Upcoming questions of the day",
-        #         description=description.strip(),
-        #         colour=discord.Colour.dark_green()
-        #     )
-        #     embed.set_footer(text=self.footer)
-        #     await ctx.send(embed=embed)
-        # else:
-        #     paginator = EmbedPaginatorSession(ctx, *embeds)
-        #     await paginator.run()
 
-        with BytesIO() as image_binary:
-            Data.shops[0].get_shop_image(Data.items).save(image_binary, "PNG")
-            image_binary.seek(0)
-            await ctx.send("# Items to buy", file=discord.File(fp=image_binary, filename='shop.png'))
+    # Get player balance
+    @gacha.command(name="balance", aliases=["money"])
+    async def balance(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
+        """Shows a user's currency balance"""
+
+        if member is None:
+            member = ctx.author
+
+        if member.id in self.save:
+            player = self.save[member.id]
+
+            description = "## Pull currency:\n"
+            description += f"{player.pull_currency} {CURRENCY_NAME}{'s' if player.pull_currency > 1 else ''}"
+            colour = discord.Colour.green()
+        else:
+            description = f"{member.display_name} isn't in our database. Have they ever talked??"
+            colour = discord.Colour.red()
+
+        embed = discord.Embed(
+            title=f"{member.display_name}'s money",
+            description=f"{description}",
+            colour=colour
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
 
 
 async def setup(bot):
