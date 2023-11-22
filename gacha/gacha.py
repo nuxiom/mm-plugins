@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import json
 import os
 import subprocess
@@ -18,6 +19,9 @@ GACHA_FILE = os.path.join(os.path.expanduser("~"), "gacha.json")
 CURRENCY_NAME = "Cosmic Fragment"
 CURRENCY_EMOJI = "cosmic.png"
 
+
+def hash(s: str):
+    return hashlib.md5(s.encode()).hexdigest()
 
 
 class Item():

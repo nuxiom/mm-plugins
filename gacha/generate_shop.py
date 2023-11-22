@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 from typing import Optional
@@ -6,6 +7,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 DIR = os.path.dirname(__file__)
+
+
+def hash(s: str):
+    return hashlib.md5(s.encode()).hexdigest()
 
 
 class Item():
