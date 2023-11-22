@@ -225,10 +225,9 @@ class Gacha(commands.Cog, name=COG_NAME):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+        self.save = {}
         if os.path.exists(GACHA_FILE):
             self.load_conf()
-        else:
-            self.save = {}
 
         subprocess.run([sys.executable, os.path.join(DIR, 'generate_shop.py')])
 
