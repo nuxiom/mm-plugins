@@ -254,26 +254,23 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        try:
-            if message.author.id in self.save:
-                player = self.save[message.author.id]
-            else:
-                player = Player(message.author.id)
-                self.save[message.author.id] = player
+        if message.author.id in self.save:
+            player = self.save[message.author.id]
+        else:
+            player = Player(message.author.id)
+            self.save[message.author.id] = player
 
-            t = datetime.datetime.now()
-            if player._last_talked.minute != t.minute or player._last_talked.hour != t.hour or player._last_talked.date != t.date:
-                player._last_talked = t
-                player._talked_this_minute = 0
+        t = datetime.datetime.now()
+        if player._last_talked.minute != t.minute or player._last_talked.hour != t.hour or player._last_talked.date != t.date:
+            player._last_talked = t
+            player._talked_this_minute = 0
 
-            msg: str = message.content
-            if not msg.startswith("?") and player._talked_this_minute < 10:
-                score = msg.split()
-                player.pull_currency += score
-                self.save_conf()
-                player._talked_this_minute += 1
-        except:
-            pass
+        msg: str = message.content
+        if not msg.startswith("?") and player._talked_this_minute < 10:
+            score = msg.split()
+            player.pull_currency += score
+            self.save_conf()
+            player._talked_this_minute += 1
 
 
     @commands.group(invoke_without_command=True)
