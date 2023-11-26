@@ -406,5 +406,30 @@ class Gacha(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
+    # Scoreboard for currency owners (debug)
+    @gacha.command(name="topkek")
+    async def topkek(self, ctx: commands.Context):
+        """Scoreboard for currency owners (for debug purposes)"""
+
+        topmembers = sorted(self.save.items(), key=lambda p: p[1].pull_currency, reverse=True)
+        topmembers = topmembers[:min(len(topmembers), 10)]
+
+        description = ""
+        i = 0
+        for id, player in topmembers:
+            i += 1
+            user: discord.User = self.bot.get_user(id)
+            description += f"{i}. {user.display_name}: {player.pull_currency} {CURRENCY_NAME}s"
+
+        embed = discord.Embed(
+            title=f"Currency scoreboard",
+            description=description,
+            colour=discord.Colour.green()
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
+
+
 async def setup(bot):
     await bot.add_cog(Gacha(bot))
