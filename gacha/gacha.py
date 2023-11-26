@@ -12,6 +12,7 @@ import discord
 from discord.ext import commands
 from discord.utils import get
 
+from core.models import getLogger
 from core.paginator import EmbedPaginatorSession
 
 
@@ -244,6 +245,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                 with open(file, "rb") as f:
                     r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"media": f})
                     j = r.json()
+                    getLogger(__name__).info(r.text)
                     self.shop_images[filename] = j["data"]["url"]
         with open(shops_save, "w+") as f:
             json.dump(self.shop_images, f)
