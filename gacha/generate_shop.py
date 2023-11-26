@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 DIR = os.path.dirname(__file__)
 
 
-def hash(s: str):
+def hash2(s: str):
     return hashlib.md5(s.encode()).hexdigest()
 
 
@@ -51,7 +51,7 @@ class Item():
         return Item(**d)
 
     def get_image(self):
-        return Image.open(os.path.join(DIR, "img", self.image))
+        return Image.open(os.path.join(DIR, "img", "items", self.image))
 
 
 class Shop():
@@ -115,64 +115,86 @@ def get_emoji_img(emoji: str, size: tuple) -> Image.Image:
 
 def get_shop_image_to_buy(shop, items: dict[str, Item]):
     font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 32)
-    img = Image.open(os.path.join(DIR, "img", "background.png"))
-    draw = ImageDraw.Draw(img)
+    bigfont = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 64)
 
-    for i, itemprice in enumerate(shop.to_buy.items()):
-        itm, price = itemprice
-        item = items[itm]
+    imgs = []
+    n = 0
+    # Split the items in chunks of 8
+    to_buys = [list(shop.to_buy.items())[i * 8:(i + 1) * 8] for i in range((len(shop.to_buy) + 8 - 1) // 8 )]
+    for to_buy in to_buys:
+        img = Image.open(os.path.join(DIR, "img", "background.png"))
+        draw = ImageDraw.Draw(img)
 
-        x = (i % 4) * 300 + 110
-        y = (i // 4) * 300 + 110
-        itemimg = item.get_image().resize((160, 160))
-        img.paste(itemimg, (x, y), itemimg)
+        for i, itemprice in enumerate(to_buy):
+            n += 1
+            itm, price = itemprice
+            item = items[itm]
 
-        _, _, w, _ = draw.textbbox((0, 0), item.name, font=font)
-        tx = x + 80 - w // 2
-        ty = y + 170
-        draw.text((tx, ty), item.name, font=font, fill='white')
+            x = (i % 4) * 300 + 110
+            y = (i // 4) * 300 + 110
+            itemimg = item.get_image().resize((160, 160))
+            img.paste(itemimg, (x, y), itemimg)
+            draw.text((x - 40, y - 40), f"#{n}", font=bigfont, fill='white', stroke_fill='black', stroke_width=2)
 
-        currency_img = get_emoji_img(shop.currency_emoji, (48, 48))
+            _, _, w, _ = draw.textbbox((0, 0), item.name, font=font)
+            tx = x + 80 - w // 2
+            ty = y + 170
+            draw.text((tx, ty), item.name, font=font, fill='white')
 
-        pricetxt = f"{int(price)} "
-        _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
-        tx = x + 80 - w // 2 - currency_img.size[0] // 2
-        ty = y + 210
-        draw.text((tx, ty), pricetxt, font=font, fill='white')
-        img.paste(currency_img, (tx + w, ty - 8), currency_img)
+            currency_img = get_emoji_img(shop.currency_emoji, (42, 42))
 
-    return img
+            pricetxt = f"{int(price)} "
+            _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
+            tx = x + 80 - w // 2 - currency_img.size[0] // 2
+            ty = y + 210
+            draw.text((tx, ty), pricetxt, font=font, fill='white')
+            img.paste(currency_img, (tx + w, ty), currency_img)
+
+        imgs.append(img)
+
+    return imgs
 
 
 def get_shop_image_to_sell(shop, items: dict[str, Item]):
     font = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 32)
-    img = Image.open(os.path.join(DIR, "img", "background2.png"))
-    draw = ImageDraw.Draw(img)
+    bigfont = ImageFont.truetype(os.path.join(DIR, "ggsymbola.ttf"), 64)
 
-    for i, itemprice in enumerate(shop.to_sell.items()):
-        itm, price = itemprice
-        item = items[itm]
+    imgs = []
+    n = 0
+    # Split the items in chunks of 8
+    to_sells = [list(shop.to_sell.items())[i * 8:(i + 1) * 8] for i in range((len(shop.to_sell) + 8 - 1) // 8 )]
+    for to_sell in to_sells:
+        img = Image.open(os.path.join(DIR, "img", "background2.png"))
+        draw = ImageDraw.Draw(img)
 
-        x = (i % 4) * 300 + 110
-        y = (i // 4) * 300 + 110
-        itemimg = item.get_image().resize((160, 160))
-        img.paste(itemimg, (x, y), itemimg)
+        for i, itemprice in enumerate(to_sell):
+            n += 1
+            itm, price = itemprice
+            item = items[itm]
 
-        _, _, w, _ = draw.textbbox((0, 0), item.name, font=font)
-        tx = x + 80 - w // 2
-        ty = y + 170
-        draw.text((tx, ty), item.name, font=font, fill='white')
+            x = (i % 4) * 300 + 110
+            y = (i // 4) * 300 + 110
+            itemimg = item.get_image().resize((160, 160))
+            img.paste(itemimg, (x, y), itemimg)
+            draw.text((x - 40, y - 40), f"#{n}", font=bigfont, fill='white', stroke_fill='black', stroke_width=2)
 
-        currency_img = get_emoji_img(shop.currency_emoji, (48, 48))
+            _, _, w, _ = draw.textbbox((0, 0), item.name, font=font)
+            tx = x + 80 - w // 2
+            ty = y + 170
+            draw.text((tx, ty), item.name, font=font, fill='white')
 
-        pricetxt = f"{int(price)} "
-        _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
-        tx = x + 80 - w // 2 - currency_img.size[0] // 2
-        ty = y + 210
-        draw.text((tx, ty), pricetxt, font=font, fill='white')
-        img.paste(currency_img, (tx + w, ty - 8), currency_img)
+            currency_img = get_emoji_img(shop.currency_emoji, (42, 42))
 
-    return img
+            pricetxt = f"{int(price)} "
+            _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
+            tx = x + 80 - w // 2 - currency_img.size[0] // 2
+            ty = y + 210
+            draw.text((tx, ty), pricetxt, font=font, fill='white')
+            img.paste(currency_img, (tx + w, ty), currency_img)
+
+        imgs.append(img)
+
+    return imgs
 
 
 
@@ -186,16 +208,22 @@ if __name__ == "__main__":
 
     for s in data["shops"]:
         shop = Shop.from_dict(s)
-        filename = f"to_buy_{hash(json.dumps(shop.to_dict()))}.png"
+        filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_0.png"
         path = os.path.join(DIR, "img", "shops", filename)
 
         if not os.path.exists(path):
-            img = get_shop_image_to_buy(shop, items)
-            img.save(path)
+            imgs = get_shop_image_to_buy(shop, items)
+            for n, img in enumerate(imgs):
+                filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{n}.png"
+                path = os.path.join(DIR, "img", "shops", filename)
+                img.save(path)
 
-        filename = f"to_sell_{hash(json.dumps(shop.to_dict()))}.png"
+        filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_0.png"
         path = os.path.join(DIR, "img", "shops", filename)
 
         if not os.path.exists(path):
-            img = get_shop_image_to_sell(shop, items)
-            img.save(path)
+            imgs = get_shop_image_to_sell(shop, items)
+            for n, img in enumerate(imgs):
+                filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_{n}.png"
+                path = os.path.join(DIR, "img", "shops", filename)
+                img.save(path)

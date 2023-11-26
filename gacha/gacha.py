@@ -1,16 +1,21 @@
 import datetime
+import glob
 import hashlib
 import json
 import os
+import requests
 import subprocess
 import sys
-from io import BytesIO
 from typing import Optional
 
 import discord
 from discord.ext import commands
+from discord.utils import get
 
+from core.models import getLogger
 from core.paginator import EmbedPaginatorSession
+
+logger = getLogger(__name__)
 
 
 COG_NAME = "Gacha"
@@ -20,7 +25,7 @@ CURRENCY_NAME = "Cosmic Fragment"
 CURRENCY_EMOJI = "cosmic.png"
 
 
-def hash(s: str):
+def hash2(s: str):
     return hashlib.md5(s.encode()).hexdigest()
 
 
@@ -198,11 +203,11 @@ class Banner():
 
 class Data:
 
-    items = {}
+    items: dict[str, Item] = {}
 
-    shops = []
+    shops: list[Shop] = []
 
-    banners = []
+    banners: list[Banner] = []
 
     with open(os.path.join(DIR, "data.json"), encoding='utf8') as f:
         o = json.load(f)
@@ -231,6 +236,21 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         subprocess.run([sys.executable, os.path.join(DIR, 'generate_shop.py')])
 
+        shops_save = os.path.join(DIR, "shops_url.json")
+        self.shop_images = {}
+        if os.path.exists(shops_save):
+            with open(shops_save) as f:
+                self.shop_images = json.load(f)
+        for file in glob.glob(str(os.path.join(DIR, "img", "shops", "*.png"))):
+            filename = os.path.basename(file)
+            if filename not in self.shop_images.keys():
+                with open(file, "rb") as f:
+                    r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"image": f})
+                    j = r.json()
+                    self.shop_images[filename] = j["data"]["url"]
+        with open(shops_save, "w+") as f:
+            json.dump(self.shop_images, f)
+
         self.footer = ""  # TODO: added just in case we do something with it someday
 
 
@@ -253,6 +273,9 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
         if message.author.id in self.save:
             player = self.save[message.author.id]
         else:
@@ -323,20 +346,55 @@ class Gacha(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
-    # List items in shop
-    @gacha.command(name="shop")
-    async def shop(self, ctx: commands.Context):
-        """Lists upcoming questions of the day"""
-        shop = Data.shops[0]
-        filename = f"to_buy_{hash(json.dumps(shop.to_dict()))}.png"
-        path = os.path.join(DIR, "img", "shops", filename)
-        with open(path, "rb") as f:
-            await ctx.send("# Items to buy", file=discord.File(fp=f, filename='shop.png'))
+    # List items to buy in shops
+    @gacha.command(name="buy")
+    async def buy(self, ctx: commands.Context, count: int = 1, *, item: str = None):
+        """Shows what's to buy in the shops"""
 
-        filename = f"to_sell_{hash(json.dumps(shop.to_dict()))}.png"
-        path = os.path.join(DIR, "img", "shops", filename)
-        with open(path, "rb") as f:
-            await ctx.send("# Items to sell", file=discord.File(fp=f, filename='shop.png'))
+        if item is None:
+            embeds = []
+            logger.info(str(len(Data.shops)))
+            for shop in Data.shops:
+                logger.info(str(shop.to_buy))
+                n = len(shop.to_buy) // 8 + 1
+                logger.info(str(n))
+                for i in range(n):
+                    embed = discord.Embed(
+                        title="Items to buy",
+                        description=f"## Items to buy - {shop.name} ({i+1}/{n})",
+                        colour=discord.Colour.green()
+                    )
+
+                    filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                    logger.info(self.shop_images[filename])
+                    embed.set_image(url=self.shop_images[filename])
+                    embeds.append(embed)
+
+            paginator = EmbedPaginatorSession(ctx, *embeds)
+            await paginator.run()
+
+
+    @gacha.command(name="sell")
+    async def sell(self, ctx: commands.Context, count: int = 1, *, item: str = None):
+        """Shows what's to sell in the shops"""
+
+        if item is None:
+            embeds = []
+            for shop in Data.shops:
+                n = len(shop.to_sell) // 8 + 1
+                for i in range(n):
+                    embed = discord.Embed(
+                        title="Items to sell",
+                        description=f"## Items to sell - {shop.name} ({i+1}/{n})",
+                        colour=discord.Colour.green()
+                    )
+
+                    filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                    embed.set_image(url=self.shop_images[filename])
+                    embeds.append(embed)
+
+            paginator = EmbedPaginatorSession(ctx, *embeds)
+            await paginator.run()
 
 
     # Get player balance
@@ -361,6 +419,34 @@ class Gacha(commands.Cog, name=COG_NAME):
             title=f"{member.display_name}'s money",
             description=f"{description}",
             colour=colour
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
+
+
+    # Scoreboard for currency owners (debug)
+    @gacha.command(name="topkek")
+    async def topkek(self, ctx: commands.Context):
+        """Scoreboard for currency owners (for debug purposes)"""
+
+        topmembers = sorted(self.save.items(), key=lambda p: p[1].pull_currency, reverse=True)
+        topmembers = list(filter(
+            lambda i: (m := get(ctx.guild.members, id=i[0])) is not None and not m.bot,
+            topmembers))
+        topmembers = topmembers[:min(len(topmembers), 10)]
+
+        description = ""
+        i = 0
+        for id, player in topmembers:
+            i += 1
+            user: discord.Member = get(ctx.guild.members, id=id)
+            description += f"{i}. {user.display_name}: {player.pull_currency} {CURRENCY_NAME}s\n"
+
+        embed = discord.Embed(
+            title=f"Currency scoreboard",
+            description=description.strip(),
+            colour=discord.Colour.green()
         )
         embed.set_footer(text=self.footer)
 

@@ -10,6 +10,56 @@
             "name": "4* Collectible",
             "description": "This is just a collectible, doesn't give a role but it's nice to have!",
             "image": "001.png"
+        },
+        "tbcat": {
+            "name": "Trailblazer Cat",
+            "description": "",
+            "image": "tile000.png"
+        },
+        "m7cat": {
+            "name": "March 7th Cat",
+            "description": "",
+            "image": "tile001.png"
+        },
+        "dhcat": {
+            "name": "Dan Heng Cat",
+            "description": "",
+            "image": "tile002.png"
+        },
+        "hertacat": {
+            "name": "Herta Cat",
+            "description": "",
+            "image": "tile003.png"
+        },
+        "rmcat": {
+            "name": "Ruan Mei Cat",
+            "description": "",
+            "image": "tile004.png"
+        },
+        "qqcat": {
+            "name": "Qingque Cat",
+            "description": "",
+            "image": "tile006.png"
+        },
+        "bladecat": {
+            "name": "Blade Cat",
+            "description": "",
+            "image": "tile007.png"
+        },
+        "claracat": {
+            "name": "Clara Cat",
+            "description": "",
+            "image": "tile008.png"
+        },
+        "guicat": {
+            "name": "Guinaifen Cat",
+            "description": "",
+            "image": "tile009.png"
+        },
+        "kafcat": {
+            "name": "Kafka Cat",
+            "description": "",
+            "image": "tile010.png"
         }
     },
 
@@ -18,10 +68,41 @@
             "currency": "Plum Blossom",
             "currency_emoji": "🌸",
             "to_buy": {
-                "5starRole": 1e6
+                "5starRole": 1e6,
+                "tbcat": 1e6,
+                "m7cat": 1e6,
+                "dhcat": 1e6,
+                "hertacat": 1e6,
+                "rmcat": 1e6,
+                "qqcat": 1e6,
+                "bladecat": 1e6,
+                "claracat": 1e6,
+                "guicat": 1e6,
+                "kafcat": 1e6
             },
             "to_sell": {
-                "4starCollectible": 300
+                "4starCollectible": 300,
+                "tbcat": 1,
+                "m7cat": 1,
+                "dhcat": 1,
+                "hertacat": 1,
+                "rmcat": 1,
+                "qqcat": 1,
+                "bladecat": 1,
+                "claracat": 1,
+                "guicat": 1,
+                "kafcat": 1
+            }
+        },
+        {
+            "currency": "Poop",
+            "currency_emoji": "💩",
+            "name": "Test shop",
+            "to_buy": {
+                "5starRole": 300
+            },
+            "to_sell": {
+                "4starCollectible": 1
             }
         }
     ],
@@ -31,7 +112,7 @@
             "name": "Standard banner",
             "pull_cost": 50,
             "drop_weights": {
-                "1": ["5starRole"],
+                "1": ["5starRole", "rmcat"],
                 "2999": ["4starCollectible"]
             }
         }
