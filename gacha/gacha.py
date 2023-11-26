@@ -1,14 +1,16 @@
 import datetime
+import glob
 import hashlib
 import json
 import os
+import requests
 import subprocess
 import sys
-from io import BytesIO
 from typing import Optional
 
 import discord
 from discord.ext import commands
+from discord.utils import get
 
 from core.paginator import EmbedPaginatorSession
 
@@ -231,6 +233,19 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         subprocess.run([sys.executable, os.path.join(DIR, 'generate_shop.py')])
 
+        shops_save = os.path.join(DIR, "shops_url.json")
+        self.shop_images = {}
+        if os.path.exists(shops_save):
+            with open(shops_save) as f:
+                self.shop_images = json.load(f)
+        for file in glob.glob(str(os.path.join(DIR, "img", "shops", "*.png"))):
+            filename = os.path.basename(file)
+            if filename not in self.shop_images.keys():
+                with open(file, "rb") as f:
+                    r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"media": f})
+                    j = r.json
+                    self.shop_images[filename] = j["data"]["url"]
+
         self.footer = ""  # TODO: added just in case we do something with it someday
 
 
@@ -340,11 +355,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     )
 
                     filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
-                    path = os.path.join(DIR, "img", "shops", filename)
-                    with open(path, "rb") as f:
-                        file = discord.File(fp=f, filename=filename)
-                        embed.set_image(url=f"attachment://{filename}")
-
+                    embed.set_image(url=self.shop_images[filename])
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
@@ -367,11 +378,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     )
 
                     filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
-                    path = os.path.join(DIR, "img", "shops", filename)
-                    with open(path, "rb") as f:
-                        file = discord.File(fp=f, filename=filename)
-                        embed.set_image(url=f"attachment://{filename}")
-
+                    embed.set_image(url=self.shop_images[filename])
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
@@ -418,12 +425,12 @@ class Gacha(commands.Cog, name=COG_NAME):
         i = 0
         for id, player in topmembers:
             i += 1
-            user: discord.User = self.bot.get_user(id)
-            description += f"{i}. {user.display_name}: {player.pull_currency} {CURRENCY_NAME}s"
+            user: discord.Member = get(ctx.guild.members, id=id)
+            description += f"{i}. {user.display_name}: {player.pull_currency} {CURRENCY_NAME}s\n"
 
         embed = discord.Embed(
             title=f"Currency scoreboard",
-            description=description,
+            description=description.strip(),
             colour=discord.Colour.green()
         )
         embed.set_footer(text=self.footer)
