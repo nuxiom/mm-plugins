@@ -243,8 +243,10 @@ class Gacha(commands.Cog, name=COG_NAME):
             if filename not in self.shop_images.keys():
                 with open(file, "rb") as f:
                     r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"media": f})
-                    j = r.json
+                    j = r.json()
                     self.shop_images[filename] = j["data"]["url"]
+        with open(shops_save, "w+") as f:
+            json.dump(self.shop_images, f)
 
         self.footer = ""  # TODO: added just in case we do something with it someday
 
