@@ -273,6 +273,9 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
         if message.author.id in self.save:
             player = self.save[message.author.id]
         else:
@@ -424,6 +427,9 @@ class Gacha(commands.Cog, name=COG_NAME):
         """Scoreboard for currency owners (for debug purposes)"""
 
         topmembers = sorted(self.save.items(), key=lambda p: p[1].pull_currency, reverse=True)
+        topmembers = list(filter(
+            lambda i: (m := get(ctx.guild.members, id=i[0])) is not None and not m.bot,
+            topmembers))
         topmembers = topmembers[:min(len(topmembers), 10)]
 
         description = ""
