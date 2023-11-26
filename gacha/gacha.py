@@ -20,7 +20,7 @@ CURRENCY_NAME = "Cosmic Fragment"
 CURRENCY_EMOJI = "cosmic.png"
 
 
-def hash(s: str):
+def hash2(s: str):
     return hashlib.md5(s.encode()).hexdigest()
 
 
@@ -198,11 +198,11 @@ class Banner():
 
 class Data:
 
-    items = {}
+    items: dict[str, Item] = {}
 
-    shops = []
+    shops: list[Shop] = []
 
-    banners = []
+    banners: list[Banner] = []
 
     with open(os.path.join(DIR, "data.json"), encoding='utf8') as f:
         o = json.load(f)
@@ -323,20 +323,59 @@ class Gacha(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
-    # List items in shop
-    @gacha.command(name="shop")
-    async def shop(self, ctx: commands.Context):
-        """Lists upcoming questions of the day"""
-        shop = Data.shops[0]
-        filename = f"to_buy_{hash(json.dumps(shop.to_dict()))}.png"
-        path = os.path.join(DIR, "img", "shops", filename)
-        with open(path, "rb") as f:
-            await ctx.send("# Items to buy", file=discord.File(fp=f, filename='shop.png'))
+    # List items to buy in shops
+    @gacha.command(name="buy")
+    async def buy(self, ctx: commands.Context, count: int = 1, *, item: str = None):
+        """Shows what's to buy in the shops"""
 
-        filename = f"to_sell_{hash(json.dumps(shop.to_dict()))}.png"
-        path = os.path.join(DIR, "img", "shops", filename)
-        with open(path, "rb") as f:
-            await ctx.send("# Items to sell", file=discord.File(fp=f, filename='shop.png'))
+        if item is None:
+            embeds = []
+            for shop in Data.shops:
+                n = len(shop.to_buy) // 8
+                for i in range(n):
+                    embed = discord.Embed(
+                        title="Items to buy",
+                        description=f"## Items to buy - {shop.name} ({i+1}/{n})",
+                        colour=discord.Colour.green()
+                    )
+
+                    filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                    path = os.path.join(DIR, "img", "shops", filename)
+                    with open(path, "rb") as f:
+                        file = discord.File(fp=f, filename=filename)
+                        embed.set_image(url=f"attachment://{filename}")
+
+                    embeds.append(embed)
+
+            paginator = EmbedPaginatorSession(ctx, *embeds)
+            await paginator.run()
+
+
+    @gacha.command(name="sell")
+    async def sell(self, ctx: commands.Context, count: int = 1, *, item: str = None):
+        """Shows what's to sell in the shops"""
+
+        if item is None:
+            embeds = []
+            for shop in Data.shops:
+                n = len(shop.to_sell) // 8
+                for i in range(n):
+                    embed = discord.Embed(
+                        title="Items to sell",
+                        description=f"## Items to sell - {shop.name} ({i+1}/{n})",
+                        colour=discord.Colour.green()
+                    )
+
+                    filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                    path = os.path.join(DIR, "img", "shops", filename)
+                    with open(path, "rb") as f:
+                        file = discord.File(fp=f, filename=filename)
+                        embed.set_image(url=f"attachment://{filename}")
+
+                    embeds.append(embed)
+
+            paginator = EmbedPaginatorSession(ctx, *embeds)
+            await paginator.run()
 
 
     # Get player balance
