@@ -353,8 +353,11 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         if item is None:
             embeds = []
+            logger.info(str(len(Data.shops)))
             for shop in Data.shops:
-                n = len(shop.to_buy) // 8
+                logger.info(str(shop.to_buy))
+                n = len(shop.to_buy) // 8 + 1
+                logger.info(str(n))
                 for i in range(n):
                     embed = discord.Embed(
                         title="Items to buy",
@@ -363,6 +366,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     )
 
                     filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                    logger.info(self.shop_images[filename])
                     embed.set_image(url=self.shop_images[filename])
                     embeds.append(embed)
 
