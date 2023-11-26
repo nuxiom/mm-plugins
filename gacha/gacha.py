@@ -381,7 +381,7 @@ class Gacha(commands.Cog, name=COG_NAME):
         if item is None:
             embeds = []
             for shop in Data.shops:
-                n = len(shop.to_sell) // 8
+                n = len(shop.to_sell) // 8 + 1
                 for i in range(n):
                     embed = discord.Embed(
                         title="Items to sell",

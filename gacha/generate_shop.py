@@ -164,7 +164,7 @@ def get_shop_image_to_sell(shop, items: dict[str, Item]):
     # Split the items in chunks of 8
     to_sells = [list(shop.to_sell.items())[i * 8:(i + 1) * 8] for i in range((len(shop.to_sell) + 8 - 1) // 8 )]
     for to_sell in to_sells:
-        img = Image.open(os.path.join(DIR, "img", "background.png"))
+        img = Image.open(os.path.join(DIR, "img", "background2.png"))
         draw = ImageDraw.Draw(img)
 
         for i, itemprice in enumerate(to_sell):
