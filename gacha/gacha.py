@@ -234,7 +234,7 @@ class Gacha(commands.Cog, name=COG_NAME):
         if os.path.exists(GACHA_FILE):
             self.load_conf()
 
-        subprocess.run([sys.executable, os.path.join(DIR, 'generate_shop.py')])
+        # subprocess.run([sys.executable, os.path.join(DIR, 'generate_shop.py')])
 
         shops_save = os.path.join(DIR, "shops_url.json")
         self.shop_images = {}
