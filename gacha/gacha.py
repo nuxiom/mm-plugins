@@ -504,26 +504,33 @@ class Gacha(commands.Cog, name=COG_NAME):
             weight = sorted(bann.drop_weights.keys())[i]
             item = Data.items[random.choice(bann.drop_weights[weight])]
 
+            img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
+            itm = item.get_image().resize((160, 160))
+            img.paste(itm, (240, 100), itm)
+
             embed = discord.Embed(
                 title=title,
                 colour=discord.Colour.random()
             )
             embed.set_image(url=anim)
             embed.set_footer(text=self.footer)
-            message: discord.Message = await ctx.send(embed=embed)
-
-            img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
-            itm = item.get_image().resize((160, 160))
-            img.paste(itm, (240, 100), itm)
-
-            await asyncio.sleep(11.5)
-
-            await message.delete()
 
             with io.BytesIO() as f:
                 img.save(f, 'PNG')
                 f.seek(0)
-                await ctx.send(content=f"{ctx.author.mention} just pulled a **{item.name}**!", file=discord.File(fp=f, filename="pull.png"))
+                message: discord.Message = await ctx.send(embed=embed, file=discord.File(fp=f, filename="pull.png"))
+
+            await asyncio.sleep(11.5)
+
+            embed = discord.Embed(
+                title=title,
+                description=f"{ctx.author.mention} just pulled a **{item.name}**!",
+                colour=discord.Colour.random()
+            )
+            embed.set_image(url="attachment://pull.png")
+            embed.set_footer(text=self.footer)
+
+            await message.edit(embed=embed)
 
 
 async def setup(bot):
