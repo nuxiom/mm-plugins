@@ -346,6 +346,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                 role = get(ctx.guild.roles, name=item.role)
                 logger.info(f"{ctx.author} won role {item.role}")
                 await ctx.author.add_roles(role)
+                self.save_conf()
             except:
                 logger.error(f"Error while giving role {item.role} to {ctx.author}")
 
@@ -563,10 +564,11 @@ class Gacha(commands.Cog, name=COG_NAME):
             embed.set_image(url=pull_url)
             embed.set_footer(text=self.footer)
 
-            self.save[player_id].pull_currency -= bann.pull_cost
-
             await message.edit(embed=embed)
             await message.reply(f"{ctx.author.mention} just pulled a **{item.name}**!")
+
+            self.give_role(ctx, item)
+            self.save[player_id].pull_currency -= bann.pull_cost
 
 
 async def setup(bot):
