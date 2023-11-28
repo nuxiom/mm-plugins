@@ -1,16 +1,16 @@
 import datetime
-import glob
 import hashlib
+import io
 import json
 import os
-import requests
-import subprocess
-import sys
+import random
 from typing import Optional
 
+import asyncio
 import discord
 from discord.ext import commands
 from discord.utils import get
+from PIL import Image
 
 from core.models import getLogger
 from core.paginator import EmbedPaginatorSession
@@ -23,6 +23,10 @@ DIR = os.path.dirname(__file__)
 GACHA_FILE = os.path.join(os.path.expanduser("~"), "gacha.json")
 CURRENCY_NAME = "Cosmic Fragment"
 CURRENCY_EMOJI = "cosmic.png"
+PULL_ANIM = [
+    "https://media.discordapp.net/attachments/1179003913354104832/1179017794994569236/pull-5star.gif",
+    "https://media.discordapp.net/attachments/1179003913354104832/1179029377976119306/pull-3star.gif"
+]
 
 
 def hash2(s: str):
@@ -65,6 +69,9 @@ class Item():
     @staticmethod
     def from_dict(d: dict):
         return Item(**d)
+
+    def get_image(self):
+        return Image.open(os.path.join(DIR, "img", "items", self.image))
 
 
 class Player():
@@ -157,11 +164,17 @@ class Banner():
     """ Pull cost """
     pull_cost: int
 
+    _cumulative_weights = []
 
     def __init__(self, name: str, pull_cost: int, drop_weights: dict = {}):
         self.name = name
         self.pull_cost = pull_cost
         self.drop_weights = drop_weights
+
+        self._cumulative_weights = [0]
+        for w in sorted(self.drop_weights.keys()):
+            self._cumulative_weights.append(self._cumulative_weights[0] + w)
+        self._cumulative_weights.pop(0)
 
     def to_dict(self):
         new_drop_weights = {}
@@ -234,7 +247,7 @@ class Gacha(commands.Cog, name=COG_NAME):
         if os.path.exists(GACHA_FILE):
             self.load_conf()
 
-        # subprocess.run([sys.executable, os.path.join(DIR, 'generate_shop.py')])
+        self.bot.loop.create_task(self.schedule_save)
 
         shops_save = os.path.join(DIR, "shops_url.json")
         self.shop_images = {}
@@ -268,6 +281,13 @@ class Gacha(commands.Cog, name=COG_NAME):
             json.dump(save, f)
 
 
+    async def schedule_save(self):
+        while True:
+            await asyncio.sleep(300)
+            logger.info("Saving gacha conf")
+            self.save_conf()
+
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
@@ -293,8 +313,23 @@ class Gacha(commands.Cog, name=COG_NAME):
             if len(message.stickers) > 0:
                 player.pull_currency += 3
 
-            self.save_conf()
             player._talked_this_minute += 1
+
+
+    def get_banner(self, banner: str):
+        bann: Banner = None
+        if banner is None:
+            if len(Data.banners) == 1:
+                bann = Data.banners[0]
+        else:
+            if banner.isnumeric() and int(banner) > 0 and int(banner) <= len(Data.banners):
+                bann = Data.banners[int(banner) - 1]
+            else:
+                for b in Data.banners:
+                    if b.name == banner:
+                        bann = b
+                        break
+        return bann
 
 
     @commands.group(invoke_without_command=True)
@@ -311,18 +346,7 @@ class Gacha(commands.Cog, name=COG_NAME):
     async def details(self, ctx: commands.Context, *, banner: str = None):
         """Display gacha drop rates for current banner"""
 
-        bann: Banner = None
-        if banner is None:
-            if len(Data.banners) == 1:
-                bann = Data.banners[0]
-        else:
-            if banner.isnumeric() and int(banner) > 0 and int(banner) <= len(Data.banners):
-                bann = Data.banners[int(banner) - 1]
-            else:
-                for b in Data.banners:
-                    if b.name == banner:
-                        bann = b
-                        break
+        bann = self.get_banner(banner)
 
         if bann is None:
             description = f'Banner "{banner}" not found!'
@@ -451,6 +475,58 @@ class Gacha(commands.Cog, name=COG_NAME):
         embed.set_footer(text=self.footer)
 
         await ctx.send(embed=embed)
+
+
+    # Pull on a banner
+    @gacha.command(name="pull", aliases=["single"])
+    async def pull(self, ctx: commands.Context, *, banner: str = "0"):
+        """Single pull on a banner (defaults to banner number 1)"""
+
+        bann = self.get_banner(banner)
+
+        if bann is None:
+            description = f'No banners at the time!'
+            embed = discord.Embed(
+                title="Can't do single pull",
+                description=description.strip(),
+                colour=discord.Colour.red()
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
+        else:
+            title = f"{ctx.author.mention}'s single pull on {bann.name}"
+            rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
+            for i in range(len(bann._cumulative_weights)):
+                if rnd < bann._cumulative_weights[i]:
+                    break
+            if i < len(PULL_ANIM):
+                anim = PULL_ANIM[i]
+            else:
+                anim = PULL_ANIM[-1]
+
+            weight = sorted(bann.drop_weights.keys())[i]
+            item = Data.items[random.choice(bann.drop_weights[weight])]
+
+            embed = discord.Embed(
+                title=title,
+                colour=discord.Colour.random()
+            )
+            embed.set_image(url=anim)
+            embed.set_footer(text=self.footer)
+            message: discord.Message = await ctx.send(embed=embed)
+
+            img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
+            itm = item.get_image().resize((160, 160))
+            img.paste(itm, (240, 100), itm)
+
+            await asyncio.sleep(11.5)
+
+            await message.delete()
+
+            with io.BytesIO() as f:
+                img.save(f, 'PNG')
+                img.seek(0)
+                await ctx.send(content=f"{ctx.author.mention} just pulled a {item.name}!", file=discord.File(fp=f, filename="pull.png"))
 
 
 async def setup(bot):
