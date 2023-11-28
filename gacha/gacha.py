@@ -235,6 +235,7 @@ class Data:
             banners.append(Banner.from_dict(b))
 
 
+
 class Gacha(commands.Cog, name=COG_NAME):
     """Earn currency, gacha-it, and win roles!"""
 
@@ -247,7 +248,7 @@ class Gacha(commands.Cog, name=COG_NAME):
         if os.path.exists(GACHA_FILE):
             self.load_conf()
 
-        self.bot.loop.create_task(self.schedule_save)
+        self.bot.loop.create_task(self.schedule_save())
 
         shops_save = os.path.join(DIR, "shops_url.json")
         self.shop_images = {}
@@ -374,11 +375,8 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         if item is None:
             embeds = []
-            logger.info(str(len(Data.shops)))
             for shop in Data.shops:
-                logger.info(str(shop.to_buy))
                 n = len(shop.to_buy) // 8 + 1
-                logger.info(str(n))
                 for i in range(n):
                     embed = discord.Embed(
                         title="Items to buy",
@@ -387,7 +385,6 @@ class Gacha(commands.Cog, name=COG_NAME):
                     )
 
                     filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
-                    logger.info(self.shop_images[filename])
                     embed.set_image(url=self.shop_images[filename])
                     embeds.append(embed)
 
