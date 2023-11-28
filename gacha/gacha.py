@@ -4,6 +4,7 @@ import io
 import json
 import os
 import random
+import uuid
 from typing import Optional
 
 import asyncio
@@ -244,6 +245,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.cog_id = uuid.uuid4()
 
         self.save = {}
         if os.path.exists(GACHA_FILE):
@@ -285,7 +287,11 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     async def schedule_save(self):
         while True:
-            await asyncio.sleep(300)
+            cog: Gacha = self.bot.get_cog(COG_NAME)
+            if cog is None or cog.cog_id != self.cog_id:
+                # We are in an old cog after update and don't have to send QOTD anymore
+                break
+            await asyncio.sleep(60)
             logger.info("Saving gacha conf")
             self.save_conf()
 
