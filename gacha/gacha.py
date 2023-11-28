@@ -476,7 +476,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     # Pull on a banner
     @gacha.command(name="pull", aliases=["single"])
-    async def pull(self, ctx: commands.Context, *, banner: str = "0"):
+    async def pull(self, ctx: commands.Context, *, banner: str = "1"):
         """Single pull on a banner (defaults to banner number 1)"""
 
         bann = self.get_banner(banner)
