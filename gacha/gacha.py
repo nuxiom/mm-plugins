@@ -8,6 +8,7 @@ from typing import Optional
 
 import asyncio
 import discord
+import requests
 from discord.ext import commands
 from discord.utils import get
 from PIL import Image
@@ -508,6 +509,13 @@ class Gacha(commands.Cog, name=COG_NAME):
             itm = item.get_image().resize((160, 160))
             img.paste(itm, (240, 100), itm)
 
+            with io.BytesIO() as f:
+                img.save(f, 'PNG')
+                f.seek(0)
+                r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"image": f})
+                j = r.json()
+                pull_url = j["data"]["url"]
+
             embed = discord.Embed(
                 title=title,
                 colour=discord.Colour.random()
@@ -515,10 +523,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             embed.set_image(url=anim)
             embed.set_footer(text=self.footer)
 
-            with io.BytesIO() as f:
-                img.save(f, 'PNG')
-                f.seek(0)
-                message: discord.Message = await ctx.send(embed=embed, file=discord.File(fp=f, filename="pull.png"))
+            message: discord.Message = await ctx.send(embed=embed)
 
             await asyncio.sleep(11.5)
 
@@ -527,7 +532,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                 description=f"{ctx.author.mention} just pulled a **{item.name}**!",
                 colour=discord.Colour.random()
             )
-            embed.set_image(url="attachment://pull.png")
+            embed.set_image(url=pull_url)
             embed.set_footer(text=self.footer)
 
             await message.edit(embed=embed)
