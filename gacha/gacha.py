@@ -613,7 +613,9 @@ class Gacha(commands.Cog, name=COG_NAME):
         await message.edit(embed=embed)
         await message.reply(f"{ctx.author.mention} just pulled {', '.join(results_str)}!")
 
-        await self.give_role(ctx, item)
+        for item in pull_results:
+            await self.give_role(ctx, item)
+
         player.pull_currency -= pull_cost
 
         for item_id in pull_results_ids:
