@@ -498,7 +498,7 @@ class Gacha(commands.Cog, name=COG_NAME):
     async def pull(self, ctx: commands.Context, *, banner: str = "1"):
         """Single pull on a banner (defaults to banner number 1)"""
 
-        logger.info(ctx.command.name)
+        logger.info(ctx.message.content.split()[1])
         bann = self.get_banner(banner)
 
         if bann is None:
@@ -533,6 +533,8 @@ class Gacha(commands.Cog, name=COG_NAME):
                 embed.set_footer(text=self.footer)
                 await ctx.send(embed=embed)
                 return
+
+            player._pulling = True
 
             title = f"{ctx.author.display_name}'s single pull on {bann.name}"
             rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
@@ -588,6 +590,8 @@ class Gacha(commands.Cog, name=COG_NAME):
                 player.inventory[item_id] = 0
 
             player.inventory[item_id] += 1
+
+            player._pulling = False
 
 
 async def setup(bot):
