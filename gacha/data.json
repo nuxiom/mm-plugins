@@ -112,8 +112,8 @@
             "name": "Standard banner",
             "pull_cost": 1,
             "drop_weights": {
-                "2": ["5starRole", "rmcat"],
-                "1": ["4starCollectible"]
+                "1": ["5starRole", "rmcat"],
+                "2": ["4starCollectible"]
             }
         }
     ]
