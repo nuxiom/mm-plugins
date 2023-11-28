@@ -544,9 +544,10 @@ class Gacha(commands.Cog, name=COG_NAME):
                 j = r.json()
                 pull_url = j["data"]["url"]
 
+            colour = discord.Colour.random()
             embed = discord.Embed(
                 title=title,
-                colour=discord.Colour.random()
+                colour=colour
             )
             embed.set_image(url=anim)
             embed.set_footer(text=self.footer)
@@ -557,8 +558,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
             embed = discord.Embed(
                 title=title,
-                description=f"{ctx.author.mention} just pulled a **{item.name}**!",
-                colour=discord.Colour.random()
+                colour=colour
             )
             embed.set_image(url=pull_url)
             embed.set_footer(text=self.footer)
@@ -566,6 +566,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             self.save[player_id].pull_currency -= bann.pull_cost
 
             await message.edit(embed=embed)
+            await message.reply(f"{ctx.author.mention} just pulled a **{item.name}**!")
 
 
 async def setup(bot):
