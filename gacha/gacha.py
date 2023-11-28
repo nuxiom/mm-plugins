@@ -501,7 +501,7 @@ class Gacha(commands.Cog, name=COG_NAME):
         command = ctx.message.content.split()[1]
         bann = self.get_banner(banner)
 
-        error_title = f"Can't do {command}"
+        error_title = f"Can't do a {command}"
         MULTIS = ["10pull", "multi"]
 
         if bann is None:
@@ -523,7 +523,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         player_id = ctx.author.id
         if player_id not in self.save.keys() or self.save[player_id].pull_currency < pull_cost:
-            description = f"You don't have enough {CURRENCY_NAME}s. The cost for a {command} on this banner is **{pull_cost}**.\n\nTalk some more and use `!gacha balance` to check your balance!"
+            description = f"You don't have enough {CURRENCY_NAME}s. The cost for a {command} on this banner is **{pull_cost} {CURRENCY_NAME}{'s' if pull_cost > 1 else ''}**.\n\nTalk some more and use `?gacha balance` to check your balance!"
             embed = discord.Embed(
                 title=error_title,
                 description=description.strip(),
