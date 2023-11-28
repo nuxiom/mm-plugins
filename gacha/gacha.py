@@ -92,6 +92,7 @@ class Player():
     # Internal variables
     _last_talked: datetime.datetime
     _talked_this_minute: int
+    _pulling: bool
 
     def __init__(self, player_id: int, pull_currency: int = 0, currencies: dict = {}, inventory: dict = {}):
         self.player_id = player_id
@@ -101,6 +102,7 @@ class Player():
 
         self._last_talked = datetime.datetime.now()
         self._talked_this_minute = 0
+        self._pulling = False
 
     def to_dict(self):
         return {
@@ -292,7 +294,6 @@ class Gacha(commands.Cog, name=COG_NAME):
                 # We are in an old cog after update and don't have to send QOTD anymore
                 break
             await asyncio.sleep(60)
-            logger.info("Saving gacha conf")
             self.save_conf()
 
 
@@ -521,6 +522,16 @@ class Gacha(commands.Cog, name=COG_NAME):
                 await ctx.send(embed=embed)
                 return
             player = self.save[player_id]
+            if player._pulling:
+                description = f"You already have an ongoing pull, please be patient!"
+                embed = discord.Embed(
+                    title="Can't do single pull",
+                    description=description.strip(),
+                    colour=discord.Colour.red()
+                )
+                embed.set_footer(text=self.footer)
+                await ctx.send(embed=embed)
+                return
 
             title = f"{ctx.author.display_name}'s single pull on {bann.name}"
             rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
