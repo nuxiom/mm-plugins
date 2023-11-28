@@ -498,6 +498,7 @@ class Gacha(commands.Cog, name=COG_NAME):
     async def pull(self, ctx: commands.Context, *, banner: str = "1"):
         """Single pull on a banner (defaults to banner number 1)"""
 
+        logger.info(ctx.command.name)
         bann = self.get_banner(banner)
 
         if bann is None:
