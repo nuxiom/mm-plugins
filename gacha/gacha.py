@@ -494,104 +494,135 @@ class Gacha(commands.Cog, name=COG_NAME):
 
 
     # Pull on a banner
-    @gacha.command(name="pull", aliases=["single"])
+    @gacha.command(name="pull", aliases=["single", "multi", "10pull"])
     async def pull(self, ctx: commands.Context, *, banner: str = "1"):
-        """Single pull on a banner (defaults to banner number 1)"""
+        """Pull on a banner (defaults to banner number 1)"""
 
-        logger.info(ctx.message.content.split()[1])
+        command = ctx.message.content.split()[1]
         bann = self.get_banner(banner)
+
+        error_title = f"Can't do {command}"
+        MULTIS = ["10pull", "multi"]
 
         if bann is None:
             description = f'No banners at the time!'
             embed = discord.Embed(
-                title="Can't do single pull",
+                title=error_title,
                 description=description.strip(),
                 colour=discord.Colour.red()
             )
             embed.set_footer(text=self.footer)
             await ctx.send(embed=embed)
+            return
+
+        if command in MULTIS:
+            pull_count = 10
         else:
-            player_id = ctx.author.id
-            if player_id not in self.save.keys() or self.save[player_id].pull_currency < bann.pull_cost:
-                description = f"You don't have enough {CURRENCY_NAME}s. Pulls on this banner cost **{bann.pull_cost}**.\n\nTalk some more and use `!gacha balance` to check your balance!"
-                embed = discord.Embed(
-                    title="Can't do single pull",
-                    description=description.strip(),
-                    colour=discord.Colour.red()
-                )
-                embed.set_footer(text=self.footer)
-                await ctx.send(embed=embed)
-                return
-            player = self.save[player_id]
-            if player._pulling:
-                description = f"You already have an ongoing pull, please be patient!"
-                embed = discord.Embed(
-                    title="Can't do single pull",
-                    description=description.strip(),
-                    colour=discord.Colour.red()
-                )
-                embed.set_footer(text=self.footer)
-                await ctx.send(embed=embed)
-                return
+            pull_count = 1
+        pull_cost = bann.pull_cost * pull_count
 
-            player._pulling = True
+        player_id = ctx.author.id
+        if player_id not in self.save.keys() or self.save[player_id].pull_currency < pull_cost:
+            description = f"You don't have enough {CURRENCY_NAME}s. The cost for a {command} on this banner is **{pull_cost}**.\n\nTalk some more and use `!gacha balance` to check your balance!"
+            embed = discord.Embed(
+                title=error_title,
+                description=description.strip(),
+                colour=discord.Colour.red()
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
+            return
 
-            title = f"{ctx.author.display_name}'s single pull on {bann.name}"
+        player = self.save[player_id]
+        if player._pulling:
+            description = f"You already have an ongoing pull, please be patient!"
+            embed = discord.Embed(
+                title=error_title,
+                description=description.strip(),
+                colour=discord.Colour.red()
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
+            return
+
+        player._pulling = True
+
+        title = f"{ctx.author.display_name}'s {command} on {bann.name}"
+
+        pull_results = []
+        pull_results_ids = []
+        mini = len(PULL_ANIM)
+        for _ in range(pull_count):
             rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
             for i in range(len(bann._cumulative_weights)):
                 if rnd < bann._cumulative_weights[i]:
+                    if i < mini:
+                        mini = i
+                    weight = sorted(bann.drop_weights.keys())[i]
+                    item_id = random.choice(bann.drop_weights[weight])
+                    pull_results_ids.append(item_id)
+                    item = Data.items[item_id]
+                    pull_results.append(item)
                     break
-            if i < len(PULL_ANIM):
-                anim = PULL_ANIM[i]
-            else:
-                anim = PULL_ANIM[-1]
 
-            weight = sorted(bann.drop_weights.keys())[i]
-            item_id = random.choice(bann.drop_weights[weight])
-            item = Data.items[item_id]
+        if mini < len(PULL_ANIM):
+            anim = PULL_ANIM[mini]
+        else:
+            anim = PULL_ANIM[-1]
 
-            img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
+        img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
+        if command in MULTIS:
+            for i in range(pull_count):
+                item = pull_results[i]
+                itm = item.get_image().resize((92, 92))
+                img.paste(itm, (30 * (1+(i % 5)) + 92 * (i % 5), 60 * (1+(i // 5)) + 92 * (i // 5)), itm)
+        else:
+            item = pull_results[0]
             itm = item.get_image().resize((160, 160))
             img.paste(itm, (240, 100), itm)
 
-            with io.BytesIO() as f:
-                img.save(f, 'PNG')
-                f.seek(0)
-                r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"image": f})
-                j = r.json()
-                pull_url = j["data"]["url"]
+        with io.BytesIO() as f:
+            img.save(f, 'PNG')
+            f.seek(0)
+            r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"image": f})
+            j = r.json()
+            pull_url = j["data"]["url"]
 
-            colour = discord.Colour.random()
-            embed = discord.Embed(
-                title=title,
-                colour=colour
-            )
-            embed.set_image(url=anim)
-            embed.set_footer(text=self.footer)
+        colour = discord.Colour.random()
+        embed = discord.Embed(
+            title=title,
+            colour=colour
+        )
+        embed.set_image(url=anim)
+        embed.set_footer(text=self.footer)
 
-            message: discord.Message = await ctx.send(embed=embed)
+        message: discord.Message = await ctx.send(embed=embed)
 
-            await asyncio.sleep(11.5)
+        await asyncio.sleep(11.5)
 
-            embed = discord.Embed(
-                title=title,
-                colour=colour
-            )
-            embed.set_image(url=pull_url)
-            embed.set_footer(text=self.footer)
+        embed = discord.Embed(
+            title=title,
+            colour=colour
+        )
+        embed.set_image(url=pull_url)
+        embed.set_footer(text=self.footer)
 
-            await message.edit(embed=embed)
-            await message.reply(f"{ctx.author.mention} just pulled a **{item.name}**!")
+        results_dict = dict([(item.name, pull_results.count(item)) for item in pull_results])
+        results_str = [f"**{k} x{v}**" for k, v in results_dict.items()]
 
-            await self.give_role(ctx, item)
-            player.pull_currency -= bann.pull_cost
+        await message.edit(embed=embed)
+        await message.reply(f"{ctx.author.mention} just pulled {', '.join(results_str)}!")
 
+        await self.give_role(ctx, item)
+        player.pull_currency -= pull_cost
+
+        for item_id in pull_results_ids:
             if item_id not in player.inventory:
                 player.inventory[item_id] = 0
 
             player.inventory[item_id] += 1
 
-            player._pulling = False
+        player._pulling = False
 
 
 async def setup(bot):

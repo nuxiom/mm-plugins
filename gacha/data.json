@@ -1,13 +1,13 @@
 {
     "items": {
         "5starRole": {
-            "name": "5* Role",
+            "name": "5\\* Role",
             "description": "This is a super rare role!",
             "image": "000.png",
             "role": "Super Lucky Player"
         },
         "4starCollectible": {
-            "name": "4* Collectible",
+            "name": "4\\* Collectible",
             "description": "This is just a collectible, doesn't give a role but it's nice to have!",
             "image": "001.png"
         },
@@ -113,7 +113,7 @@
             "pull_cost": 1,
             "drop_weights": {
                 "1": ["5starRole", "rmcat"],
-                "2": ["4starCollectible"]
+                "9": ["4starCollectible"]
             }
         }
     ]
