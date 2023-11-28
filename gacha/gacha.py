@@ -340,6 +340,16 @@ class Gacha(commands.Cog, name=COG_NAME):
         return bann
 
 
+    async def give_role(self, ctx: commands.Context, item: Item):
+        if item.role is not None:
+            try:
+                role = get(ctx.guild.roles, name=item.role)
+                logger.info(f"{ctx.author} won role {item.role}")
+                await ctx.author.add_roles(role)
+            except:
+                logger.error(f"Error while giving role {item.role} to {ctx.author}")
+
+
     @commands.group(invoke_without_command=True)
     async def gacha(self, ctx):
         """
@@ -498,6 +508,18 @@ class Gacha(commands.Cog, name=COG_NAME):
             embed.set_footer(text=self.footer)
             await ctx.send(embed=embed)
         else:
+            player_id = ctx.author.id
+            if player_id not in self.save.keys() or self.save[player_id].pull_currency < bann.pull_cost:
+                description = f"You don't have enough {CURRENCY_NAME}s. Pulls on this banner cost **{bann.pull_cost}**.\n\nTalk some more and use `!gacha balance` to check your balance!"
+                embed = discord.Embed(
+                    title="Can't do single pull",
+                    description=description.strip(),
+                    colour=discord.Colour.red()
+                )
+                embed.set_footer(text=self.footer)
+                await ctx.send(embed=embed)
+                return
+
             title = f"{ctx.author.display_name}'s single pull on {bann.name}"
             rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
             for i in range(len(bann._cumulative_weights)):
@@ -540,6 +562,8 @@ class Gacha(commands.Cog, name=COG_NAME):
             )
             embed.set_image(url=pull_url)
             embed.set_footer(text=self.footer)
+
+            self.save[player_id].pull_currency -= bann.pull_cost
 
             await message.edit(embed=embed)
 
