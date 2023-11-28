@@ -515,6 +515,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
             itm = item.get_image().resize((160, 160))
             img.paste(itm, (240, 100), itm)
+            img.save("/tmp/pull.png")
 
             await asyncio.sleep(11.5)
 
