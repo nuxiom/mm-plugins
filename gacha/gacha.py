@@ -241,15 +241,12 @@ class Gacha(commands.Cog, name=COG_NAME):
         if os.path.exists(shops_save):
             with open(shops_save) as f:
                 self.shop_images = json.load(f)
-        for file in glob.glob(str(os.path.join(DIR, "img", "shops", "*.png"))):
-            filename = os.path.basename(file)
-            if filename not in self.shop_images.keys():
-                with open(file, "rb") as f:
-                    r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"image": f})
-                    j = r.json()
-                    self.shop_images[filename] = j["data"]["url"]
-        with open(shops_save, "w+") as f:
-            json.dump(self.shop_images, f)
+        for shop in Data.shops:
+            n = len(shop.to_sell) // 8 + 1
+            for i in range(n):
+                filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                if filename not in self.shop_images.keys():
+                    logger.warn(f"No image for shop {shop.name}-{i}")
 
         self.footer = ""  # TODO: added just in case we do something with it someday
 
@@ -390,7 +387,10 @@ class Gacha(commands.Cog, name=COG_NAME):
                     )
 
                     filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
-                    embed.set_image(url=self.shop_images[filename])
+                    if filename in self.shop_images.keys():
+                        embed.set_image(url=self.shop_images[filename])
+                    else:
+                        embed.set_footer("ERROR: No image for this shop. Please ping <@200282032771694593>")
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
