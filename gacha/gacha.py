@@ -491,7 +491,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             embed.set_footer(text=self.footer)
             await ctx.send(embed=embed)
         else:
-            title = f"{ctx.author.mention}'s single pull on {bann.name}"
+            title = f"{ctx.author.display_name}'s single pull on {bann.name}"
             rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
             for i in range(len(bann._cumulative_weights)):
                 if rnd < bann._cumulative_weights[i]:
@@ -515,7 +515,6 @@ class Gacha(commands.Cog, name=COG_NAME):
             img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
             itm = item.get_image().resize((160, 160))
             img.paste(itm, (240, 100), itm)
-            img.save("/tmp/pull.png")
 
             await asyncio.sleep(11.5)
 
@@ -523,8 +522,8 @@ class Gacha(commands.Cog, name=COG_NAME):
 
             with io.BytesIO() as f:
                 img.save(f, 'PNG')
-                img.seek(0)
-                await ctx.send(content=f"{ctx.author.mention} just pulled a {item.name}!", file=discord.File(fp=f, filename="pull.png"))
+                f.seek(0)
+                await ctx.send(content=f"{ctx.author.mention} just pulled a **{item.name}**!", file=discord.File(fp=f, filename="pull.png"))
 
 
 async def setup(bot):
