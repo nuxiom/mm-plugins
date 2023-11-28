@@ -520,6 +520,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                 embed.set_footer(text=self.footer)
                 await ctx.send(embed=embed)
                 return
+            player = self.save[player_id]
 
             title = f"{ctx.author.display_name}'s single pull on {bann.name}"
             rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
@@ -532,7 +533,8 @@ class Gacha(commands.Cog, name=COG_NAME):
                 anim = PULL_ANIM[-1]
 
             weight = sorted(bann.drop_weights.keys())[i]
-            item = Data.items[random.choice(bann.drop_weights[weight])]
+            item_id = random.choice(bann.drop_weights[weight])
+            item = Data.items[item_id]
 
             img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
             itm = item.get_image().resize((160, 160))
@@ -567,8 +569,13 @@ class Gacha(commands.Cog, name=COG_NAME):
             await message.edit(embed=embed)
             await message.reply(f"{ctx.author.mention} just pulled a **{item.name}**!")
 
-            self.give_role(ctx, item)
-            self.save[player_id].pull_currency -= bann.pull_cost
+            await self.give_role(ctx, item)
+            player.pull_currency -= bann.pull_cost
+
+            if item_id not in player.inventory:
+                player.inventory[item_id] = 0
+
+            player.inventory[item_id] += 1
 
 
 async def setup(bot):
