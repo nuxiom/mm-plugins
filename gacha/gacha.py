@@ -471,7 +471,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     if filename in self.shop_images.keys():
                         embed.set_image(url=self.shop_images[filename])
                     else:
-                        embed.set_footer("ERROR: No image for this shop. Please ping <@200282032771694593>")
+                        embed.set_footer(text="ERROR: No image for this shop. Please ping <@200282032771694593>")
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
@@ -534,7 +534,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                         txt_shop_list = "\n".join([f'{i+1}. "{shop.name}"' for i, shop in enumerate(avail_shops)])
                         description = f'**Multiple shops found to sell "{item}". Please specify a shop to use:**\n{txt_shop_list}\nUsage: `?gacha sell "{item}" {count} [shop name or number]`'
                     elif len(avail_shops) == 0:
-                        description = f'**No shop to sell "{item}" at the moment'
+                        description = f'No shop to sell "{item}" at the moment'
                     else:
                         shp = avail_shops[0]
                 else:
