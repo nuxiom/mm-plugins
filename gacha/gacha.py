@@ -428,7 +428,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     # List items to buy in shops
     @gacha.command(name="buy")
-    async def buy(self, ctx: commands.Context, count: int = 1, item: str = None, shop: str = None):
+    async def buy(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Buy items / Shows what's to buy in the shops"""
 
         if item is None:
@@ -446,7 +446,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     if filename in self.shop_images.keys():
                         embed.set_image(url=self.shop_images[filename])
                     else:
-                        embed.set_footer("ERROR: No image for this shop. Please ping <@200282032771694593>")
+                        embed.set_footer("ERROR: No image for this shop. Please ping @cyxo")
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
@@ -562,7 +562,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     if filename in self.shop_images.keys():
                         embed.set_image(url=self.shop_images[filename])
                     else:
-                        embed.set_footer(text="ERROR: No image for this shop. Please ping <@200282032771694593>")
+                        embed.set_footer(text="ERROR: No image for this shop. Please ping @cyxo")
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
