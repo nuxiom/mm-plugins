@@ -68,7 +68,6 @@
             "currency": "Plum Blossom",
             "currency_emoji": "🌸",
             "to_buy": {
-                "5starRole": 1e6,
                 "tbcat": 1e6,
                 "m7cat": 1e6,
                 "dhcat": 1e6,

@@ -341,6 +341,44 @@ class Gacha(commands.Cog, name=COG_NAME):
         return bann
 
 
+    def get_shop(self, shop: str):
+        shp: Shop = None
+        if shop is None:
+            if len(Data.shops) == 1:
+                shp = Data.shops[0]
+        else:
+            if shop.isnumeric() and int(shop) > 0 and int(shop) <= len(Data.shops):
+                shp = Data.shops[int(shop) - 1]
+            else:
+                for s in Data.shops:
+                    if s.name == shop:
+                        shp = s
+                        break
+        return shp
+
+
+    def get_item(self, item: str):
+        for item_id, itm in Data.items.items():
+            if itm.name == item or item_id == item:
+                return item_id, itm
+        return None, None
+
+
+    def get_item_price(self, item: str, prices: dict[str, int]):
+        itm: Item = None
+        price: int = None
+        if item.isnumeric() and int(item) > 0 and int(item) <= len(prices):
+            item_id, price = list(prices.items())[int(item) - 1]
+            itm = Data.items[item_id]
+        else:
+            item_id, itm = self.get_item(item)
+            if item_id in prices.keys():
+                price = prices[item_id]
+            else:
+                itm = None
+        return itm, price
+
+
     async def give_role(self, ctx: commands.Context, item: Item):
         if item.role is not None:
             try:
@@ -389,8 +427,8 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     # List items to buy in shops
     @gacha.command(name="buy")
-    async def buy(self, ctx: commands.Context, count: int = 1, *, item: str = None):
-        """Shows what's to buy in the shops"""
+    async def buy(self, ctx: commands.Context, count: int = 1, item: str = None, shop: str = None):
+        """Buy items / Shows what's to buy in the shops"""
 
         if item is None:
             embeds = []
@@ -404,7 +442,10 @@ class Gacha(commands.Cog, name=COG_NAME):
                     )
 
                     filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
-                    embed.set_image(url=self.shop_images[filename])
+                    if filename in self.shop_images.keys():
+                        embed.set_image(url=self.shop_images[filename])
+                    else:
+                        embed.set_footer("ERROR: No image for this shop. Please ping <@200282032771694593>")
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
@@ -412,8 +453,8 @@ class Gacha(commands.Cog, name=COG_NAME):
 
 
     @gacha.command(name="sell")
-    async def sell(self, ctx: commands.Context, count: int = 1, *, item: str = None):
-        """Shows what's to sell in the shops"""
+    async def sell(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
+        """Sell items / Shows what's to sell in the shops"""
 
         if item is None:
             embeds = []
@@ -435,6 +476,92 @@ class Gacha(commands.Cog, name=COG_NAME):
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
             await paginator.run()
+        else:
+            title = "Sell item"
+            colour = discord.Colour.red()
+            if ctx.author.id not in self.save:
+                embed = discord.Embed(
+                    title=title,
+                    description=f"You don't have any item. Try talking a little before trying to sell, okay?",
+                    colour=colour
+                )
+                embed.set_footer(text=self.footer)
+                await ctx.send(embed=embed)
+                return
+            player = self.save[ctx.author.id]
+
+            if item.isnumeric():
+                if shop is None and len(Data.shops) > 1:
+                    txt_shop_list = "\n".join([f'{i+1}. "{shop.name}"' for i, shop in enumerate(Data.shops)])
+                    embed = discord.Embed(
+                        title=title,
+                        description=f"**Multiple shops found. Please specify a shop to use:**\n{txt_shop_list}\nUsage: `?gacha sell {item} {count} [shop name or number]`",
+                        colour=colour
+                    )
+                    embed.set_footer(text=self.footer)
+                    await ctx.send(embed=embed)
+                    return
+                
+                shp = self.get_shop(shop)
+                if shp is None:
+                    description = f'Shop "{shop}" not found'
+                else:
+                    itm, price = self.get_item_price(item, shp.to_sell)
+                    if itm is None:
+                        description = f'Item "{item}" not found in shop "{shp.name}"'
+                    else:
+                        item_id, _ = self.get_item(itm.name)
+                        if item_id not in player.inventory.keys() or player.inventory[item_id] < count:
+                            description = f"You don't have enough {itm.name} in your inventory to sell {count} of them..."
+                        else:
+                            total_price = price * count
+                            player.inventory[item_id] -= count
+                            player.currencies[shp.currency_emoji] += total_price
+                            description = f"You sold **{count} {itm.name}** and earned **{total_price}** {shp.currency_emoji}"
+                            colour = discord.Colour.green()
+            else:
+                shp = None
+                if shop == None:
+                    avail_shops = []
+                    item_id, itm = self.get_item(item)
+                    for shp in Data.shops:
+                        if item_id in shp.to_sell.keys():
+                            avail_shops.append(shp)
+
+                    if len(avail_shops) > 1:
+                        txt_shop_list = "\n".join([f'{i+1}. "{shop.name}"' for i, shop in enumerate(avail_shops)])
+                        description = f'**Multiple shops found to sell "{item}". Please specify a shop to use:**\n{txt_shop_list}\nUsage: `?gacha sell "{item}" {count} [shop name or number]`'
+                    elif len(avail_shops) == 0:
+                        description = f'**No shop to sell "{item}" at the moment'
+                    else:
+                        shp = avail_shops[0]
+                else:
+                    shp = self.get_shop(shop)
+                    if shp is None:
+                        description = f'Shop "{shop}" not found'
+
+                if shp is not None:
+                    itm, price = self.get_item_price(item, shp.to_sell)
+                    if itm is None:
+                        description = f'Item "{item}" not found in shop "{shp.name}"'
+                    else:
+                        item_id, _ = self.get_item(itm.name)
+                        if item_id not in player.inventory.keys() or player.inventory[item_id] < count:
+                            description = f"You don't have enough {itm.name} in your inventory to sell {count} of them..."
+                        else:
+                            total_price = price * count
+                            player.inventory[item_id] -= count
+                            player.currencies[shp.currency_emoji] += total_price
+                            description = f"You sold **{count} {itm.name}** and earned **{total_price}** {shp.currency_emoji}"
+                            colour = discord.Colour.green()
+
+            embed = discord.Embed(
+                title=title,
+                description=description,
+                colour=colour
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
 
 
     # Get player balance
