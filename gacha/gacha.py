@@ -516,6 +516,8 @@ class Gacha(commands.Cog, name=COG_NAME):
                         else:
                             total_price = price * count
                             player.inventory[item_id] -= count
+                            if shp.currency_emoji not in player.currencies.keys():
+                                player.currencies[shp.currency_emoji] = 0
                             player.currencies[shp.currency_emoji] += total_price
                             description = f"You sold **{count} {itm.name}** and earned **{total_price}** {shp.currency_emoji}"
                             colour = discord.Colour.green()
@@ -551,6 +553,8 @@ class Gacha(commands.Cog, name=COG_NAME):
                         else:
                             total_price = price * count
                             player.inventory[item_id] -= count
+                            if shp.currency_emoji not in player.currencies.keys():
+                                player.currencies[shp.currency_emoji] = 0
                             player.currencies[shp.currency_emoji] += total_price
                             description = f"You sold **{count} {itm.name}** and earned **{total_price}** {shp.currency_emoji}"
                             colour = discord.Colour.green()
