@@ -14,7 +14,8 @@ from discord.ext import commands
 from discord.utils import get
 from PIL import Image
 
-from core.models import getLogger
+from core import checks
+from core.models import PermissionLevel, getLogger
 from core.paginator import EmbedPaginatorSession
 
 logger = getLogger(__name__)
@@ -599,6 +600,46 @@ class Gacha(commands.Cog, name=COG_NAME):
             title=f"{member.display_name}'s money",
             description=f"{description}",
             colour=colour
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
+
+
+    # Give item or currency to user
+    @gacha.command(name="give")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def give(self, ctx: commands.Context, member: commands.MemberConverter, amount: int, *, item: str = None):
+        """Gives an item or currency to a member"""
+
+        if member.id in self.save:
+            player = self.save[member.id]
+        else:
+            player = Player(member.id)
+            self.save[member.id] = player
+
+        if item is None:
+            player.pull_currency += amount
+        elif item in Data.items.keys():
+            if item not in player.inventory.keys():
+                player.inventory[item] = 0
+            player.inventory[item] += amount
+            await self.give_role(ctx, Data.items[item])
+        else:
+            for shp in Data.shops:
+                if item.lower() == shp.currency.lower() or item == shp.currency_emoji:
+                    if shp.currency_emoji not in player.currencies.keys():
+                        player.currencies[shp.currency_emoji] = 0
+                    player.currencies[shp.currency_emoji] += amount
+
+        self.save_conf()
+
+        if item is None: item = CURRENCY_NAME
+
+        embed = discord.Embed(
+            title=f"Give to {member.display_name}",
+            description=f"Gave **{amount} {item}** to {member.mention}",
+            colour=discord.Colour.green()
         )
         embed.set_footer(text=self.footer)
 
