@@ -526,9 +526,9 @@ class Gacha(commands.Cog, name=COG_NAME):
                 if shop == None:
                     avail_shops = []
                     item_id, itm = self.get_item(item)
-                    for shp in Data.shops:
-                        if item_id in shp.to_sell.keys():
-                            avail_shops.append(shp)
+                    for s in Data.shops:
+                        if item_id in s.to_sell.keys():
+                            avail_shops.append(s)
 
                     if len(avail_shops) > 1:
                         txt_shop_list = "\n".join([f'{i+1}. "{shop.name}"' for i, shop in enumerate(avail_shops)])
