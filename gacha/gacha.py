@@ -581,6 +581,15 @@ class Gacha(commands.Cog, name=COG_NAME):
 
             description = "## Pull currency:\n"
             description += f"{player.pull_currency} {CURRENCY_NAME}{'s' if player.pull_currency > 1 else ''}"
+            
+            description += "\n## Shop currencies:\n"
+            i = 0
+            for curr, amount in player.currencies.items():
+                i += 1
+                description += f"- {amount} {curr}\n"
+            if i == 0:
+                description += "This user has no shop currencies.\n"
+
             colour = discord.Colour.green()
         else:
             description = f"{member.display_name} isn't in our database. Have they ever talked??"
@@ -634,16 +643,8 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         if member.id in self.save:
             player = self.save[member.id]
-            
-            description = "## Shop currencies:\n"
-            i = 0
-            for curr, amount in player.currencies.items():
-                i += 1
-                description += f"- {amount} {curr}\n"
-            if i == 0:
-                description += "This user has no shop currencies.\n"
 
-            description += "\n## Items:\n"
+            description = "## Items:\n"
             i = 0
             for item, amount in player.inventory.items():
                 i += 1
