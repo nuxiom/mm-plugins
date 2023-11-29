@@ -639,7 +639,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             i = 0
             for curr, amount in player.currencies.items():
                 i += 1
-                description += f"- {amount} **{curr}{'s' if amount > 1 else ''}**\n"
+                description += f"- {amount} {curr}\n"
             if i == 0:
                 description += "This user has no shop currencies.\n"
 
