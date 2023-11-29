@@ -451,6 +451,96 @@ class Gacha(commands.Cog, name=COG_NAME):
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
             await paginator.run()
+        else:
+            title = "Buy item"
+            colour = discord.Colour.red()
+            if ctx.author.id not in self.save:
+                embed = discord.Embed(
+                    title=title,
+                    description=f"You don't have any currency. Try talking a little before trying to buy, okay?",
+                    colour=colour
+                )
+                embed.set_footer(text=self.footer)
+                await ctx.send(embed=embed)
+                return
+            player = self.save[ctx.author.id]
+
+            if item.isnumeric():
+                if shop is None and len(Data.shops) > 1:
+                    txt_shop_list = "\n".join([f'{i+1}. "{shop.name}"' for i, shop in enumerate(Data.shops)])
+                    embed = discord.Embed(
+                        title=title,
+                        description=f"**Multiple shops found. Please specify a shop to use:**\n{txt_shop_list}\nUsage: `?gacha buy {item} {count} [shop name or number]`",
+                        colour=colour
+                    )
+                    embed.set_footer(text=self.footer)
+                    await ctx.send(embed=embed)
+                    return
+                
+                shp = self.get_shop(shop)
+                if shp is None:
+                    description = f'Shop "{shop}" not found'
+                else:
+                    itm, price = self.get_item_price(item, shp.to_buy)
+                    if itm is None:
+                        description = f'Item "{item}" not found in shop "{shp.name}"'
+                    else:
+                        item_id, _ = self.get_item(itm.name)
+                        total_price = price * count
+                        if shp.currency_emoji not in player.currencies.keys() or player.currencies[shp.currency_emoji] < total_price:
+                            description = f"You don't have enough {shp.currency}s to buy {count} {itm.name}"
+                        else:
+                            player.currencies[shp.currency_emoji] -= total_price
+                            if item_id not in player.inventory.keys():
+                                player.inventory[item_id] = 0
+                            player.inventory[item_id] += count
+                            description = f"You bought **{count} {itm.name}** for **{total_price}** {shp.currency_emoji}"
+                            colour = discord.Colour.green()
+            else:
+                shp = None
+                if shop == None:
+                    avail_shops = []
+                    item_id, itm = self.get_item(item)
+                    for s in Data.shops:
+                        if item_id in s.to_buy.keys():
+                            avail_shops.append(s)
+
+                    if len(avail_shops) > 1:
+                        txt_shop_list = "\n".join([f'{i+1}. "{shop.name}"' for i, shop in enumerate(avail_shops)])
+                        description = f'**Multiple shops found to buy "{item}". Please specify a shop to use:**\n{txt_shop_list}\nUsage: `?gacha buy "{item}" {count} [shop name or number]`'
+                    elif len(avail_shops) == 0:
+                        description = f'No shop to buy "{item}" at the moment'
+                    else:
+                        shp = avail_shops[0]
+                else:
+                    shp = self.get_shop(shop)
+                    if shp is None:
+                        description = f'Shop "{shop}" not found'
+
+                if shp is not None:
+                    itm, price = self.get_item_price(item, shp.to_buy)
+                    if itm is None:
+                        description = f'Item "{item}" not found in shop "{shp.name}"'
+                    else:
+                        item_id, _ = self.get_item(itm.name)
+                        total_price = price * count
+                        if shp.currency_emoji not in player.currencies.keys() or player.currencies[shp.currency_emoji] < total_price:
+                            description = f"You don't have enough {shp.currency}s to buy {count} {itm.name}"
+                        else:
+                            player.currencies[shp.currency_emoji] -= total_price
+                            if item_id not in player.inventory.keys():
+                                player.inventory[item_id] = 0
+                            player.inventory[item_id] += count
+                            description = f"You bought **{count} {itm.name}** for **{total_price}** {shp.currency_emoji}"
+                            colour = discord.Colour.green()
+
+            embed = discord.Embed(
+                title=title,
+                description=description,
+                colour=colour
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
 
 
     @gacha.command(name="sell")
