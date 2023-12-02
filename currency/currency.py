@@ -299,17 +299,8 @@ class Currency(commands.Cog, name=COG_NAME):
                 logger.error(f"Error while giving role {item.role} to {ctx.author}")
 
 
-    @commands.group(invoke_without_command=True)
-    async def gacha(self, ctx):
-        """
-        Ruan Mei Mains' gacha system!
-        """
-
-        await ctx.send_help(ctx.command)
-
-
     # List items to buy in shops
-    @gacha.command(name="buy")
+    @commands.command(name="buy")
     async def buy(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Buy items / Shows what's to buy in the shops"""
 
@@ -425,7 +416,7 @@ class Currency(commands.Cog, name=COG_NAME):
             await ctx.send(embed=embed)
 
 
-    @gacha.command(name="sell")
+    @commands.command(name="sell")
     async def sell(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Sell items / Shows what's to sell in the shops"""
 
@@ -538,7 +529,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     # Get player balance
-    @gacha.command(name="balance", aliases=["money"])
+    @commands.command(name="balance", aliases=["money"])
     async def balance(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
         """Shows a user's currency balance"""
 
@@ -564,7 +555,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     # Give item or currency to user
-    @gacha.command(name="give")
+    @commands.command(name="give")
     @checks.has_permissions(PermissionLevel.OWNER)
     async def give(self, ctx: commands.Context, member: commands.MemberConverter, amount: int, *, item: str = None):
         """Gives an item or currency to a member"""
@@ -607,7 +598,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     # Scoreboard for currency owners (debug)
-    @gacha.command(name="topkek")
+    @commands.command(name="currency_topkek")
     async def topkek(self, ctx: commands.Context):
         """Scoreboard for currency owners (for debug purposes)"""
 
@@ -635,7 +626,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     # Items and currencies inventory
-    @gacha.command(name="inventory", aliases=["items", "bag"])
+    @commands.command(name="inventory", aliases=["items", "bag"])
     async def inventory(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
         """Shows a user's inventory"""
 
