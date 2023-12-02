@@ -319,7 +319,7 @@ class Currency(commands.Cog, name=COG_NAME):
                     if filename in self.shop_images.keys():
                         embed.set_image(url=self.shop_images[filename])
                     else:
-                        embed.set_footer("ERROR: No image for this shop. Please ping @cyxo")
+                        embed.set_footer(text="ERROR: No image for this shop. Please ping @cyxo")
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
