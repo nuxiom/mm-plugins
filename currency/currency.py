@@ -45,25 +45,23 @@ class Item():
     """ Icon in shop / collection """
     image: str
 
-    """ Role (optional) """
-    role: Optional[str]
+    """ Effects """
+    effects: dict[str, list]
 
 
-    def __init__(self, name: str, description: str, image: str, role: Optional[str] = None) -> None:
+    def __init__(self, name: str, description: str, image: str, effects: dict[str, list] = {}) -> None:
         self.name = name
         self.description = description
         self.image = image
-        self.role = role
+        self.effects = effects
 
     def to_dict(self):
         res = {
             "name": self.name,
             "description": self.description,
-            "image": self.image
+            "image": self.image,
+            "effects": self.effects
         }
-
-        if self.role is not None:
-            res["role"] = self.role
 
         return res
 
@@ -288,17 +286,6 @@ class Currency(commands.Cog, name=COG_NAME):
         return itm, price
 
 
-    async def give_role(self, ctx: commands.Context, item: Item):
-        if item.role is not None:
-            try:
-                role = get(ctx.guild.roles, name=item.role)
-                logger.info(f"{ctx.author} won role {item.role}")
-                await ctx.author.add_roles(role)
-                self.save_conf()
-            except:
-                logger.error(f"Error while giving role {item.role} to {ctx.author}")
-
-
     # List items to buy in shops
     @commands.command(name="buy")
     async def buy(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
@@ -366,7 +353,10 @@ class Currency(commands.Cog, name=COG_NAME):
                             player.currency -= total_price
                             if item_id not in player.inventory.keys():
                                 player.inventory[item_id] = 0
-                            player.inventory[item_id] += count
+                            for _ in range(count):
+                                player.inventory[item_id] += 1
+                                for effect, args in itm.effects.items():
+                                    await eval(effect)(self, ctx, *args)
                             description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
             else:
@@ -403,7 +393,10 @@ class Currency(commands.Cog, name=COG_NAME):
                             player.currency -= total_price
                             if item_id not in player.inventory.keys():
                                 player.inventory[item_id] = 0
-                            player.inventory[item_id] += count
+                            for _ in range(count):
+                                player.inventory[item_id] += 1
+                                for effect, args in itm.effects.items():
+                                    await eval(effect)(self, ctx, *args)
                             description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
 
@@ -569,10 +562,13 @@ class Currency(commands.Cog, name=COG_NAME):
         if item is None:
             player.currency += amount
         elif item in Data.items.keys():
+            _, itm = self.get_item(item)
             if item not in player.inventory.keys():
                 player.inventory[item] = 0
-            player.inventory[item] += amount
-            await self.give_role(ctx, Data.items[item])
+            for _ in range(amount):
+                player.inventory[item] += 1
+                for effect, args in itm.effects.items():
+                    await eval(effect)(self, ctx, *args)
         else:
             embed = discord.Embed(
                 title=f"Give to {member.display_name}",
@@ -657,6 +653,70 @@ class Currency(commands.Cog, name=COG_NAME):
         )
         embed.set_footer(text=self.footer)
         await ctx.send(embed=embed)
+
+
+    # Display info about an item
+    @commands.command(name="item")
+    async def item(self, ctx: commands.Context, *, item: str):
+        """ Shows info about an item """
+
+        item_id, itm = self.get_item(item)
+        if itm is not None:
+            description = f"## {itm.name}\n\n"
+            description += f"{itm.description}\n\n"
+            description += "**Effects:**\n"
+            if len(itm.effects.keys()) > 0:
+                for effect in itm.effects.keys():
+                    description += f"- {eval(effect).__doc__}\n"
+            else:
+                description += "*No effect, this item is purely a collectible!*"
+            colour = discord.Colour.green()
+            embed = discord.Embed(
+                title=f'Item info',
+                description=description,
+                colour=colour
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
+        else:
+            description = f"Item {item} not found!"
+            colour = discord.Colour.red()
+
+
+
+class Effects:
+    @staticmethod
+    async def give_role(plugin: Currency, ctx: commands.Context, role_name: str):
+        """ Gives you a Discord role """
+
+        try:
+            role = get(ctx.guild.roles, name=role_name)
+            logger.info(f"{ctx.author} won role {role_name}")
+            await ctx.author.add_roles(role)
+        except:
+            logger.error(f"Error while giving role {role_name} to {ctx.author}")
+
+    @staticmethod
+    async def dna_role(plugin: Currency, ctx: commands.Context, dna_role_name: str):
+        """ Collect them all to get a special prize! """
+
+        dna_list = ["adenine", "cytosine", "guanine", "thymine"]
+
+        player = plugin.save[ctx.author.id]
+        if all(dna in player.inventory.keys() for dna in dna_list):
+            await Effects.give_role(plugin, ctx, dna_role_name)
+            await ctx.author.send(f'Congrats! You\'ve just received the role "{dna_role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
+
+    @staticmethod
+    async def currency_boost(plugin: Currency, ctx: commands.Context):
+        """ Boosts your currency earnings. The more you have the better!
+            - 1 Currency Boost: +5%
+            - 5 Currency Boost: +10%
+            - 20 Currency Boost: +15%
+            - 50 Currency Boost: +20%
+        """
+        pass
+
 
 
 async def setup(bot):

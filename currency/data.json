@@ -1,65 +1,68 @@
 {
     "items": {
-        "5starRole": {
-            "name": "5-star Role",
-            "description": "This is a super rare role!",
+        "mrrole": {
+            "name": "Mei's Ruan Role",
+            "description": "The must-have role for real Ruan Mei mains!",
+            "image": "001.png",
+            "effects": {
+                "Effects.give_role": ["Mei's Ruan"]
+            }
+        },
+        "pbprole": {
+            "name": "Plum Blossom Pastry Role",
+            "description": "Tasty~",
             "image": "000.png",
-            "role": "Super Lucky Player"
+            "effects": {
+                "Effects.give_role": ["Plum Blossom Pastry"]
+            }
         },
-        "4starCollectible": {
-            "name": "4-star Collectible",
-            "description": "This is just a collectible, doesn't give a role but it's nice to have!",
-            "image": "001.png"
+        "ferole": {
+            "name": "Floral Embroidery Role",
+            "description": "Become a trendsetter with this super fashionable role!",
+            "image": "001.png",
+            "effects": {
+                "Effects.give_role": ["Floral Embroidery"]
+            }
         },
-        "tbcat": {
-            "name": "Trailblazer Cat",
-            "description": "",
-            "image": "tile000.png"
+        "adenine": {
+            "name": "Adenine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "000.png",
+            "effects": {
+                "Effects.dna_role": ["DNA Collector"]
+            }
         },
-        "m7cat": {
-            "name": "March 7th Cat",
-            "description": "",
-            "image": "tile001.png"
+        "cytosine": {
+            "name": "Cytosine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "000.png",
+            "effects": {
+                "Effects.dna_role": ["DNA Collector"]
+            }
         },
-        "dhcat": {
-            "name": "Dan Heng Cat",
-            "description": "",
-            "image": "tile002.png"
+        "guanine": {
+            "name": "Guanine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "000.png",
+            "effects": {
+                "Effects.dna_role": ["DNA Collector"]
+            }
         },
-        "hertacat": {
-            "name": "Herta Cat",
-            "description": "",
-            "image": "tile003.png"
+        "thymine": {
+            "name": "Thymine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "000.png",
+            "effects": {
+                "Effects.dna_role": ["DNA Collector"]
+            }
         },
-        "rmcat": {
-            "name": "Ruan Mei Cat",
-            "description": "",
-            "image": "tile004.png"
-        },
-        "qqcat": {
-            "name": "Qingque Cat",
-            "description": "",
-            "image": "tile006.png"
-        },
-        "bladecat": {
-            "name": "Blade Cat",
-            "description": "",
-            "image": "tile007.png"
-        },
-        "claracat": {
-            "name": "Clara Cat",
-            "description": "",
-            "image": "tile008.png"
-        },
-        "guicat": {
-            "name": "Guinaifen Cat",
-            "description": "",
-            "image": "tile009.png"
-        },
-        "kafcat": {
-            "name": "Kafka Cat",
-            "description": "",
-            "image": "tile010.png"
+        "currencyboost": {
+            "name": "Currency Boost",
+            "description": "Boosts currency earn. The more you have, the better!",
+            "image": "001.png",
+            "effects": {
+                "Effects.currency_boost": []
+            }
         }
     },
 
@@ -67,29 +70,8 @@
         {
             "name": "Permanent Shop",
             "to_buy": {
-                "tbcat": 1e6,
-                "m7cat": 1e6,
-                "dhcat": 1e6,
-                "hertacat": 1e6,
-                "rmcat": 1e6,
-                "qqcat": 1e6,
-                "bladecat": 1e6,
-                "claracat": 1e6,
-                "guicat": 1e6,
-                "kafcat": 1e6
             },
             "to_sell": {
-                "4starCollectible": 300,
-                "tbcat": 1,
-                "m7cat": 1,
-                "dhcat": 1,
-                "hertacat": 1,
-                "rmcat": 1,
-                "qqcat": 1,
-                "bladecat": 1,
-                "claracat": 1,
-                "guicat": 1,
-                "kafcat": 1
             }
         }
     ]
