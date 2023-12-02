@@ -538,7 +538,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
         if member.id in self.save:
             player = self.save[member.id]
-            description = f"{member.display_name} currently has {player.currency} {CURRENCY_NAME}{'s' if player.currency > 1 else ''}"
+            description = f"{member.display_name} currently has {player.currency} {CURRENCY_EMOJI}"
             colour = discord.Colour.green()
         else:
             description = f"{member.display_name} isn't in our database. Have they ever talked??"
@@ -585,7 +585,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
         self.save_conf()
 
-        if item is None: item = CURRENCY_NAME
+        if item is None: item = CURRENCY_EMOJI
 
         embed = discord.Embed(
             title=f"Give to {member.display_name}",
@@ -613,7 +613,7 @@ class Currency(commands.Cog, name=COG_NAME):
         for id, player in topmembers:
             i += 1
             user: discord.Member = get(ctx.guild.members, id=id)
-            description += f"{i}. {user.display_name}: {player.currency} {CURRENCY_NAME}s\n"
+            description += f"{i}. {user.display_name}: {player.currency} {CURRENCY_EMOJI}\n"
 
         embed = discord.Embed(
             title=f"Currency scoreboard",
