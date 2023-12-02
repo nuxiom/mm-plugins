@@ -27,7 +27,7 @@
         "adenine": {
             "name": "Adenine",
             "description": "Collect all the DNA proteins for a special reward!",
-            "image": "000.png",
+            "image": "adna.png",
             "effects": {
                 "Effects.dna_role": ["DNA Collector"]
             }
@@ -35,7 +35,7 @@
         "cytosine": {
             "name": "Cytosine",
             "description": "Collect all the DNA proteins for a special reward!",
-            "image": "000.png",
+            "image": "adnc.png",
             "effects": {
                 "Effects.dna_role": ["DNA Collector"]
             }
@@ -43,7 +43,7 @@
         "guanine": {
             "name": "Guanine",
             "description": "Collect all the DNA proteins for a special reward!",
-            "image": "000.png",
+            "image": "adng.png",
             "effects": {
                 "Effects.dna_role": ["DNA Collector"]
             }
@@ -51,7 +51,7 @@
         "thymine": {
             "name": "Thymine",
             "description": "Collect all the DNA proteins for a special reward!",
-            "image": "000.png",
+            "image": "adnt.png",
             "effects": {
                 "Effects.dna_role": ["DNA Collector"]
             }

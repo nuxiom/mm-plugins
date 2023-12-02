@@ -662,7 +662,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
         item_id, itm = self.get_item(item)
         if itm is not None:
-            description = f"## {itm.name}\n\n"
+            description = f"## {itm.name}\n`{item_id}`\n\n"
             description += f"{itm.description}\n\n"
             description += "**Effects:**\n"
             if len(itm.effects.keys()) > 0:
@@ -670,17 +670,23 @@ class Currency(commands.Cog, name=COG_NAME):
                     description += f"- {eval(effect).__doc__}\n"
             else:
                 description += "*No effect, this item is purely a collectible!*"
-            colour = discord.Colour.green()
             embed = discord.Embed(
                 title=f'Item info',
                 description=description,
-                colour=colour
+                colour=discord.Colour.green()
+            )
+            embed.set_thumbnail(url="attachment://item.png")
+            embed.set_footer(text=self.footer)
+            with open(os.path.join(DIR, "img", "items", itm.image), "rb") as f:
+                await ctx.send(embed=embed, file=discord.File(fp=f, filename="item.png"))
+        else:
+            embed = discord.Embed(
+                title=f'Item info',
+                description=f"Item {item} not found!",
+                colour=discord.Colour.red()
             )
             embed.set_footer(text=self.footer)
             await ctx.send(embed=embed)
-        else:
-            description = f"Item {item} not found!"
-            colour = discord.Colour.red()
 
 
 
