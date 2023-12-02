@@ -83,18 +83,22 @@ class Player():
     """ Inventory (dict  item_id -> amount) """
     inventory: dict[str, int]
 
+    """ Currency boost """
+    currency_boost: float
+
     # Internal variables
     _last_talked: datetime.datetime
     _talked_this_minute: int
     _pulling: bool
 
-    def __init__(self, player_id: int, pull_currency: int = None, currency: int = 0, currencies: dict = {}, inventory: dict = {}):
+    def __init__(self, player_id: int, pull_currency: int = None, currency: int = 0, currencies: dict = {}, inventory: dict = {}, currency_boost: float = 0.0):
         self.player_id = player_id
         if pull_currency is not None:
             self.currency = pull_currency
         else:
             self.currency = currency
         self.inventory = inventory
+        self.currency_boost = currency_boost
 
         self._last_talked = datetime.datetime.now()
         self._talked_this_minute = 0
@@ -104,7 +108,8 @@ class Player():
         return {
             "player_id": self.player_id,
             "currency": self.currency,
-            "inventory": self.inventory
+            "inventory": self.inventory,
+            "currency_boost": self.currency_boost
         }
 
     @staticmethod
@@ -721,7 +726,15 @@ class Effects:
             - 20 Currency Boost: +15%
             - 50 Currency Boost: +20%
         """
-        pass
+        player = plugin.save[ctx.author.id]
+        if player.inventory["currencyboost"] < 5:
+            player.currency_boost = 0.05
+        elif player.inventory["currencyboost"] < 20:
+            player.currency_boost = 0.1
+        elif player.inventory["currencyboost"] < 50:
+            player.currency_boost = 0.15
+        else:
+            player.currency_boost = 0.2
 
 
 
