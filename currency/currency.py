@@ -266,7 +266,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
     def get_item(self, item: str):
         for item_id, itm in Data.items.items():
-            if itm.name == item or item_id == item:
+            if item.lower() in itm.name.lower() or item.lower() in item_id.lower():
                 return item_id, itm
         return None, None
 
