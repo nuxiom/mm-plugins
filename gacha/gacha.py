@@ -254,6 +254,8 @@ class Gacha(commands.Cog, name=COG_NAME):
         if os.path.exists(GACHA_FILE):
             self.load_conf()
 
+        logger.info(os.getcwd())
+
         self.bot.loop.create_task(self.schedule_save())
 
         shops_save = os.path.join(DIR, "shops_url.json")
