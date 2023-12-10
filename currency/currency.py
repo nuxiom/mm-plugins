@@ -664,40 +664,6 @@ class Currency(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
-    # Items and currencies inventory
-    @commands.command(name="inventory", aliases=["items", "bag"])
-    async def inventory(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
-        """Shows a user's inventory"""
-
-        if member is None:
-            member = ctx.author
-
-        if member.id in self.save:
-            player = self.save[member.id]
-
-            description = "## Items:\n"
-            i = 0
-            for item, amount in player.inventory.items():
-                i += 1
-                itm = Data.items[item]
-                description += f"- **{itm.name}** x{amount}\n"
-            if i == 0:
-                description += "This user has no items in their inventory."
-
-            colour = discord.Colour.green()
-        else:
-            description = f"{member.display_name} isn't in our database. Have they ever talked??"
-            colour = discord.Colour.red()
-
-        embed = discord.Embed(
-            title=f"{member.display_name}'s inventory",
-            description=description,
-            colour=colour
-        )
-        embed.set_footer(text=self.footer)
-        await ctx.send(embed=embed)
-
-
     # Display info about an item
     @commands.command(name="item")
     async def item(self, ctx: commands.Context, *, item: str):
