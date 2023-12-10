@@ -245,7 +245,11 @@ class Currency(commands.Cog, name=COG_NAME):
         if not msg.startswith("?") and player._talked_this_minute < 10:
             filtered = list(filter(lambda w: len(w) > 1, msg.split()))
             score = min(len(filtered), 20)
-            player.currency += score
+            boost = 1 + player.currency_boost
+            if any([role.id == 1145893255062495303 for role in message.author.roles]):
+                boost += 0.1
+            
+            player.currency += int(score * boost)
 
             if len(message.stickers) > 0:
                 player.currency += 3
@@ -361,7 +365,7 @@ class Currency(commands.Cog, name=COG_NAME):
                             for _ in range(count):
                                 player.inventory[item_id] += 1
                                 for effect, args in itm.effects.items():
-                                    await eval(effect)(self, ctx, *args)
+                                    await Effects.fx[effect](self, ctx, *args)
                             description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
             else:
@@ -401,7 +405,7 @@ class Currency(commands.Cog, name=COG_NAME):
                             for _ in range(count):
                                 player.inventory[item_id] += 1
                                 for effect, args in itm.effects.items():
-                                    await eval(effect)(self, ctx, *args)
+                                    await Effects.fx[effect](self, ctx, *args)
                             description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
 
@@ -527,7 +531,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     # Get player balance
-    @commands.command(name="balance", aliases=["money"])
+    @commands.command(name="balance", aliases=["money", "bal"])
     async def balance(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
         """Shows a user's currency balance"""
 
@@ -573,7 +577,7 @@ class Currency(commands.Cog, name=COG_NAME):
             for _ in range(amount):
                 player.inventory[item] += 1
                 for effect, args in itm.effects.items():
-                    await eval(effect)(self, ctx, *args)
+                    await Effects.fx[effect](self, ctx, *args)
         else:
             embed = discord.Embed(
                 title=f"Give to {member.display_name}",
@@ -672,7 +676,7 @@ class Currency(commands.Cog, name=COG_NAME):
             description += "**Effects:**\n"
             if len(itm.effects.keys()) > 0:
                 for effect in itm.effects.keys():
-                    description += f"- {eval(effect).__doc__}\n"
+                    description += f"- {Effects.fx[effect].__doc__.format(*itm.effects[effect])}\n"
             else:
                 description += "*No effect, this item is purely a collectible!*"
             embed = discord.Embed(
@@ -698,7 +702,7 @@ class Currency(commands.Cog, name=COG_NAME):
 class Effects:
     @staticmethod
     async def give_role(plugin: Currency, ctx: commands.Context, role_name: str):
-        """ Gives you a Discord role """
+        """ Gives you the "{}" Discord role """
 
         try:
             role = get(ctx.guild.roles, name=role_name)
@@ -735,6 +739,12 @@ class Effects:
             player.currency_boost = 0.15
         else:
             player.currency_boost = 0.2
+
+    fx = {
+        "give_role": give_role,
+        "dna_role": dna_role,
+        "currency_boost": currency_boost
+    }
 
 
 

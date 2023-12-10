@@ -7,6 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 DIR = os.path.dirname(__file__)
+CURRENCY_NAME = "Plum Blossom"
+CURRENCY_EMOJI = "🌸"
 
 
 def hash2(s: str):
@@ -24,25 +26,23 @@ class Item():
     """ Icon in shop / collection """
     image: str
 
-    """ Role (optional) """
-    role: Optional[str]
+    """ Effects """
+    effects: dict[str, list]
 
 
-    def __init__(self, name: str, description: str, image: str, role: Optional[str] = None) -> None:
+    def __init__(self, name: str, description: str, image: str, effects: dict[str, list] = {}) -> None:
         self.name = name
         self.description = description
         self.image = image
-        self.role = role
+        self.effects = effects
 
     def to_dict(self):
         res = {
             "name": self.name,
             "description": self.description,
-            "image": self.image
+            "image": self.image,
+            "effects": self.effects
         }
-
-        if self.role is not None:
-            res["role"] = self.role
 
         return res
 
@@ -51,16 +51,10 @@ class Item():
         return Item(**d)
 
     def get_image(self):
-        return Image.open(os.path.join(DIR, "img", "items", self.image))
+        return Image.open(os.path.join(DIR, "..", "currency", "img", "items", self.image))
 
 
 class Shop():
-    """ Currency name """
-    currency: str
-
-    """ Currency emoji """
-    currency_emoji: str
-
     """ Shop name """
     name: str
 
@@ -71,20 +65,13 @@ class Shop():
     to_sell: dict[str, int]
 
 
-    def __init__(self, currency: str, currency_emoji: str, name: str = None, to_buy: dict = {}, to_sell: dict = {}):
-        if name is None:
-            name = f"{currency.title()} shop"
-
-        self.currency = currency
-        self.currency_emoji = currency_emoji
+    def __init__(self, name: str, to_buy: dict = {}, to_sell: dict = {}):
         self.name = name
         self.to_buy = to_buy
         self.to_sell = to_sell
 
     def to_dict(self):
         return {
-            "currency": self.currency,
-            "currency_emoji": self.currency_emoji,
             "name": self.name,
             "to_buy": self.to_buy,
             "to_sell": self.to_sell
@@ -122,7 +109,7 @@ def get_shop_image_to_buy(shop, items: dict[str, Item]):
     # Split the items in chunks of 8
     to_buys = [list(shop.to_buy.items())[i * 8:(i + 1) * 8] for i in range((len(shop.to_buy) + 8 - 1) // 8 )]
     for to_buy in to_buys:
-        img = Image.open(os.path.join(DIR, "img", "background.png"))
+        img = Image.open(os.path.join(DIR, "img", "background2.png"))
         draw = ImageDraw.Draw(img)
 
         for i, itemprice in enumerate(to_buy):
@@ -141,7 +128,7 @@ def get_shop_image_to_buy(shop, items: dict[str, Item]):
             ty = y + 170
             draw.text((tx, ty), item.name, font=font, fill='white')
 
-            currency_img = get_emoji_img(shop.currency_emoji, (42, 42))
+            currency_img = get_emoji_img(CURRENCY_EMOJI, (42, 42))
 
             pricetxt = f"{int(price)} "
             _, _, w, _ = draw.textbbox((0, 0), pricetxt, font=font)
@@ -164,7 +151,7 @@ def get_shop_image_to_sell(shop, items: dict[str, Item]):
     # Split the items in chunks of 8
     to_sells = [list(shop.to_sell.items())[i * 8:(i + 1) * 8] for i in range((len(shop.to_sell) + 8 - 1) // 8 )]
     for to_sell in to_sells:
-        img = Image.open(os.path.join(DIR, "img", "background2.png"))
+        img = Image.open(os.path.join(DIR, "img", "background.png"))
         draw = ImageDraw.Draw(img)
 
         for i, itemprice in enumerate(to_sell):
@@ -199,7 +186,7 @@ def get_shop_image_to_sell(shop, items: dict[str, Item]):
 
 
 if __name__ == "__main__":
-    with open(os.path.join(DIR, "data.json"), encoding='utf8') as f:
+    with open(os.path.join(DIR, "..", "currency", "data.json"), encoding='utf8') as f:
         data = json.load(f)
 
     items = {}
