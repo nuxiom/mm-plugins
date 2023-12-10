@@ -637,7 +637,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     # Scoreboard for currency owners (debug)
-    @commands.command(name="currency_topkek")
+    @commands.command(name="topkek")
     async def topkek(self, ctx: commands.Context):
         """Scoreboard for currency owners (for debug purposes)"""
 
