@@ -1,13 +1,13 @@
 {
     "items": {
         "5starRole": {
-            "name": "5* Role",
+            "name": "5-star Role",
             "description": "This is a super rare role!",
             "image": "000.png",
             "role": "Super Lucky Player"
         },
         "4starCollectible": {
-            "name": "4* Collectible",
+            "name": "4-star Collectible",
             "description": "This is just a collectible, doesn't give a role but it's nice to have!",
             "image": "001.png"
         },
@@ -68,7 +68,6 @@
             "currency": "Plum Blossom",
             "currency_emoji": "🌸",
             "to_buy": {
-                "5starRole": 1e6,
                 "tbcat": 1e6,
                 "m7cat": 1e6,
                 "dhcat": 1e6,
@@ -110,9 +109,9 @@
     "banners": [
         {
             "name": "Standard banner",
-            "pull_cost": 50,
+            "pull_cost": 1,
             "drop_weights": {
-                "1": ["5starRole", "rmcat"],
+                "1": ["5starRole"],
                 "2999": ["4starCollectible"]
             }
         }

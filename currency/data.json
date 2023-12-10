@@ -1,0 +1,92 @@
+{
+    "items": {
+        "mrrole": {
+            "name": "Mei's Ruan Role",
+            "description": "The must-have role for real Ruan Mei mains!",
+            "image": "ruan.png",
+            "effects": {
+                "give_role": ["Mei's Ruan"]
+            }
+        },
+        "pbprole": {
+            "name": "Pastry Role",
+            "description": "Tasty~",
+            "image": "000.png",
+            "effects": {
+                "give_role": ["Plum Blossom Pastry"]
+            }
+        },
+        "ferole": {
+            "name": "Embroidery Role",
+            "description": "Become a trendsetter with this super fashionable role!",
+            "image": "embroiderie.png",
+            "effects": {
+                "give_role": ["Floral Embroidery"]
+            }
+        },
+        "adenine": {
+            "name": "Adenine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "adna.png",
+            "effects": {
+                "dna_role": ["DNA Collector"]
+            }
+        },
+        "cytosine": {
+            "name": "Cytosine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "adnc.png",
+            "effects": {
+                "dna_role": ["DNA Collector"]
+            }
+        },
+        "guanine": {
+            "name": "Guanine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "adng.png",
+            "effects": {
+                "dna_role": ["DNA Collector"]
+            }
+        },
+        "thymine": {
+            "name": "Thymine",
+            "description": "Collect all the DNA proteins for a special reward!",
+            "image": "adnt.png",
+            "effects": {
+                "dna_role": ["DNA Collector"]
+            }
+        },
+        "currencyboost": {
+            "name": "Currency Boost",
+            "description": "Boosts currency earn. The more you have, the better!",
+            "image": "booster.png",
+            "effects": {
+                "currency_boost": []
+            }
+        },
+        "octoplush": {
+            "name": "Octo Plush",
+            "description": "Reversable octopus plushie. It's so cute when it changes its mood!",
+            "image": "octoplush.png"
+        }
+    },
+
+    "shops": [
+        {
+            "name": "Permanent Shop",
+            "to_buy": {
+                "pbprole": 10000,
+                "ferole": 20000,
+                "mrrole": 30000,
+                "adenine": 20000,
+                "cytosine": 20000,
+                "guanine": 20000,
+                "thymine": 20000,
+                "currencyboost": 1000,
+                "octoplush": 50000
+            },
+            "to_sell": {
+            }
+        }
+    ]
+}

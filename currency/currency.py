@@ -4,6 +4,7 @@ import io
 import json
 import os
 import random
+import shutil
 import uuid
 from typing import Optional
 
@@ -21,15 +22,12 @@ from core.paginator import EmbedPaginatorSession
 logger = getLogger(__name__)
 
 
-COG_NAME = "Gacha"
+COG_NAME = "Currency"
 DIR = os.path.dirname(__file__)
-GACHA_FILE = os.path.join(os.path.expanduser("~"), "gacha.json")
-CURRENCY_NAME = "Cosmic Fragment"
-CURRENCY_EMOJI = "cosmic.png"
-PULL_ANIM = [
-    "https://media.discordapp.net/attachments/1179003913354104832/1179017794994569236/pull-5star.gif",
-    "https://media.discordapp.net/attachments/1179003913354104832/1179029377976119306/pull-3star.gif"
-]
+OLD_GACHA_FILE = os.path.join(os.path.expanduser("~"), "gacha.json")
+SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
+CURRENCY_NAME = "Plum Blossom"
+CURRENCY_EMOJI = "🌸"
 
 
 def hash2(s: str):
@@ -47,25 +45,23 @@ class Item():
     """ Icon in shop / collection """
     image: str
 
-    """ Role (optional) """
-    role: Optional[str]
+    """ Effects """
+    effects: dict[str, list]
 
 
-    def __init__(self, name: str, description: str, image: str, role: Optional[str] = None) -> None:
+    def __init__(self, name: str, description: str, image: str, effects: dict[str, list] = {}) -> None:
         self.name = name
         self.description = description
         self.image = image
-        self.role = role
+        self.effects = effects
 
     def to_dict(self):
         res = {
             "name": self.name,
             "description": self.description,
-            "image": self.image
+            "image": self.image,
+            "effects": self.effects
         }
-
-        if self.role is not None:
-            res["role"] = self.role
 
         return res
 
@@ -81,25 +77,28 @@ class Player():
     """ Player id """
     player_id: int
 
-    """ Pull currency """
-    pull_currency: int
-
-    """ Shop currencies (dict  name -> amount) """
-    currencies: dict[str, int]
+    """ Currency """
+    currency: int
 
     """ Inventory (dict  item_id -> amount) """
     inventory: dict[str, int]
+
+    """ Currency boost """
+    currency_boost: float
 
     # Internal variables
     _last_talked: datetime.datetime
     _talked_this_minute: int
     _pulling: bool
 
-    def __init__(self, player_id: int, pull_currency: int = 0, currencies: dict = {}, inventory: dict = {}):
+    def __init__(self, player_id: int, pull_currency: int = None, currency: int = 0, currencies: dict = {}, inventory: dict = {}, currency_boost: float = 0.0):
         self.player_id = player_id
-        self.pull_currency = pull_currency
-        self.currencies = currencies
+        if pull_currency is not None:
+            self.currency = pull_currency
+        else:
+            self.currency = currency
         self.inventory = inventory
+        self.currency_boost = currency_boost
 
         self._last_talked = datetime.datetime.now()
         self._talked_this_minute = 0
@@ -108,9 +107,9 @@ class Player():
     def to_dict(self):
         return {
             "player_id": self.player_id,
-            "pull_currency": self.pull_currency,
-            "currencies": self.currencies,
-            "inventory": self.inventory
+            "currency": self.currency,
+            "inventory": self.inventory,
+            "currency_boost": self.currency_boost
         }
 
     @staticmethod
@@ -119,12 +118,6 @@ class Player():
 
 
 class Shop():
-    """ Currency name """
-    currency: str
-
-    """ Currency emoji """
-    currency_emoji: str
-
     """ Shop name """
     name: str
 
@@ -135,20 +128,13 @@ class Shop():
     to_sell: dict[str, int]
 
 
-    def __init__(self, currency: str, currency_emoji: str, name: str = None, to_buy: dict = {}, to_sell: dict = {}):
-        if name is None:
-            name = f"{currency.title()} shop"
-
-        self.currency = currency
-        self.currency_emoji = currency_emoji
+    def __init__(self, name: str, to_buy: dict = {}, to_sell: dict = {}):
         self.name = name
         self.to_buy = to_buy
         self.to_sell = to_sell
 
     def to_dict(self):
         return {
-            "currency": self.currency,
-            "currency_emoji": self.currency_emoji,
             "name": self.name,
             "to_buy": self.to_buy,
             "to_sell": self.to_sell
@@ -159,73 +145,11 @@ class Shop():
         return Shop(**d)
 
 
-class Banner():
-    """ Banner/event name """
-    name: str
-
-    """ Items (dict  drop_weight -> list[item_id]) """
-    drop_weights: dict[int, list[str]] # eg: if weight is 1 and sum of weights is 3000, 1 among 3000 chances to get one in the list
-
-    """ Pull cost """
-    pull_cost: int
-
-    _cumulative_weights = []
-
-    def __init__(self, name: str, pull_cost: int, drop_weights: dict = {}):
-        self.name = name
-        self.pull_cost = pull_cost
-        self.drop_weights = drop_weights
-
-        self._cumulative_weights = [0]
-        for w in sorted(self.drop_weights.keys()):
-            self._cumulative_weights.append(self._cumulative_weights[0] + w)
-        self._cumulative_weights.pop(0)
-
-    def to_dict(self):
-        new_drop_weights = {}
-        for weight, lst in self.drop_weights.items():
-            new_drop_weights[str(weight)] = lst
-
-        return {
-            "name": self.name,
-            "pull_cost": self.pull_cost,
-            "drop_weights": new_drop_weights
-        }
-
-    @staticmethod
-    def from_dict(d: dict):
-        new_drop_weights = {}
-        for weight, lst in d["drop_weights"].items():
-            new_drop_weights[int(weight)] = lst
-
-        d["drop_weights"] = new_drop_weights
-        return Banner(**d)
-
-    def get_rates_text(self, items: dict[str, Item]):
-        text = f"### Pulls cost: {self.pull_cost} {CURRENCY_NAME}{'s' if self.pull_cost > 1 else ''}\n\n"
-
-        sorted_rates = sorted(self.drop_weights.keys())
-        total_weight = sum(sorted_rates)
-
-        for weight in sorted_rates:
-            rate = weight / total_weight * 100
-            text += f"{rate:.2f}% chance to get one of the following:\n"
-
-            for item_id in self.drop_weights[weight]:
-                text += f"- {items[item_id].name}\n"
-
-            text += "\n"
-
-        return text.strip()
-
-
 class Data:
 
     items: dict[str, Item] = {}
 
     shops: list[Shop] = []
-
-    banners: list[Banner] = []
 
     with open(os.path.join(DIR, "data.json"), encoding='utf8') as f:
         o = json.load(f)
@@ -236,13 +160,10 @@ class Data:
         for s in o["shops"]:
             shops.append(Shop.from_dict(s))
 
-        for b in o["banners"]:
-            banners.append(Banner.from_dict(b))
 
 
-
-class Gacha(commands.Cog, name=COG_NAME):
-    """Earn currency, gacha-it, and win roles!"""
+class Currency(commands.Cog, name=COG_NAME):
+    """Earn currency, spend in shops, and win roles!"""
 
     save: dict[int, Player]
 
@@ -251,7 +172,10 @@ class Gacha(commands.Cog, name=COG_NAME):
         self.cog_id = uuid.uuid4()
 
         self.save = {}
-        if os.path.exists(GACHA_FILE):
+        if os.path.exists(OLD_GACHA_FILE):
+            shutil.copy(OLD_GACHA_FILE, SAVE_FILE)
+            os.remove(OLD_GACHA_FILE)
+        if os.path.exists(SAVE_FILE):
             self.load_conf()
 
         logger.info(os.getcwd())
@@ -268,13 +192,14 @@ class Gacha(commands.Cog, name=COG_NAME):
             for i in range(n):
                 filename = f"to_sell_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
                 if filename not in self.shop_images.keys():
+                    # TODO: "upload" to Discord and retrieve URL
                     logger.warn(f"No image for shop {shop.name}-{i}")
 
         self.footer = ""  # TODO: added just in case we do something with it someday
 
 
     def load_conf(self):
-        with open(GACHA_FILE, "r") as f:
+        with open(SAVE_FILE, "r") as f:
             save = json.load(f)
 
         for k, v in save.items():
@@ -286,13 +211,13 @@ class Gacha(commands.Cog, name=COG_NAME):
         for k, v in self.save.items():
             save[str(k)] = v.to_dict()
 
-        with open(GACHA_FILE, "w+") as f:
+        with open(SAVE_FILE, "w+") as f:
             json.dump(save, f)
 
 
     async def schedule_save(self):
         while True:
-            cog: Gacha = self.bot.get_cog(COG_NAME)
+            cog: Currency = self.bot.get_cog(COG_NAME)
             if cog is None or cog.cog_id != self.cog_id:
                 # We are in an old cog after update and don't have to send QOTD anymore
                 break
@@ -320,28 +245,16 @@ class Gacha(commands.Cog, name=COG_NAME):
         if not msg.startswith("?") and player._talked_this_minute < 10:
             filtered = list(filter(lambda w: len(w) > 1, msg.split()))
             score = min(len(filtered), 20)
-            player.pull_currency += score
+            boost = 1 + player.currency_boost
+            if any([role.id == 1145893255062495303 for role in message.author.roles]):
+                boost += 0.1
+            
+            player.currency += int(score * boost)
 
             if len(message.stickers) > 0:
-                player.pull_currency += 3
+                player.currency += 3
 
             player._talked_this_minute += 1
-
-
-    def get_banner(self, banner: str):
-        bann: Banner = None
-        if banner is None:
-            if len(Data.banners) == 1:
-                bann = Data.banners[0]
-        else:
-            if banner.isnumeric() and int(banner) > 0 and int(banner) <= len(Data.banners):
-                bann = Data.banners[int(banner) - 1]
-            else:
-                for b in Data.banners:
-                    if b.name == banner:
-                        bann = b
-                        break
-        return bann
 
 
     def get_shop(self, shop: str):
@@ -362,7 +275,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
     def get_item(self, item: str):
         for item_id, itm in Data.items.items():
-            if itm.name == item or item_id == item:
+            if item.lower() in itm.name.lower() or item.lower() in item_id.lower():
                 return item_id, itm
         return None, None
 
@@ -382,54 +295,8 @@ class Gacha(commands.Cog, name=COG_NAME):
         return itm, price
 
 
-    async def give_role(self, ctx: commands.Context, item: Item):
-        if item.role is not None:
-            try:
-                role = get(ctx.guild.roles, name=item.role)
-                logger.info(f"{ctx.author} won role {item.role}")
-                await ctx.author.add_roles(role)
-                self.save_conf()
-            except:
-                logger.error(f"Error while giving role {item.role} to {ctx.author}")
-
-
-    @commands.group(invoke_without_command=True)
-    async def gacha(self, ctx):
-        """
-        Ruan Mei Mains' gacha system!
-        """
-
-        await ctx.send_help(ctx.command)
-
-
-    # Get gacha drop rates
-    @gacha.command(name="details", aliases=["rates"])
-    async def details(self, ctx: commands.Context, *, banner: str = None):
-        """Display gacha drop rates for current banner"""
-
-        bann = self.get_banner(banner)
-
-        if bann is None:
-            description = f'Banner "{banner}" not found!'
-            colour = discord.Colour.red()
-        else:
-            bann_description = bann.get_rates_text(Data.items)
-            description = f"# {bann.name}\n\n{bann_description}"
-            colour = discord.Colour.green()
-
-
-        embed = discord.Embed(
-            title="Banner details",
-            description=f"{description}",
-            colour=colour
-        )
-        embed.set_footer(text=self.footer)
-
-        await ctx.send(embed=embed)
-
-
     # List items to buy in shops
-    @gacha.command(name="buy")
+    @commands.command(name="buy")
     async def buy(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Buy items / Shows what's to buy in the shops"""
 
@@ -448,7 +315,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     if filename in self.shop_images.keys():
                         embed.set_image(url=self.shop_images[filename])
                     else:
-                        embed.set_footer("ERROR: No image for this shop. Please ping @cyxo")
+                        embed.set_footer(text="ERROR: No image for this shop. Please ping @cyxo")
                     embeds.append(embed)
 
             paginator = EmbedPaginatorSession(ctx, *embeds)
@@ -459,7 +326,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             if ctx.author.id not in self.save:
                 embed = discord.Embed(
                     title=title,
-                    description=f"You don't have any currency. Try talking a little before trying to buy, okay?",
+                    description=f"You don't have any money. Try talking a little before trying to buy, okay?",
                     colour=colour
                 )
                 embed.set_footer(text=self.footer)
@@ -478,7 +345,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     embed.set_footer(text=self.footer)
                     await ctx.send(embed=embed)
                     return
-                
+
                 shp = self.get_shop(shop)
                 if shp is None:
                     description = f'Shop "{shop}" not found'
@@ -489,14 +356,17 @@ class Gacha(commands.Cog, name=COG_NAME):
                     else:
                         item_id, _ = self.get_item(itm.name)
                         total_price = price * count
-                        if shp.currency_emoji not in player.currencies.keys() or player.currencies[shp.currency_emoji] < total_price:
-                            description = f"You don't have enough {shp.currency}s to buy {count} {itm.name}"
+                        if player.currency < total_price:
+                            description = f"You don't have enough {CURRENCY_NAME}s to buy {count} {itm.name}"
                         else:
-                            player.currencies[shp.currency_emoji] -= total_price
+                            player.currency -= total_price
                             if item_id not in player.inventory.keys():
                                 player.inventory[item_id] = 0
-                            player.inventory[item_id] += count
-                            description = f"You bought **{count} {itm.name}** for **{total_price}** {shp.currency_emoji}"
+                            for _ in range(count):
+                                player.inventory[item_id] += 1
+                                for effect, args in itm.effects.items():
+                                    await Effects.fx[effect](self, ctx, *args)
+                            description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
             else:
                 shp = None
@@ -526,14 +396,17 @@ class Gacha(commands.Cog, name=COG_NAME):
                     else:
                         item_id, _ = self.get_item(itm.name)
                         total_price = price * count
-                        if shp.currency_emoji not in player.currencies.keys() or player.currencies[shp.currency_emoji] < total_price:
-                            description = f"You don't have enough {shp.currency}s to buy {count} {itm.name}"
+                        if player.currency < total_price:
+                            description = f"You don't have enough {CURRENCY_NAME}s to buy {count} {itm.name}"
                         else:
-                            player.currencies[shp.currency_emoji] -= total_price
+                            player.currency -= total_price
                             if item_id not in player.inventory.keys():
                                 player.inventory[item_id] = 0
-                            player.inventory[item_id] += count
-                            description = f"You bought **{count} {itm.name}** for **{total_price}** {shp.currency_emoji}"
+                            for _ in range(count):
+                                player.inventory[item_id] += 1
+                                for effect, args in itm.effects.items():
+                                    await Effects.fx[effect](self, ctx, *args)
+                            description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
 
             embed = discord.Embed(
@@ -545,7 +418,7 @@ class Gacha(commands.Cog, name=COG_NAME):
             await ctx.send(embed=embed)
 
 
-    @gacha.command(name="sell")
+    @commands.command(name="sell")
     async def sell(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Sell items / Shows what's to sell in the shops"""
 
@@ -594,7 +467,7 @@ class Gacha(commands.Cog, name=COG_NAME):
                     embed.set_footer(text=self.footer)
                     await ctx.send(embed=embed)
                     return
-                
+
                 shp = self.get_shop(shop)
                 if shp is None:
                     description = f'Shop "{shop}" not found'
@@ -609,10 +482,8 @@ class Gacha(commands.Cog, name=COG_NAME):
                         else:
                             total_price = price * count
                             player.inventory[item_id] -= count
-                            if shp.currency_emoji not in player.currencies.keys():
-                                player.currencies[shp.currency_emoji] = 0
-                            player.currencies[shp.currency_emoji] += total_price
-                            description = f"You sold **{count} {itm.name}** and earned **{total_price}** {shp.currency_emoji}"
+                            player.currency += total_price
+                            description = f"You sold **{count} {itm.name}** and earned **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
             else:
                 shp = None
@@ -646,10 +517,8 @@ class Gacha(commands.Cog, name=COG_NAME):
                         else:
                             total_price = price * count
                             player.inventory[item_id] -= count
-                            if shp.currency_emoji not in player.currencies.keys():
-                                player.currencies[shp.currency_emoji] = 0
-                            player.currencies[shp.currency_emoji] += total_price
-                            description = f"You sold **{count} {itm.name}** and earned **{total_price}** {shp.currency_emoji}"
+                            player.currency += total_price
+                            description = f"You sold **{count} {itm.name}** and earned **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
 
             embed = discord.Embed(
@@ -662,7 +531,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
 
     # Get player balance
-    @gacha.command(name="balance", aliases=["money"])
+    @commands.command(name="balance", aliases=["money", "bal"])
     async def balance(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
         """Shows a user's currency balance"""
 
@@ -671,18 +540,7 @@ class Gacha(commands.Cog, name=COG_NAME):
 
         if member.id in self.save:
             player = self.save[member.id]
-
-            description = "## Pull currency:\n"
-            description += f"{player.pull_currency} {CURRENCY_NAME}{'s' if player.pull_currency > 1 else ''}"
-            
-            description += "\n## Shop currencies:\n"
-            i = 0
-            for curr, amount in player.currencies.items():
-                i += 1
-                description += f"- {amount} {curr}\n"
-            if i == 0:
-                description += "This user has no shop currencies.\n"
-
+            description = f"{member.display_name} currently has {player.currency} {CURRENCY_EMOJI}"
             colour = discord.Colour.green()
         else:
             description = f"{member.display_name} isn't in our database. Have they ever talked??"
@@ -698,76 +556,8 @@ class Gacha(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
-    # Give item or currency to user
-    @gacha.command(name="give")
-    @checks.has_permissions(PermissionLevel.OWNER)
-    async def give(self, ctx: commands.Context, member: commands.MemberConverter, amount: int, *, item: str = None):
-        """Gives an item or currency to a member"""
-
-        if member.id in self.save:
-            player = self.save[member.id]
-        else:
-            player = Player(member.id)
-            self.save[member.id] = player
-
-        if item is None:
-            player.pull_currency += amount
-        elif item in Data.items.keys():
-            if item not in player.inventory.keys():
-                player.inventory[item] = 0
-            player.inventory[item] += amount
-            await self.give_role(ctx, Data.items[item])
-        else:
-            for shp in Data.shops:
-                if item.lower() == shp.currency.lower() or item == shp.currency_emoji:
-                    if shp.currency_emoji not in player.currencies.keys():
-                        player.currencies[shp.currency_emoji] = 0
-                    player.currencies[shp.currency_emoji] += amount
-
-        self.save_conf()
-
-        if item is None: item = CURRENCY_NAME
-
-        embed = discord.Embed(
-            title=f"Give to {member.display_name}",
-            description=f"Gave **{amount} {item}** to {member.mention}",
-            colour=discord.Colour.green()
-        )
-        embed.set_footer(text=self.footer)
-
-        await ctx.send(embed=embed)
-
-
-    # Scoreboard for currency owners (debug)
-    @gacha.command(name="topkek")
-    async def topkek(self, ctx: commands.Context):
-        """Scoreboard for currency owners (for debug purposes)"""
-
-        topmembers = sorted(self.save.items(), key=lambda p: p[1].pull_currency, reverse=True)
-        topmembers = list(filter(
-            lambda i: (m := get(ctx.guild.members, id=i[0])) is not None and not m.bot,
-            topmembers))
-        topmembers = topmembers[:min(len(topmembers), 10)]
-
-        description = ""
-        i = 0
-        for id, player in topmembers:
-            i += 1
-            user: discord.Member = get(ctx.guild.members, id=id)
-            description += f"{i}. {user.display_name}: {player.pull_currency} {CURRENCY_NAME}s\n"
-
-        embed = discord.Embed(
-            title=f"Currency scoreboard",
-            description=description.strip(),
-            colour=discord.Colour.green()
-        )
-        embed.set_footer(text=self.footer)
-
-        await ctx.send(embed=embed)
-
-
     # Items and currencies inventory
-    @gacha.command(name="inventory", aliases=["items", "bag"])
+    @commands.command(name="inventory", aliases=["items", "bag", "inv"])
     async def inventory(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
         """Shows a user's inventory"""
 
@@ -800,139 +590,163 @@ class Gacha(commands.Cog, name=COG_NAME):
         await ctx.send(embed=embed)
 
 
-    # Pull on a banner
-    @gacha.command(name="pull", aliases=["single", "multi", "10pull"])
-    async def pull(self, ctx: commands.Context, *, banner: str = "1"):
-        """Pull on a banner (defaults to banner number 1)"""
+    # Give item or currency to user
+    @commands.command(name="give")
+    @checks.has_permissions(PermissionLevel.OWNER)
+    async def give(self, ctx: commands.Context, member: commands.MemberConverter, amount: int, *, item: str = None):
+        """Gives an item or currency to a member"""
 
-        command = ctx.message.content.split()[1]
-        bann = self.get_banner(banner)
+        if member.id in self.save:
+            player = self.save[member.id]
+        else:
+            player = Player(member.id)
+            self.save[member.id] = player
 
-        error_title = f"Can't do a {command}"
-        MULTIS = ["10pull", "multi"]
-
-        if bann is None:
-            description = f'No banners at the time!'
+        if item is None:
+            player.currency += amount
+        elif item in Data.items.keys():
+            _, itm = self.get_item(item)
+            if item not in player.inventory.keys():
+                player.inventory[item] = 0
+            for _ in range(amount):
+                player.inventory[item] += 1
+                for effect, args in itm.effects.items():
+                    await Effects.fx[effect](self, ctx, *args)
+        else:
             embed = discord.Embed(
-                title=error_title,
-                description=description.strip(),
+                title=f"Give to {member.display_name}",
+                description=f"Item {item} does not exist.",
                 colour=discord.Colour.red()
             )
             embed.set_footer(text=self.footer)
             await ctx.send(embed=embed)
             return
 
-        if command in MULTIS:
-            pull_count = 10
-        else:
-            pull_count = 1
-        pull_cost = bann.pull_cost * pull_count
+        self.save_conf()
 
-        player_id = ctx.author.id
-        if player_id not in self.save.keys() or self.save[player_id].pull_currency < pull_cost:
-            description = f"You don't have enough {CURRENCY_NAME}s. The cost for a {command} on this banner is **{pull_cost} {CURRENCY_NAME}{'s' if pull_cost > 1 else ''}**.\n\nTalk some more and use `?gacha balance` to check your balance!"
-            embed = discord.Embed(
-                title=error_title,
-                description=description.strip(),
-                colour=discord.Colour.red()
-            )
-            embed.set_footer(text=self.footer)
-            await ctx.send(embed=embed)
-            return
-
-        player = self.save[player_id]
-        if player._pulling:
-            description = f"You already have an ongoing pull, please be patient!"
-            embed = discord.Embed(
-                title=error_title,
-                description=description.strip(),
-                colour=discord.Colour.red()
-            )
-            embed.set_footer(text=self.footer)
-            await ctx.send(embed=embed)
-            return
-
-        player._pulling = True
-
-        title = f"{ctx.author.display_name}'s {command} on {bann.name}"
-
-        pull_results = []
-        pull_results_ids = []
-        mini = len(PULL_ANIM)
-        for _ in range(pull_count):
-            rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
-            for i in range(len(bann._cumulative_weights)):
-                if rnd < bann._cumulative_weights[i]:
-                    if i < mini:
-                        mini = i
-                    weight = sorted(bann.drop_weights.keys())[i]
-                    item_id = random.choice(bann.drop_weights[weight])
-                    pull_results_ids.append(item_id)
-                    item = Data.items[item_id]
-                    pull_results.append(item)
-                    break
-
-        if mini < len(PULL_ANIM):
-            anim = PULL_ANIM[mini]
-        else:
-            anim = PULL_ANIM[-1]
-
-        img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
-        if command in MULTIS:
-            for i in range(pull_count):
-                item = pull_results[i]
-                itm = item.get_image().resize((92, 92))
-                img.paste(itm, (30 * (1+(i % 5)) + 92 * (i % 5), 60 * (1+(i // 5)) + 92 * (i // 5)), itm)
-        else:
-            item = pull_results[0]
-            itm = item.get_image().resize((160, 160))
-            img.paste(itm, (240, 100), itm)
-
-        with io.BytesIO() as f:
-            img.save(f, 'PNG')
-            f.seek(0)
-            r = requests.post("https://api.imgbb.com/1/upload?key=97d73c9821eedce1864ef870883defdb", files={"image": f})
-            j = r.json()
-            pull_url = j["data"]["url"]
-
-        colour = discord.Colour.random()
-        embed = discord.Embed(
-            title=title,
-            colour=colour
-        )
-        embed.set_image(url=anim)
-        embed.set_footer(text=self.footer)
-
-        message: discord.Message = await ctx.send(embed=embed)
-
-        await asyncio.sleep(11.5)
+        if item is None: item = CURRENCY_EMOJI
 
         embed = discord.Embed(
-            title=title,
-            colour=colour
+            title=f"Give to {member.display_name}",
+            description=f"Gave **{amount} {item}** to {member.mention}",
+            colour=discord.Colour.green()
         )
-        embed.set_image(url=pull_url)
         embed.set_footer(text=self.footer)
 
-        results_dict = dict([(item.name, pull_results.count(item)) for item in pull_results])
-        results_str = [f"**{k} x{v}**" for k, v in results_dict.items()]
+        await ctx.send(embed=embed)
 
-        await message.edit(embed=embed)
-        await message.reply(f"{ctx.author.mention} just pulled {', '.join(results_str)}!")
 
-        for item in pull_results:
-            await self.give_role(ctx, item)
+    # Scoreboard for currency owners (debug)
+    @commands.command(name="topkek")
+    async def topkek(self, ctx: commands.Context):
+        """Scoreboard for currency owners (for debug purposes)"""
 
-        player.pull_currency -= pull_cost
+        topmembers = sorted(self.save.items(), key=lambda p: p[1].currency, reverse=True)
+        topmembers = list(filter(
+            lambda i: (m := get(ctx.guild.members, id=i[0])) is not None and not m.bot,
+            topmembers))
+        topmembers = topmembers[:min(len(topmembers), 10)]
 
-        for item_id in pull_results_ids:
-            if item_id not in player.inventory:
-                player.inventory[item_id] = 0
+        description = ""
+        i = 0
+        for id, player in topmembers:
+            i += 1
+            user: discord.Member = get(ctx.guild.members, id=id)
+            description += f"{i}. {user.display_name}: {player.currency} {CURRENCY_EMOJI}\n"
 
-            player.inventory[item_id] += 1
+        embed = discord.Embed(
+            title=f"Currency scoreboard",
+            description=description.strip(),
+            colour=discord.Colour.green()
+        )
+        embed.set_footer(text=self.footer)
 
-        player._pulling = False
+        await ctx.send(embed=embed)
+
+
+    # Display info about an item
+    @commands.command(name="item")
+    async def item(self, ctx: commands.Context, *, item: str):
+        """ Shows info about an item """
+
+        item_id, itm = self.get_item(item)
+        if itm is not None:
+            description = f"## {itm.name}\n`{item_id}`\n\n"
+            description += f"{itm.description}\n\n"
+            description += "**Effects:**\n"
+            if len(itm.effects.keys()) > 0:
+                for effect in itm.effects.keys():
+                    description += f"- {Effects.fx[effect].__doc__.format(*itm.effects[effect])}\n"
+            else:
+                description += "*No effect, this item is purely a collectible!*"
+            embed = discord.Embed(
+                title=f'Item info',
+                description=description,
+                colour=discord.Colour.green()
+            )
+            embed.set_thumbnail(url="attachment://item.png")
+            embed.set_footer(text=self.footer)
+            with open(os.path.join(DIR, "img", "items", itm.image), "rb") as f:
+                await ctx.send(embed=embed, file=discord.File(fp=f, filename="item.png"))
+        else:
+            embed = discord.Embed(
+                title=f'Item info',
+                description=f"Item {item} not found!",
+                colour=discord.Colour.red()
+            )
+            embed.set_footer(text=self.footer)
+            await ctx.send(embed=embed)
+
+
+
+class Effects:
+    @staticmethod
+    async def give_role(plugin: Currency, ctx: commands.Context, role_name: str):
+        """ Gives you the "{}" Discord role """
+
+        try:
+            role = get(ctx.guild.roles, name=role_name)
+            logger.info(f"{ctx.author} won role {role_name}")
+            await ctx.author.add_roles(role)
+        except:
+            logger.error(f"Error while giving role {role_name} to {ctx.author}")
+
+    @staticmethod
+    async def dna_role(plugin: Currency, ctx: commands.Context, dna_role_name: str):
+        """ Collect them all to get a special prize! """
+
+        dna_list = ["adenine", "cytosine", "guanine", "thymine"]
+
+        player = plugin.save[ctx.author.id]
+        if all(dna in player.inventory.keys() for dna in dna_list):
+            await Effects.give_role(plugin, ctx, dna_role_name)
+            await ctx.author.send(f'Congrats! You\'ve just received the role "{dna_role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
+
+    @staticmethod
+    async def currency_boost(plugin: Currency, ctx: commands.Context):
+        """ Boosts your currency earnings. The more you have the better!
+            - 1 Currency Boost: +5%
+            - 5 Currency Boost: +10%
+            - 20 Currency Boost: +15%
+            - 50 Currency Boost: +20%
+        """
+        player = plugin.save[ctx.author.id]
+        if player.inventory["currencyboost"] < 5:
+            player.currency_boost = 0.05
+        elif player.inventory["currencyboost"] < 20:
+            player.currency_boost = 0.1
+        elif player.inventory["currencyboost"] < 50:
+            player.currency_boost = 0.15
+        else:
+            player.currency_boost = 0.2
+
+    fx = {
+        "give_role": give_role,
+        "dna_role": dna_role,
+        "currency_boost": currency_boost
+    }
+
 
 
 async def setup(bot):
-    await bot.add_cog(Gacha(bot))
+    await bot.add_cog(Currency(bot))
