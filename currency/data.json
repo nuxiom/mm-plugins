@@ -82,7 +82,7 @@
                 "cytosine": 20000,
                 "guanine": 20000,
                 "thymine": 20000,
-                "currencyboost": 10000,
+                "currencyboost": 1000,
                 "octoplush": 50000
             },
             "to_sell": {
