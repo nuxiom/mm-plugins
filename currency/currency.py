@@ -701,26 +701,27 @@ class Currency(commands.Cog, name=COG_NAME):
 
 class Effects:
     @staticmethod
-    async def give_role(plugin: Currency, ctx: commands.Context, role_name: str):
-        """ Gives you the "{}" Discord role """
+    async def give_role(plugin: Currency, ctx: commands.Context, role_id: int):
+        """ Gives you the <@&{}> Discord role """
 
         try:
-            role = get(ctx.guild.roles, name=role_name)
-            logger.info(f"{ctx.author} won role {role_name}")
+            role = get(ctx.guild.roles, id=role_id)
+            logger.info(f"{ctx.author} won role {role.name}")
             await ctx.author.add_roles(role)
+            return role.name
         except:
-            logger.error(f"Error while giving role {role_name} to {ctx.author}")
+            logger.error(f"Error while giving role {role_id} to {ctx.author}")
 
     @staticmethod
-    async def dna_role(plugin: Currency, ctx: commands.Context, dna_role_name: str):
+    async def dna_role(plugin: Currency, ctx: commands.Context, dna_role_id: int):
         """ Collect them all to get a special prize! """
 
         dna_list = ["adenine", "cytosine", "guanine", "thymine"]
 
         player = plugin.save[ctx.author.id]
         if all(dna in player.inventory.keys() for dna in dna_list):
-            await Effects.give_role(plugin, ctx, dna_role_name)
-            await ctx.author.send(f'Congrats! You\'ve just received the role "{dna_role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
+            role_name = await Effects.give_role(plugin, ctx, dna_role_id)
+            await ctx.author.send(f'Congrats! You collected all the parts to assemble Ruan Mei\'s hairping! You received the role "{role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
 
     @staticmethod
     async def currency_boost(plugin: Currency, ctx: commands.Context):
