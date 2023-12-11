@@ -365,7 +365,7 @@ class Currency(commands.Cog, name=COG_NAME):
                             for _ in range(count):
                                 player.inventory[item_id] += 1
                                 for effect, args in itm.effects.items():
-                                    await Effects.fx[effect](self, ctx, *args)
+                                    await eval(f"Effects.{effect}")(self, ctx, *args)
                             description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
             else:
@@ -405,7 +405,7 @@ class Currency(commands.Cog, name=COG_NAME):
                             for _ in range(count):
                                 player.inventory[item_id] += 1
                                 for effect, args in itm.effects.items():
-                                    await Effects.fx[effect](self, ctx, *args)
+                                    await eval(f"Effects.{effect}")(self, ctx, *args)
                             description = f"You bought **{count} {itm.name}** for **{total_price}** {CURRENCY_EMOJI}"
                             colour = discord.Colour.green()
 
@@ -611,7 +611,7 @@ class Currency(commands.Cog, name=COG_NAME):
             for _ in range(amount):
                 player.inventory[item] += 1
                 for effect, args in itm.effects.items():
-                    await Effects.fx[effect](self, ctx, *args)
+                    await eval(f"Effects.{effect}")(self, ctx, *args)
         else:
             embed = discord.Embed(
                 title=f"Give to {member.display_name}",
@@ -676,7 +676,7 @@ class Currency(commands.Cog, name=COG_NAME):
             description += "**Effects:**\n"
             if len(itm.effects.keys()) > 0:
                 for effect in itm.effects.keys():
-                    description += f"- {Effects.fx[effect].__doc__.format(*itm.effects[effect])}\n"
+                    description += f"- {eval(f'Effects.{effect}').__doc__.format(*itm.effects[effect])}\n"
             else:
                 description += "*No effect, this item is purely a collectible!*"
             embed = discord.Embed(
@@ -739,12 +739,6 @@ class Effects:
             player.currency_boost = 0.15
         else:
             player.currency_boost = 0.2
-
-    fx = {
-        "give_role": give_role,
-        "dna_role": dna_role,
-        "currency_boost": currency_boost
-    }
 
 
 
