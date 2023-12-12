@@ -323,7 +323,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     # List items to buy in shops
-    @commands.command(name="buy")
+    @commands.command(name="buy", aliases=["shop"])
     @checks.has_permissions(PermissionLevel.REGULAR)
     async def buy(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Buy items / Shows what's to buy in the shops"""
