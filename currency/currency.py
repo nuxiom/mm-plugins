@@ -78,7 +78,7 @@ class Player():
     player_id: int
 
     """ Currency """
-    currency: int
+    currency: float
 
     """ Inventory (dict  item_id -> amount) """
     inventory: dict[str, int]
@@ -91,12 +91,9 @@ class Player():
     _talked_this_minute: int
     _vc_earn_rate: float
 
-    def __init__(self, player_id: int, pull_currency: int = None, currency: int = 0, currencies: dict = {}, inventory: dict = {}, currency_boost: float = 0.0):
+    def __init__(self, player_id: int, currency: float = 0, inventory: dict = {}, currency_boost: float = 0.0):
         self.player_id = player_id
-        if pull_currency is not None:
-            self.currency = pull_currency
-        else:
-            self.currency = currency
+        self.currency = float(currency)
         self.inventory = inventory
         self.currency_boost = currency_boost
 
@@ -223,7 +220,7 @@ class Currency(commands.Cog, name=COG_NAME):
                         boost += 0.1
 
                     earnings = 100 / 60 * duration * boost * player._vc_earn_rate
-                    player.currency += int(earnings)
+                    player.currency += earnings
 
 
     def load_conf(self):
@@ -279,7 +276,7 @@ class Currency(commands.Cog, name=COG_NAME):
             if any([role.id == 1145893255062495303 for role in message.author.roles]):
                 boost += 0.1
             
-            player.currency += int(score * boost)
+            player.currency += score * boost
 
             if len(message.stickers) > 0:
                 player.currency += 3
@@ -570,7 +567,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
         if member.id in self.save:
             player = self.save[member.id]
-            description = f"{member.display_name} currently has {player.currency} {CURRENCY_EMOJI}"
+            description = f"{member.display_name} currently has {int(player.currency)} {CURRENCY_EMOJI}"
             colour = discord.Colour.green()
         else:
             description = f"{member.display_name} isn't in our database. Have they ever talked??"
@@ -682,7 +679,7 @@ class Currency(commands.Cog, name=COG_NAME):
         for id, player in topmembers:
             i += 1
             user: discord.Member = get(ctx.guild.members, id=id)
-            description += f"{i}. {user.display_name}: {player.currency} {CURRENCY_EMOJI}\n"
+            description += f"{i}. {user.display_name}: {int(player.currency)} {CURRENCY_EMOJI}\n"
 
         embed = discord.Embed(
             title=f"Currency scoreboard",
