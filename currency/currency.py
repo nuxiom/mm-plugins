@@ -257,6 +257,25 @@ class Currency(commands.Cog, name=COG_NAME):
             player._talked_this_minute += 1
 
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        # User joined VC or undeafened
+        if (before.channel is None and after.channel is not None) \
+        or (before.deaf and not after.deaf):
+            logger.info(f"{member.display_name} joined / undeafened")
+
+        # User (un)muted
+        if after.mute:
+            logger.info(f"{member.display_name} is muted")
+        else:
+            logger.info(f"{member.display_name} is not muted")
+
+        # User leaved VC or deafened
+        if (before.channel is not None and after.channel is None) \
+        or (not before.deaf and after.deaf):
+            logger.info(f"{member.display_name} leaved / deafened")
+
+
     def get_shop(self, shop: str):
         shp: Shop = None
         if shop is None:
