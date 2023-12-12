@@ -5,7 +5,7 @@
             "description": "The must-have role for real Ruan Mei mains!",
             "image": "ruan.png",
             "effects": {
-                "give_role": ["Mei's Ruan"]
+                "give_role": [1183807105682120774]
             }
         },
         "pbprole": {
@@ -13,7 +13,7 @@
             "description": "Tasty~",
             "image": "000.png",
             "effects": {
-                "give_role": ["Plum Blossom Pastry"]
+                "give_role": [1179765215215235102]
             }
         },
         "ferole": {
@@ -21,7 +21,7 @@
             "description": "Become a trendsetter with this super fashionable role!",
             "image": "embroiderie.png",
             "effects": {
-                "give_role": ["Floral Embroidery"]
+                "give_role": [1183807831154110564]
             }
         },
         "adenine": {
@@ -29,7 +29,7 @@
             "description": "Collect all the DNA proteins for a special reward!",
             "image": "adna.png",
             "effects": {
-                "dna_role": ["DNA Collector"]
+                "dna_role": [1183807797176049814]
             }
         },
         "cytosine": {
@@ -37,7 +37,7 @@
             "description": "Collect all the DNA proteins for a special reward!",
             "image": "adnc.png",
             "effects": {
-                "dna_role": ["DNA Collector"]
+                "dna_role": [1183807797176049814]
             }
         },
         "guanine": {
@@ -45,7 +45,7 @@
             "description": "Collect all the DNA proteins for a special reward!",
             "image": "adng.png",
             "effects": {
-                "dna_role": ["DNA Collector"]
+                "dna_role": [1183807797176049814]
             }
         },
         "thymine": {
@@ -53,7 +53,7 @@
             "description": "Collect all the DNA proteins for a special reward!",
             "image": "adnt.png",
             "effects": {
-                "dna_role": ["DNA Collector"]
+                "dna_role": [1183807797176049814]
             }
         },
         "currencyboost": {

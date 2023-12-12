@@ -78,7 +78,7 @@ class Player():
     player_id: int
 
     """ Currency """
-    currency: int
+    currency: float
 
     """ Inventory (dict  item_id -> amount) """
     inventory: dict[str, int]
@@ -89,20 +89,17 @@ class Player():
     # Internal variables
     _last_talked: datetime.datetime
     _talked_this_minute: int
-    _pulling: bool
+    _vc_earn_rate: float
 
-    def __init__(self, player_id: int, pull_currency: int = None, currency: int = 0, currencies: dict = {}, inventory: dict = {}, currency_boost: float = 0.0):
+    def __init__(self, player_id: int, currency: float = 0.0, inventory: dict = {}, currency_boost: float = 0.0, **kwargs):
         self.player_id = player_id
-        if pull_currency is not None:
-            self.currency = pull_currency
-        else:
-            self.currency = currency
+        self.currency = float(currency)
         self.inventory = inventory
         self.currency_boost = currency_boost
 
         self._last_talked = datetime.datetime.now()
         self._talked_this_minute = 0
-        self._pulling = False
+        self._vc_earn_rate = 0
 
     def to_dict(self):
         return {
@@ -198,6 +195,34 @@ class Currency(commands.Cog, name=COG_NAME):
         self.footer = ""  # TODO: added just in case we do something with it someday
 
 
+    def compute_vc_currency(self, duration: int):
+        # duration in seconds since last compute
+
+        for g in self.bot.guilds:
+            for vc in g.voice_channels:
+                for member in vc.members:
+                    if member.id not in self.save.keys():
+                        self.save[member.id] = Player(member.id)
+                    player = self.save[member.id]
+
+                    mute = (member.voice.mute or member.voice.self_mute) and not member.voice.suppress
+                    deaf = member.voice.deaf or member.voice.self_deaf
+
+                    if deaf:
+                        player._vc_earn_rate = 0
+                    elif mute:
+                        player._vc_earn_rate = 0.5
+                    else:
+                        player._vc_earn_rate = 1
+
+                    boost = 1 + player.currency_boost
+                    if any([role.id == 1145893255062495303 for role in member.roles]):
+                        boost += 0.1
+
+                    earnings = 100 / 60 * duration * boost * player._vc_earn_rate
+                    player.currency += earnings
+
+
     def load_conf(self):
         with open(SAVE_FILE, "r") as f:
             save = json.load(f)
@@ -221,7 +246,9 @@ class Currency(commands.Cog, name=COG_NAME):
             if cog is None or cog.cog_id != self.cog_id:
                 # We are in an old cog after update and don't have to send QOTD anymore
                 break
-            await asyncio.sleep(60)
+            sleep = 2
+            await asyncio.sleep(sleep)
+            self.compute_vc_currency(sleep)
             self.save_conf()
 
 
@@ -249,7 +276,7 @@ class Currency(commands.Cog, name=COG_NAME):
             if any([role.id == 1145893255062495303 for role in message.author.roles]):
                 boost += 0.1
             
-            player.currency += int(score * boost)
+            player.currency += score * boost
 
             if len(message.stickers) > 0:
                 player.currency += 3
@@ -295,8 +322,30 @@ class Currency(commands.Cog, name=COG_NAME):
         return itm, price
 
 
+    # Help command
+    @commands.command(name="currency", aliases=["currency_help"])
+    @checks.has_permissions(PermissionLevel.REGULAR)
+    async def currency_help(self, ctx: commands.Context):
+        """
+        Earn currency by chatting in text or voice chat, and buy cool things with it!
+
+        **List of commands:**
+
+        `?buy|?shop(s) [item] [quantity] [shop_name]`: Buys an item in a shop.
+        > Use `?shop` alone to show current shops.
+
+        `?bal(ance)|?money [user]`: Checks how much currency you or another user have.
+
+        `?inv(entory)|?bag|?items [user]`: Checks your or another player's inventory.
+
+        `?item <item>`: Check infos about an item
+        """
+        await ctx.send_help(ctx.command)
+
+
     # List items to buy in shops
-    @commands.command(name="buy")
+    @commands.command(name="buy", aliases=["shop", "shops"])
+    @checks.has_permissions(PermissionLevel.REGULAR)
     async def buy(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Buy items / Shows what's to buy in the shops"""
 
@@ -419,6 +468,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     @commands.command(name="sell")
+    @checks.has_permissions(PermissionLevel.REGULAR)
     async def sell(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Sell items / Shows what's to sell in the shops"""
 
@@ -532,6 +582,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
     # Get player balance
     @commands.command(name="balance", aliases=["money", "bal"])
+    @checks.has_permissions(PermissionLevel.REGULAR)
     async def balance(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
         """Shows a user's currency balance"""
 
@@ -540,7 +591,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
         if member.id in self.save:
             player = self.save[member.id]
-            description = f"{member.display_name} currently has {player.currency} {CURRENCY_EMOJI}"
+            description = f"{member.display_name} currently has {int(player.currency)} {CURRENCY_EMOJI}"
             colour = discord.Colour.green()
         else:
             description = f"{member.display_name} isn't in our database. Have they ever talked??"
@@ -558,6 +609,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
     # Items and currencies inventory
     @commands.command(name="inventory", aliases=["items", "bag", "inv"])
+    @checks.has_permissions(PermissionLevel.REGULAR)
     async def inventory(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
         """Shows a user's inventory"""
 
@@ -638,6 +690,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
     # Scoreboard for currency owners (debug)
     @commands.command(name="topkek")
+    @checks.has_permissions(PermissionLevel.REGULAR)
     async def topkek(self, ctx: commands.Context):
         """Scoreboard for currency owners (for debug purposes)"""
 
@@ -652,7 +705,7 @@ class Currency(commands.Cog, name=COG_NAME):
         for id, player in topmembers:
             i += 1
             user: discord.Member = get(ctx.guild.members, id=id)
-            description += f"{i}. {user.display_name}: {player.currency} {CURRENCY_EMOJI}\n"
+            description += f"{i}. {user.display_name}: {int(player.currency)} {CURRENCY_EMOJI}\n"
 
         embed = discord.Embed(
             title=f"Currency scoreboard",
@@ -666,6 +719,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
     # Display info about an item
     @commands.command(name="item")
+    @checks.has_permissions(PermissionLevel.REGULAR)
     async def item(self, ctx: commands.Context, *, item: str):
         """ Shows info about an item """
 
@@ -678,7 +732,12 @@ class Currency(commands.Cog, name=COG_NAME):
                 for effect in itm.effects.keys():
                     description += f"- {eval(f'Effects.{effect}').__doc__.format(*itm.effects[effect])}\n"
             else:
-                description += "*No effect, this item is purely a collectible!*"
+                description += "*No effect, this item is purely a collectible!*\n"
+            if any([item_id in shop.to_buy.keys() for shop in Data.shops]):
+                description += "\n**Buyable in the following shop(s):**\n"
+                for shop in Data.shops:
+                    if item_id in shop.to_buy.keys():
+                        description += f"- {shop.name}: {shop.to_buy[item_id]} {CURRENCY_EMOJI}\n"
             embed = discord.Embed(
                 title=f'Item info',
                 description=description,
@@ -701,26 +760,27 @@ class Currency(commands.Cog, name=COG_NAME):
 
 class Effects:
     @staticmethod
-    async def give_role(plugin: Currency, ctx: commands.Context, role_name: str):
-        """ Gives you the "{}" Discord role """
+    async def give_role(plugin: Currency, ctx: commands.Context, role_id: int):
+        """ Gives you the <@&{}> Discord role """
 
         try:
-            role = get(ctx.guild.roles, name=role_name)
-            logger.info(f"{ctx.author} won role {role_name}")
+            role = get(ctx.guild.roles, id=role_id)
+            logger.info(f"{ctx.author} won role {role.name}")
             await ctx.author.add_roles(role)
+            return role.name
         except:
-            logger.error(f"Error while giving role {role_name} to {ctx.author}")
+            logger.error(f"Error while giving role {role_id} to {ctx.author}")
 
     @staticmethod
-    async def dna_role(plugin: Currency, ctx: commands.Context, dna_role_name: str):
+    async def dna_role(plugin: Currency, ctx: commands.Context, dna_role_id: int):
         """ Collect them all to get a special prize! """
 
         dna_list = ["adenine", "cytosine", "guanine", "thymine"]
 
         player = plugin.save[ctx.author.id]
         if all(dna in player.inventory.keys() for dna in dna_list):
-            await Effects.give_role(plugin, ctx, dna_role_name)
-            await ctx.author.send(f'Congrats! You\'ve just received the role "{dna_role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
+            role_name = await Effects.give_role(plugin, ctx, dna_role_id)
+            await ctx.author.send(f'Congrats! You collected all the parts to assemble Ruan Mei\'s hairping! You received the role "{role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
 
     @staticmethod
     async def currency_boost(plugin: Currency, ctx: commands.Context):
