@@ -322,8 +322,29 @@ class Currency(commands.Cog, name=COG_NAME):
         return itm, price
 
 
+    # Help command
+    @commands.command(name="currency", aliases=["currency_help"])
+    @checks.has_permissions(PermissionLevel.REGULAR)
+    async def currency_help(self, ctx: commands.Context):
+        """
+        Earn currency by chatting in text or voice chat, and buy cool things with it!
+
+        **List of commands:**
+
+        `?buy|?shop(s) [item] [quantity] [shop_name]`: Buys an item in a shop.
+        > Use `?shop` alone to show current shops.
+
+        `?bal(ance)|?money [user]`: Checks how much currency you or another user have.
+
+        `?inv(entory)|?bag|?items [user]`: Checks your or another player's inventory.
+
+        `?item <item>`: Check infos about an item
+        """
+        await ctx.send_help(ctx.command)
+
+
     # List items to buy in shops
-    @commands.command(name="buy", aliases=["shop"])
+    @commands.command(name="buy", aliases=["shop", "shops"])
     @checks.has_permissions(PermissionLevel.REGULAR)
     async def buy(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Buy items / Shows what's to buy in the shops"""
@@ -711,7 +732,12 @@ class Currency(commands.Cog, name=COG_NAME):
                 for effect in itm.effects.keys():
                     description += f"- {eval(f'Effects.{effect}').__doc__.format(*itm.effects[effect])}\n"
             else:
-                description += "*No effect, this item is purely a collectible!*"
+                description += "*No effect, this item is purely a collectible!*\n"
+            if any([item_id in shop.to_buy.keys() for shop in Data.shops]):
+                description += "\n**Buyable in the following shop(s):**\n"
+                for shop in Data.shops:
+                    if item_id in shop.to_buy.keys():
+                        description += f"- {shop.name}: {shop.to_buy[item_id]} {CURRENCY_EMOJI}\n"
             embed = discord.Embed(
                 title=f'Item info',
                 description=description,
