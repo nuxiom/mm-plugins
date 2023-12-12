@@ -89,7 +89,7 @@ class Player():
     # Internal variables
     _last_talked: datetime.datetime
     _talked_this_minute: int
-    _pulling: bool
+    _vc_earn_rate: float
 
     def __init__(self, player_id: int, pull_currency: int = None, currency: int = 0, currencies: dict = {}, inventory: dict = {}, currency_boost: float = 0.0):
         self.player_id = player_id
@@ -102,7 +102,7 @@ class Player():
 
         self._last_talked = datetime.datetime.now()
         self._talked_this_minute = 0
-        self._pulling = False
+        self._vc_earn_rate = 0
 
     def to_dict(self):
         return {
@@ -198,6 +198,34 @@ class Currency(commands.Cog, name=COG_NAME):
         self.footer = ""  # TODO: added just in case we do something with it someday
 
 
+    def compute_vc_currency(self, duration: int):
+        # duration in seconds since last compute
+
+        for g in self.bot.guilds:
+            for vc in g.voice_channels:
+                for member in vc.members:
+                    if member.id not in self.save.keys():
+                        self.save[member.id] = Player(member.id)
+                    player = self.save[member.id]
+
+                    mute = (member.voice.mute or member.voice.self_mute) and not member.voice.suppress
+                    deaf = member.voice.deaf or member.voice.self_deaf
+
+                    if deaf:
+                        player._vc_earn_rate = 0
+                    elif mute:
+                        player._vc_earn_rate = 0.5
+                    else:
+                        player._vc_earn_rate = 1
+
+                    boost = 1 + player.currency_boost
+                    if any([role.id == 1145893255062495303 for role in member.roles]):
+                        boost += 0.1
+
+                    earnings = 100 / 60 * duration * boost * player._vc_earn_rate
+                    player.currency += int(earnings)
+
+
     def load_conf(self):
         with open(SAVE_FILE, "r") as f:
             save = json.load(f)
@@ -221,7 +249,9 @@ class Currency(commands.Cog, name=COG_NAME):
             if cog is None or cog.cog_id != self.cog_id:
                 # We are in an old cog after update and don't have to send QOTD anymore
                 break
-            await asyncio.sleep(60)
+            sleep = 2
+            await asyncio.sleep(sleep)
+            self.compute_vc_currency(sleep)
             self.save_conf()
 
 
@@ -255,29 +285,6 @@ class Currency(commands.Cog, name=COG_NAME):
                 player.currency += 3
 
             player._talked_this_minute += 1
-
-
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        mute = (after.mute or after.self_mute) and not after.suppress
-        deaf_before = before.deaf or before.self_deaf
-        deaf_after = after.deaf or after.self_deaf
-
-        # User joined VC or undeafened
-        if (before.channel is None and after.channel is not None) \
-        or (deaf_before and not deaf_after):
-            logger.info(f"{member.display_name} joined / undeafened")
-
-        # User (un)muted
-        if mute:
-            logger.info(f"{member.display_name} is muted")
-        else:
-            logger.info(f"{member.display_name} is not muted")
-
-        # User leaved VC or deafened
-        if (before.channel is not None and after.channel is None) \
-        or (not deaf_before and deaf_after):
-            logger.info(f"{member.display_name} leaved / deafened")
 
 
     def get_shop(self, shop: str):
