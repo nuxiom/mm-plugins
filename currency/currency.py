@@ -91,7 +91,7 @@ class Player():
     _talked_this_minute: int
     _vc_earn_rate: float
 
-    def __init__(self, player_id: int, currency: float = 0, inventory: dict = {}, currency_boost: float = 0.0):
+    def __init__(self, player_id: int, currency: float = 0.0, inventory: dict = {}, currency_boost: float = 0.0, **kwargs):
         self.player_id = player_id
         self.currency = float(currency)
         self.inventory = inventory
