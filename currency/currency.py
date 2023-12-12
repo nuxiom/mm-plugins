@@ -259,20 +259,24 @@ class Currency(commands.Cog, name=COG_NAME):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        mute = (after.mute or after.self_mute) and not after.suppress
+        deaf_before = before.deaf or before.self_deaf
+        deaf_after = after.deaf or after.self_deaf
+
         # User joined VC or undeafened
         if (before.channel is None and after.channel is not None) \
-        or (before.deaf and not after.deaf):
+        or (deaf_before and not deaf_after):
             logger.info(f"{member.display_name} joined / undeafened")
 
         # User (un)muted
-        if after.mute:
+        if mute:
             logger.info(f"{member.display_name} is muted")
         else:
             logger.info(f"{member.display_name} is not muted")
 
         # User leaved VC or deafened
         if (before.channel is not None and after.channel is None) \
-        or (not before.deaf and after.deaf):
+        or (not deaf_before and deaf_after):
             logger.info(f"{member.display_name} leaved / deafened")
 
 
