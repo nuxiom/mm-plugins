@@ -90,6 +90,8 @@ class Player():
     _last_talked: datetime.datetime
     _talked_this_minute: int
     _vc_earn_rate: float
+    _time_in_vc: int # in seconds, resets daily
+    _last_day_in_vc: datetime.datetime
 
     def __init__(self, player_id: int, currency: float = 0.0, inventory: dict = {}, currency_boost: float = 0.0, **kwargs):
         self.player_id = player_id
@@ -100,6 +102,8 @@ class Player():
         self._last_talked = datetime.datetime.now()
         self._talked_this_minute = 0
         self._vc_earn_rate = 0
+        self._time_in_vc = 3 * 60 * 60
+        self._last_day_in_vc = datetime.datetime(2000, 1, 1)
 
     def to_dict(self):
         return {
@@ -213,14 +217,19 @@ class Currency(commands.Cog, name=COG_NAME):
                     elif mute:
                         player._vc_earn_rate = 0.5
                     else:
-                        player._vc_earn_rate = 1
+                        player._vc_earn_rate = 0.7
 
                     boost = 1 + player.currency_boost
                     if any([role.id == 1145893255062495303 for role in member.roles]):
                         boost += 0.1
 
-                    earnings = 100 / 60 * duration * boost * player._vc_earn_rate
+                    decay = max(1 - player._time_in_vc / (3*60*60), 0.3)
+                    logger.info("Decay: " + str(decay))
+
+                    earnings = 100 / 60 * duration * boost * player._vc_earn_rate * decay
                     player.currency += earnings
+
+                    player._time_in_vc += duration
 
 
     def load_conf(self):
@@ -282,6 +291,21 @@ class Currency(commands.Cog, name=COG_NAME):
                 player.currency += 3
 
             player._talked_this_minute += 1
+
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        if member.id not in self.save.keys():
+            self.save[member.id] = Player(member.id)
+        player = self.save[member.id]
+
+        if before.channel is None and after.channel is not None:
+            now = datetime.datetime.now()
+            logger.info(str(player._last_day_in_vc) + " " + str(now))
+            if now.date() != player._last_day_in_vc.date():
+                logger.info("Daily reset")
+                player._time_in_vc = 0
+            player._last_day_in_vc = now
 
 
     def get_shop(self, shop: str):
