@@ -224,7 +224,6 @@ class Currency(commands.Cog, name=COG_NAME):
                         boost += 0.1
 
                     decay = max(1 - player._time_in_vc / (3*60*60), 0.3)
-                    logger.info("Decay: " + str(decay))
 
                     earnings = 100 / 60 * duration * boost * player._vc_earn_rate * decay
                     player.currency += earnings
@@ -301,9 +300,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
         if before.channel is None and after.channel is not None:
             now = datetime.datetime.now()
-            logger.info(str(player._last_day_in_vc) + " " + str(now))
             if now.date() != player._last_day_in_vc.date():
-                logger.info("Daily reset")
                 player._time_in_vc = 0
             player._last_day_in_vc = now
 
