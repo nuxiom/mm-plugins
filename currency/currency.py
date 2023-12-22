@@ -489,7 +489,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
 
     @commands.command(name="sell")
-    @checks.has_permissions(PermissionLevel.REGULAR)
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def sell(self, ctx: commands.Context, item: str = None, count: int = 1, shop: str = None):
         """Sell items / Shows what's to sell in the shops"""
 
@@ -711,7 +711,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
     # Scoreboard for currency owners (debug)
     @commands.command(name="topkek")
-    @checks.has_permissions(PermissionLevel.REGULAR)
+    @checks.has_permissions(PermissionLevel.OWNER)
     async def topkek(self, ctx: commands.Context):
         """Scoreboard for currency owners (for debug purposes)"""
 

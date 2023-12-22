@@ -75,15 +75,15 @@
         {
             "name": "Permanent Shop",
             "to_buy": {
-                "pbprole": 10000,
-                "ferole": 20000,
-                "mrrole": 30000,
-                "adenine": 20000,
-                "cytosine": 20000,
-                "guanine": 20000,
-                "thymine": 20000,
-                "currencyboost": 1000,
-                "octoplush": 50000
+                "pbprole": 20000,
+                "ferole": 40000,
+                "mrrole": 60000,
+                "adenine": 40000,
+                "cytosine": 40000,
+                "guanine": 40000,
+                "thymine": 40000,
+                "currencyboost": 10000,
+                "octoplush": 100000
             },
             "to_sell": {
             }
