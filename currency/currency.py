@@ -888,7 +888,7 @@ class Currency(commands.Cog, name=COG_NAME):
             if mmove in rock and rmove in paper \
             or mmove in paper and rmove in scissors \
             or mmove in scissors and rmove in rock:
-                description += f"You crumble in tears as you loose your **{amount}** {CURRENCY_EMOJI}..."
+                description += f"You crumble in tears as you lose your **{amount}** {CURRENCY_EMOJI}..."
                 player.currency -= amount
                 img = "https://cdn.discordapp.com/emojis/1188293763718709258.webp"
             elif mmove == rmove:
