@@ -350,7 +350,7 @@ class Currency(commands.Cog, name=COG_NAME):
         """
         Earn currency by chatting in text or voice chat, and buy cool things with it!
 
-        **List of commands:**
+        ### General commands
 
         `?buy|?shop(s) [item] [quantity] [shop_name]`: Buys an item in a shop.
         > Use `?shop` alone to show current shops.
@@ -360,6 +360,12 @@ class Currency(commands.Cog, name=COG_NAME):
         `?inv(entory)|?bag|?items [user]`: Checks your or another player's inventory.
 
         `?item <item>`: Check infos about an item
+
+        ### Gambling
+
+        `?flip <heads/h/tails/t> <amount bet>`: Gamble currency by flipping a coin
+
+        `?rps <rock/r/paper/p/scissors/s> <amount bet>`: Gamble currency at Rock Paper Scissors
         """
         await ctx.send_help(ctx.command)
 
@@ -776,6 +782,131 @@ class Currency(commands.Cog, name=COG_NAME):
             )
             embed.set_footer(text=self.footer)
             await ctx.send(embed=embed)
+
+
+    # Gamble currency in heads/tails
+    @commands.command(name="flip")
+    @checks.has_permissions(PermissionLevel.REGULAR)
+    async def flip(self, ctx: commands.Context, guess: str, amount: int):
+        """ Gamble currency by flippîng a coin """
+
+        heads = ["heads", "h"]
+        tails = ["tails", "t"]
+
+        player: Player = None
+        if ctx.author.id in self.save.keys():
+            player = self.save[ctx.author.id]
+
+        img = None
+
+        if guess.lower() not in heads and guess.lower() not in tails:
+            description = f"Stop kidding with your `{guess}`! Guess one of these: `heads/h/tails/t`"
+            colour = discord.Colour.red()
+        elif player is None:
+            description = "You don't have any money. Try talking a little before trying to gamble, okay?"
+            colour = discord.Colour.red()
+        elif amount < 0 or amount > player.currency:
+            description = f"Can't bet **{amount}** {CURRENCY_EMOJI}. Try checking your balance with `?bal`"
+            colour = discord.Colour.red()
+        else:
+            colour = discord.Colour.green()
+            description = "Ruan Mei flips a coin, and it falls on... "
+            rnd = random.randint(0, 10000)
+            if rnd < 5000:
+                description += "Heads!\n"
+                if guess.lower() in heads:
+                    player.currency += amount
+                    description += "You won! You get double what you bet!"
+                    img = "https://cdn.discordapp.com/emojis/1164689665740259369.gif"
+                else:
+                    player.currency -= amount
+                    description += "You lost :frowning: You lost everything you bet, try again next time!"
+                    img = "https://cdn.discordapp.com/emojis/1188293763718709258.webp"
+            elif rnd < 10000:
+                description += "Tails!\n"
+                if guess.lower() in tails:
+                    player.currency += amount
+                    description += "You won! You get double what you bet!"
+                    img = "https://cdn.discordapp.com/emojis/1164689665740259369.gif"
+                else:
+                    player.currency -= amount
+                    description += "You lost :frowning: You lost everything you bet, try again next time!"
+                    img = "https://cdn.discordapp.com/emojis/1188293763718709258.webp"
+            else:
+                colour = discord.Colour.gold()
+                description += "its edge!\nWow, who could've guessed that?? Anyway, you get your coins back!"
+                img = "https://cdn.discordapp.com/emojis/1171830972786933850.webp"
+        
+        embed = discord.Embed(
+            title=f'Coin flip',
+            description=description,
+            colour=colour
+        )
+        if img is not None: embed.set_thumbnail(url=img)
+        embed.set_footer(text=self.footer)
+        await ctx.send(embed=embed)
+
+
+    # Gamble currency in rock paper scissors
+    @commands.command(name="rps")
+    @checks.has_permissions(PermissionLevel.REGULAR)
+    async def rps(self, ctx: commands.Context, move: str, amount: int):
+        """ Gamble currency by playing Rock Paper Scissors """
+
+        rock = ["rock", "r"]
+        paper = ["paper", "p"]
+        scissors = ["scissors", "s"]
+
+        adjectives = ["an epic", "a grand", "a heroic", "a monumental", "an extravagant", "a bombastic", "an ambitious", "an arduous", "a huge", "an extraordinary"]
+        battles = ["battle", "duel", "clash", "fight", "confrontation", "encounter", "skirmish", "contest"]
+
+        player: Player = None
+        if ctx.author.id in self.save.keys():
+            player = self.save[ctx.author.id]
+
+        img = None
+
+        if move.lower() not in (rock+paper+scissors):
+            description = f"Hey! `{move}` is not a valid move in Rock Paper Scissors! Pick one of these: `rock/r/paper/p/scissors/s`"
+            colour = discord.Colour.red()
+        elif player is None:
+            description = "You don't have any money. Try talking a little before trying to gamble, okay?"
+            colour = discord.Colour.red()
+        elif amount < 0 or amount > player.currency:
+            description = f"Can't bet **{amount}** {CURRENCY_EMOJI}. Try checking your balance with `?bal`"
+            colour = discord.Colour.red()
+        else:
+            topick = [rock, paper, scissors]
+            mmove = [m[0] for m in topick if move.lower() in m][0]
+            rmove = random.choice(topick)[0]
+
+            colour = discord.Colour.green()
+            description = f"You pick {random.choice(adjectives)} {random.choice(battles)} of Rock Paper Scissors against Ruan Mei!\n"
+            description += f"The tension is at its highest as **{amount}** {CURRENCY_EMOJI} are at stake on each side...\n\n"
+            description += f"You play *{mmove}*.\n"
+            description += f"She plays *{rmove}*.\n\n"
+            if mmove in rock and rmove in paper \
+            or mmove in paper and rmove in scissors \
+            or mmove in scissors and rmove in rock:
+                description += f"You crumble in tears as you loose your **{amount}** {CURRENCY_EMOJI}..."
+                player.currency -= amount
+                img = "https://cdn.discordapp.com/emojis/1188293763718709258.webp"
+            elif mmove == rmove:
+                description += f"It's a tie! Everyone gets their money back."
+                img = "https://cdn.discordapp.com/emojis/1171830972786933850.webp"
+            else:
+                description += f"You did it! You won! You receive **{amount*2}** {CURRENCY_EMOJI} for your victory!"
+                player.currency += amount
+                img = "https://cdn.discordapp.com/emojis/1164689665740259369.gif"
+        
+        embed = discord.Embed(
+            title=f'Rock Paper Scissors',
+            description=description,
+            colour=colour
+        )
+        if img is not None: embed.set_thumbnail(url=img)
+        embed.set_footer(text=self.footer)
+        await ctx.send(embed=embed)
 
 
 
