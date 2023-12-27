@@ -812,7 +812,6 @@ class Currency(commands.Cog, name=COG_NAME):
             colour = discord.Colour.green()
             description = "Ruan Mei flips a coin, and it falls on... "
             rnd = random.randint(0, 10000)
-            logger.info(str(rnd))
             if rnd < 5000:
                 description += "Heads!\n"
                 if guess.lower() in heads:
