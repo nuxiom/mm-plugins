@@ -797,6 +797,8 @@ class Currency(commands.Cog, name=COG_NAME):
         if ctx.author.id in self.save.keys():
             player = self.save[ctx.author.id]
 
+        img = None
+
         if guess.lower() not in heads and guess.lower() not in tails:
             description = f"Stop kidding with your `{guess}`! Guess one of these: `heads/h/tails/t`"
             colour = discord.Colour.red()
@@ -814,27 +816,33 @@ class Currency(commands.Cog, name=COG_NAME):
                 description += "Heads!\n"
                 if guess.lower() in heads:
                     player.currency += amount
-                    description += "You win! You get double what you bet!"
+                    description += "You won! You get double what you bet!"
+                    img = "https://cdn.discordapp.com/emojis/1164689665740259369.gif"
                 else:
                     player.currency -= amount
-                    description += "You loose :frowning: You lost everything you bet, try again next time!"
+                    description += "You lost :frowning: You lost everything you bet, try again next time!"
+                    img = "https://cdn.discordapp.com/emojis/1188293763718709258.webp"
             elif rnd < 10000:
                 description += "Tails!\n"
                 if guess.lower() in tails:
                     player.currency += amount
-                    description += "You win! You get double what you bet!"
+                    description += "You won! You get double what you bet!"
+                    img = "https://cdn.discordapp.com/emojis/1164689665740259369.gif"
                 else:
                     player.currency -= amount
-                    description += "You loose :frowning: You lost everything you bet, try again next time!"
+                    description += "You lost :frowning: You lost everything you bet, try again next time!"
+                    img = "https://cdn.discordapp.com/emojis/1188293763718709258.webp"
             else:
                 colour = discord.Colour.gold()
                 description += "its edge!\nWow, who could've guessed that?? Anyway, you get your coins back!"
+                img = "https://cdn.discordapp.com/emojis/1171830972786933850.webp"
         
         embed = discord.Embed(
             title=f'Coin flip',
             description=description,
             colour=colour
         )
+        if img is not None: embed.set_thumbnail(url=img)
         embed.set_footer(text=self.footer)
         await ctx.send(embed=embed)
 
@@ -855,6 +863,8 @@ class Currency(commands.Cog, name=COG_NAME):
         player: Player = None
         if ctx.author.id in self.save.keys():
             player = self.save[ctx.author.id]
+
+        img = None
 
         if move.lower() not in (rock+paper+scissors):
             description = f"Hey! `{move}` is not a valid move in Rock Paper Scissors! Pick one of these: `rock/r/paper/p/scissors/s`"
@@ -880,17 +890,21 @@ class Currency(commands.Cog, name=COG_NAME):
             or mmove in scissors and rmove in rock:
                 description += f"You crumble in tears as you loose your **{amount}** {CURRENCY_EMOJI}..."
                 player.currency -= amount
+                img = "https://cdn.discordapp.com/emojis/1188293763718709258.webp"
             elif mmove == rmove:
                 description += f"It's a tie! Everyone gets their money back."
+                img = "https://cdn.discordapp.com/emojis/1171830972786933850.webp"
             else:
                 description += f"You did it! You won! You receive **{amount*2}** {CURRENCY_EMOJI} for your victory!"
                 player.currency += amount
+                img = "https://cdn.discordapp.com/emojis/1164689665740259369.gif"
         
         embed = discord.Embed(
             title=f'Rock Paper Scissors',
             description=description,
             colour=colour
         )
+        if img is not None: embed.set_thumbnail(url=img)
         embed.set_footer(text=self.footer)
         await ctx.send(embed=embed)
 
