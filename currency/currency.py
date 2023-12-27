@@ -29,6 +29,8 @@ SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 CURRENCY_NAME = "Plum Blossom"
 CURRENCY_EMOJI = "🌸"
 
+NERFED_CHANNELS = [1106794426711408700]
+
 
 def hash2(s: str):
     return hashlib.md5(s.encode()).hexdigest()
@@ -224,6 +226,11 @@ class Currency(commands.Cog, name=COG_NAME):
                         boost += 0.1
 
                     decay = max(1 - player._time_in_vc / (3*60*60), 0.3)
+
+                    if vc.id in NERFED_CHANNELS:
+                        player._vc_earn_rate = 0.005
+                        decay = 1
+                        boost = 1
 
                     earnings = 100 / 60 * duration * boost * player._vc_earn_rate * decay
                     player.currency += earnings
