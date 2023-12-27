@@ -350,7 +350,7 @@ class Currency(commands.Cog, name=COG_NAME):
         """
         Earn currency by chatting in text or voice chat, and buy cool things with it!
 
-        **List of commands:**
+        ### General commands
 
         `?buy|?shop(s) [item] [quantity] [shop_name]`: Buys an item in a shop.
         > Use `?shop` alone to show current shops.
@@ -361,7 +361,7 @@ class Currency(commands.Cog, name=COG_NAME):
 
         `?item <item>`: Check infos about an item
 
-        **Gambling:**
+        ### Gambling
 
         `?flip <heads/h/tails/t> <amount bet>`: Gamble currency by flipping a coin
 
@@ -817,7 +817,7 @@ class Currency(commands.Cog, name=COG_NAME):
                     description += "You win! You get double what you bet!"
                 else:
                     player.currency -= amount
-                    description += "You loose :( You lost everything you bet, try again next time!"
+                    description += "You loose :frowning: You lost everything you bet, try again next time!"
             elif rnd < 10000:
                 description += "Tails!\n"
                 if guess.lower() in tails:
@@ -825,7 +825,7 @@ class Currency(commands.Cog, name=COG_NAME):
                     description += "You win! You get double what you bet!"
                 else:
                     player.currency -= amount
-                    description += "You loose :( You lost everything you bet, try again next time!"
+                    description += "You loose :frowning: You lost everything you bet, try again next time!"
             else:
                 colour = discord.Colour.gold()
                 description += "its edge!\nWow, who could've guessed that?? Anyway, you get your coins back!"
