@@ -812,6 +812,7 @@ class Currency(commands.Cog, name=COG_NAME):
             colour = discord.Colour.green()
             description = "Ruan Mei flips a coin, and it falls on... "
             rnd = random.randint(0, 10000)
+            logger.info(str(rnd))
             if rnd < 5000:
                 description += "Heads!\n"
                 if guess.lower() in heads:
@@ -882,9 +883,9 @@ class Currency(commands.Cog, name=COG_NAME):
 
             colour = discord.Colour.green()
             description = f"You pick {random.choice(adjectives)} {random.choice(battles)} of Rock Paper Scissors against Ruan Mei!\n"
-            description += f"The tension is highest as **{amount}** {CURRENCY_EMOJI} are at stake on each side...\n"
+            description += f"The tension is at its highest as **{amount}** {CURRENCY_EMOJI} are at stake on each side...\n\n"
             description += f"You play *{mmove}*.\n"
-            description += f"She plays *{rmove}*.\n"
+            description += f"She plays *{rmove}*.\n\n"
             if mmove in rock and rmove in paper \
             or mmove in paper and rmove in scissors \
             or mmove in scissors and rmove in rock:
