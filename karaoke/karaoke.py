@@ -8,8 +8,8 @@ from core import checks
 from core.models import PermissionLevel
 from typing import Union
 
-EVENT_STAFF = 1086023819073962086  # Event Staff Role
-PERMISSION_LEVEL = PermissionLevel.SUPPORTER  # Alternate Permission Level
+EVENT_STAFF = 1106788954608500836  # Event Staff Role
+PERMISSION_LEVEL = PermissionLevel.OWNER  # Alternate Permission Level
 BAN_LIST_FILE = os.path.dirname(__file__) + "/banlist.json"
 
 
@@ -123,7 +123,7 @@ class KaraokeQueueView(discord.ui.View):
     async def generate_queue(self):
         embed = discord.Embed(
             title=':microphone: Karaoke',
-            colour=discord.Colour.blue()
+            colour=discord.Colour.teal()
         )
 
         embed.add_field(name="Priority Queue", value="\n".join(
@@ -183,7 +183,7 @@ class KaraokeQueueView(discord.ui.View):
         )
 
     # JOIN
-    @discord.ui.button(label='Join', style=discord.ButtonStyle.blurple, emoji="<:lamesticker:1116535025098297426>")
+    @discord.ui.button(label='Join', style=discord.ButtonStyle.blurple, emoji="<:RuanMeiSmug:1186252727433568377>")
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Allows a member to join the queue."""
         if interaction.user.id in self.ban_list:
@@ -204,7 +204,7 @@ class KaraokeQueueView(discord.ui.View):
         await self.message.edit(embed=await self.generate_queue())
 
     # LEAVE
-    @discord.ui.button(label='Leave', style=discord.ButtonStyle.danger, emoji="<:bruh:1089823209660092486>")
+    @discord.ui.button(label='Leave', style=discord.ButtonStyle.danger, emoji="<:RuanMeiSleep:1185520285663891476>")
     async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Allows a member to leave the queue."""
         if self.is_current(interaction.user.id):
@@ -220,7 +220,7 @@ class KaraokeQueueView(discord.ui.View):
         await self.message.edit(embed=await self.generate_queue())
 
     # NEXT - STAFF ONLY
-    @discord.ui.button(label='Next', style=discord.ButtonStyle.success, emoji="<:seelejoy:1085986027115663481>")
+    @discord.ui.button(label='Next', style=discord.ButtonStyle.success, emoji="<:RuanMeiJoy:1153475381156913205>")
     @event_only
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Moves to the next person in the queue."""
@@ -229,7 +229,7 @@ class KaraokeQueueView(discord.ui.View):
         await self.message.edit(embed=await self.generate_queue())
         await interaction.response.defer()
 
-    @discord.ui.button(label='Reset', style=discord.ButtonStyle.grey, emoji="<:seeleomg:1085605320065302630>")
+    @discord.ui.button(label='Reset', style=discord.ButtonStyle.grey, emoji="<:RuanMeiOMG:1156150407228309564>")
     @event_only
     async def reset(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Reset button, clears the queue."""
