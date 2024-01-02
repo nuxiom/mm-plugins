@@ -44,6 +44,15 @@ class GatoGame(commands.Cog):
         sg = gatos.StrongGato()
         await ctx.send(f"```\n{eg.to_json()}\n{sg.to_json()}\n```")
 
+        sg.affect_health(-100)
+        eg.affect_health(-100)
+        await ctx.send(f"```\n{eg.to_json()}\n{sg.to_json()}\n```")
+
+        sg.affect_health(40)
+        eg.affect_health(40)
+        await ctx.send(f"```\n{eg.to_json()}\n{sg.to_json()}\n```")
+
+
 
 async def setup(bot):
     await bot.add_cog(GatoGame(bot))
