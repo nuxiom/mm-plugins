@@ -1,4 +1,4 @@
-from ABaseGato import ABaseGato
+from ABaseGato import ABaseGato, require_alive
 
 class StrongGato(ABaseGato):
 
@@ -8,12 +8,12 @@ class StrongGato(ABaseGato):
 
 
     # Override default methods to use custom parameters and change behaviors
+    @require_alive
     def affect_health(self, hp: float):
-        if not self._fainted:
-            self.health += hp
+        self.health += hp
 
-            if self.health > self.max_health:
-                self.health = self.max_health
-            elif self.health <= 0.0:
-                self.health = 0.0
-                self._fainted = True
+        if self.health > self.max_health:
+            self.health = self.max_health
+        elif self.health <= 0.0:
+            self.health = 0.0
+            self._fainted = True

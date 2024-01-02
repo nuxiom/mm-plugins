@@ -1,3 +1,12 @@
+def require_alive(function):
+    def new_function(gato: ABaseGato, *args, **kwargs):
+        if not gato._fainted:
+            return function(gato, *args, **kwargs)
+
+    return new_function
+
+
+
 class ABaseGato:
 
     mood: float = 100.0
@@ -30,12 +39,12 @@ class ABaseGato:
         }
 
 
+    @require_alive
     def affect_health(self, hp: float):
-        if not self._fainted:
-            self.health += hp
+        self.health += hp
 
-            if self.health > 100.0:
-                self.health = 100.0
-            elif self.health <= 0.0:
-                self.health = 0.0
-                self._fainted = True
+        if self.health > 100.0:
+            self.health = 100.0
+        elif self.health <= 0.0:
+            self.health = 0.0
+            self._fainted = True
