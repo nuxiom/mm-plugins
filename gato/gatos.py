@@ -1,1 +1,1 @@
-GATO_CONST = "Initial value"
+GATO_CONST = "New value without deleting cache"
