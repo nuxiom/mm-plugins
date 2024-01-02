@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 import json
 import os
 import random
@@ -16,11 +17,8 @@ DIR = os.path.dirname(__file__)
 SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 
 sys.path.append(DIR)
-cachepath = os.path.join(DIR, "__pycache__")
-if os.path.exists(cachepath):
-    shutil.rmtree(cachepath)
-
-from gatos import GATO_CONST
+import gatos
+importlib.reload(gatos)
 
 
 class GatoGame(commands.Cog):
@@ -42,7 +40,7 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="testmodule")
     async def testmodule(self, ctx):
-        await ctx.send(f"`{GATO_CONST}`")
+        await ctx.send(f"`{gatos.GATO_CONST}`")
 
 
 async def setup(bot):
