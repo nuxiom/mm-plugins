@@ -16,6 +16,10 @@ DIR = os.path.dirname(__file__)
 SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 
 sys.path.append(DIR)
+cachepath = os.path.join(DIR, "__pycache__")
+if os.path.exists(cachepath):
+    shutil.rmtree(cachepath)
+
 from gatos import GATO_CONST
 
 
@@ -42,10 +46,4 @@ class GatoGame(commands.Cog):
 
 
 async def setup(bot):
-    """
-    cachepath = os.path.join(DIR, "__pycache__")
-    if os.path.exists(cachepath):
-        shutil.rmtree(cachepath)
-    """
-
     await bot.add_cog(GatoGame(bot))
