@@ -22,7 +22,7 @@ importlib.reload(gatos)
 
 
 class GatoGame(commands.Cog):
-    """Funpost Plugin"""
+    """Gato gacha game plugin"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -40,7 +40,9 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="testmodule")
     async def testmodule(self, ctx):
-        await ctx.send(f"`{gatos.GATO_CONST}`")
+        eg = gatos.ExampleGato()
+        sg = gatos.StrongGato()
+        await ctx.send(f"```\n{eg.to_json()}\n{sg.to_json()}\n```")
 
 
 async def setup(bot):
