@@ -1,1 +1,1 @@
-GATO_CONST = "New value when deleting cache"
+GATO_CONST = "Okay, now after a new update?"
