@@ -46,7 +46,6 @@ class ExampleGato(ABaseGato):
                 chances = 0.02
 
             if random() < chances:
-                self._events.append({"find": "Rare treasure"})
                 return ["Rare treasure"]
 
 

@@ -53,18 +53,26 @@ class GatoGame(commands.Cog):
         description = ""
 
         for gato in team:
+            events_by_type = {}
             for event in gato._events:
+                et = list(event.keys())[0]
+                if et not in events_by_type:
+                    events_by_type[et] = []
+                events_by_type[et].append(event[et])
+
+            for et, value in events_by_type.items():
                 description += f"- **{gato.name}** "
 
                 args = {}
-                if "bitten" in event:
-                    rnd = random.randint(100, 500)
-                    args["amount"] = rnd
+                if et == "bitten":
+                    args["amount"] = 0
+                    for _ in value:
+                        rnd = random.randint(100, 500)
+                        args["amount"] += rnd
                     args["currency"] = CURRENCY_EMOJI
-                elif "find" in event:
-                    args["object_name"] = event['find']
+                    args["count"] = len(value)
 
-                description += gato.EVENT_DESCRIPTIONS[list(event.keys())[0]].format(**args)
+                description += gato.EVENT_DESCRIPTIONS[et].format(**args)
                 description += "\n"
 
         return description

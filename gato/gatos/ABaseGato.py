@@ -37,8 +37,7 @@ class ABaseGato(ABC):
     IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
     EVENT_DESCRIPTIONS = {
         "fainted": "fainted.",
-        "find": "finds a **{object_name}**!",
-        "bitten": "is angry and bites you. You loose **{amount}** {currency}"
+        "bitten": "is angry and bites you (x{count}). You loose **{amount}** {currency} in total"
     }
 
 
@@ -110,7 +109,6 @@ class ABaseGato(ABC):
             if self._time_deployed % 60 == 0 and self.efficiency >= 1:
                 if random() < self.luck / 100:
                     objects.append("Shiny thing")
-                    self._events.append({"find": "Shiny thing"})
 
             return currency, objects
         else:
