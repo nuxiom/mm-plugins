@@ -47,7 +47,7 @@ class ExampleGato(ABaseGato):
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         # We calculate its efficiency boost before its actions
-        self.efficiency(seconds)
+        self.efficiency_buff(seconds)
 
         # Then call the parent simulation (VERY IMPORTANT)
         currency, objects = super().simulate(seconds)
