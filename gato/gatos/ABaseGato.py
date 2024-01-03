@@ -81,6 +81,9 @@ class ABaseGato(ABC):
         self._events = []
         self._time_deployed = 0
 
+        if self.health > 0:
+            self._fainted = False
+
 
     @abstractmethod
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):

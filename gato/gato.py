@@ -301,6 +301,9 @@ class GatoGame(commands.Cog):
         currency = 0
         objects = []
         for _ in range(0, delta, TIME_STEP):
+            if all(gato._fainted for gato in tm.gatos):
+                break
+
             for gato in tm.gatos:
                 c, o = gato.simulate(tm.gatos, TIME_STEP)
                 currency += c
