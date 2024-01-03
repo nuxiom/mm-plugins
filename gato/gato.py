@@ -41,15 +41,8 @@ class GatoGame(commands.Cog):
     @gato.command(name="testmodule")
     async def testmodule(self, ctx):
         eg = gatos.ExampleGato()
-        sg = gatos.StrongGato()
-        await ctx.send(f"```\n{eg.to_json()}\n{sg.to_json()}\n```")
-
-        sg.affect_health(-100)
-        eg.affect_health(-100)
-        await ctx.send(f"```\n{eg.to_json()}\n{sg.to_json()}\n```")
-
-        sg.affect_health(40)
-        eg.affect_health(40)
+        j = eg.to_json()
+        sg = gatos.StrongGato.from_json(j)
         await ctx.send(f"```\n{eg.to_json()}\n{sg.to_json()}\n```")
 
 
