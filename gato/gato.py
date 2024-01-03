@@ -76,7 +76,7 @@ class GatoGame(commands.Cog):
 
         nursery = self.nurseries[ctx.author.id]
 
-        pulled = random.choice(["ExampleGato", "StrongGato"])
+        pulled = random.choice(["ExampleGato", "NormalGato"])
 
         gato: gatos.Gato = None
         for cat in nursery:

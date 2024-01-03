@@ -7,11 +7,11 @@ sys.path.append(DIR)
 import ABaseGato
 importlib.reload(ABaseGato)
 
-import ExampleGato, StrongGato
+import ExampleGato, NormalGato
 
 importlib.reload(ExampleGato)
-importlib.reload(StrongGato)
+importlib.reload(NormalGato)
 
 Gato = ABaseGato.ABaseGato
 ExampleGato = ExampleGato.ExampleGato
-StrongGato = StrongGato.NormalGato
+NormalGato = NormalGato.NormalGato

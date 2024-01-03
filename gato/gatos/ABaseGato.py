@@ -25,7 +25,7 @@ class ABaseGato(ABC):
 
     base_efficiency: float = 1.0
     luck: float = 1.0
-    efficiency_boost: float
+    efficiency_boost: float = 0.0
 
     _fainted: bool = False
     _events: list[dict] = []
