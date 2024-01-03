@@ -67,7 +67,7 @@ class GatoGame(commands.Cog):
                 if et == "bitten":
                     args["amount"] = 0
                     for _ in value:
-                        rnd = random.randint(100, 500)
+                        rnd = random.randint(10, 50)
                         args["amount"] += rnd
                     args["currency"] = CURRENCY_EMOJI
                     args["count"] = len(value)
@@ -303,7 +303,7 @@ class GatoGame(commands.Cog):
 
         embed = discord.Embed(
             title=f"Claim rewards",
-            description=f"### Expedition results\nYour gatos brought back {int(currency)} {CURRENCY_EMOJI} and {obj}\n### Event log\n{events}",
+            description=f"### Expedition results\nYour gatos brought back **{int(currency)}** {CURRENCY_EMOJI} and **{obj}**\n### Event log\n{events}",
             colour=discord.Colour.teal()
         )
         await ctx.send(embed=embed)
