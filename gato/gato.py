@@ -177,6 +177,7 @@ class GatoGame(commands.Cog):
                     colour=discord.Colour.teal()
                 )
                 embed.set_thumbnail(url=gato.IMAGE)
+                embed.set_footer(text="For now, stats don't update in real time. Only when you claim rewards.")
                 await ctx.send(embed=embed)
         else:
             embed = discord.Embed(
