@@ -130,7 +130,7 @@ class GatoGame(commands.Cog):
 
         description = ""
         colour = discord.Colour.teal()
-        if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
+        if ctx.author.id in self.nurseries and len(self.nurseries[ctx.author.id]) > 0:
             for i, gato in enumerate(self.nurseries[ctx.author.id]):
                 description += f"{i+1}. **{gato.name}**: {gato.__class__.__name__} *(✨ E{gato.eidolon})*\n"
         else:
