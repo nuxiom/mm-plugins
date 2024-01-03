@@ -14,4 +14,4 @@ importlib.reload(StrongGato)
 
 Gato = ABaseGato.ABaseGato
 ExampleGato = ExampleGato.ExampleGato
-StrongGato = StrongGato.StrongGato
+StrongGato = StrongGato.NormalGato
