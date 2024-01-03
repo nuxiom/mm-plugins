@@ -55,9 +55,9 @@ class ABaseGato:
             }
         }
 
-    @staticmethod
-    def from_json(json: dict):
-        return eval(json["type"])(name=json["name"], **json["stats"])
+    @classmethod
+    def from_json(cls, json: dict):
+        return cls(name=json["name"], **json["stats"])
 
 
     @require_alive
