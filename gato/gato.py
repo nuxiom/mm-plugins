@@ -269,7 +269,7 @@ class GatoGame(commands.Cog):
 
         tm = self.teams[ctx.author.id]
         now = datetime.now()
-        delta = (now - tm.deployed_at).total_seconds()
+        delta = int((now - tm.deployed_at).total_seconds())
         tm.deployed_at = None
 
         TIME_STEP = 1
