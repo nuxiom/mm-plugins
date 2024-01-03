@@ -14,6 +14,7 @@ class ExampleGato(ABaseGato):
 
     _buff_duration: int = 0         # Custom variables used for this gato
     _buff_cooldown: int = 0
+    _has_buff: bool = False
     _find_object_cooldown: int = 0
 
 
@@ -26,9 +27,11 @@ class ExampleGato(ABaseGato):
             self.efficiency_boost += 20/100 + (2/100 * self.eidolon)
             self._buff_duration += 20*60
             self._buff_cooldown += 60*60
+            self._has_buff = True
 
-        if self._buff_duration <= 0:
+        if self._buff_duration <= 0 and self._has_buff:
             self.efficiency_boost -= 20/100 + (2/100 * self.eidolon)
+            self._has_buff = False
 
 
     @require_alive
