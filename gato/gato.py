@@ -5,6 +5,7 @@ import os
 import random
 import sys
 from datetime import datetime, timedelta
+from functools import reduce
 
 import discord
 from discord.ext import commands
@@ -221,8 +222,10 @@ class GatoGame(commands.Cog):
                 await ctx.send(embed=embed)
                 return
 
+            # Get unique numbers
+            gato_numbers = reduce(lambda re, x: re+[x] if x not in re else re, gato_numbers, [])
             legatos: list[gatos.Gato] = []
-            for i in list(set(gato_numbers))[:4]:
+            for i in gato_numbers[:4]:
                 if not i.isnumeric():
                     embed = discord.Embed(
                         title=f"Deploy team",
