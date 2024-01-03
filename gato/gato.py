@@ -41,7 +41,7 @@ class GatoGame(commands.Cog):
 
 
     @commands.group(invoke_without_command=True)
-    async def gato(self, ctx):
+    async def gato(self, ctx: commands.Context):
         """
         Ruan Mei Mains' gato gacha game!
         """
@@ -115,7 +115,7 @@ class GatoGame(commands.Cog):
 
 
     @gato.command(name="nursery")
-    async def nursery(self, ctx):
+    async def nursery(self, ctx: commands.Context):
         description = ""
         colour = discord.Colour.teal()
         if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
@@ -264,7 +264,7 @@ class GatoGame(commands.Cog):
 
 
     @gato.command(name="claim")
-    async def claim(self, ctx):
+    async def claim(self, ctx: commands.Context):
         if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
             embed = discord.Embed(
                 title=f"Claim rewards",
@@ -302,7 +302,7 @@ class GatoGame(commands.Cog):
 
 
     @gato.command(name="nanook")
-    async def nanook(self, ctx):
+    async def nanook(self, ctx: commands.Context):
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
@@ -313,16 +313,16 @@ class GatoGame(commands.Cog):
             return
 
         for gato in self.nurseries[ctx.author.id]:
-            gato.add_health(- gato.health + 1)
-            gato.add_mood(- gato.mood + 1)
-            gato.add_hunger(- gato.hunger + 1)
-            gato.add_energy(- gato.energy + 1)
+            gato.health = 1
+            gato.mood = 1
+            gato.hunger = 1
+            gato.energy = 1
 
         await ctx.send("Done! ✅")
 
 
     @gato.command(name="yaoshi")
-    async def yaoshi(self, ctx):
+    async def yaoshi(self, ctx: commands.Context):
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
@@ -333,10 +333,27 @@ class GatoGame(commands.Cog):
             return
 
         for gato in self.nurseries[ctx.author.id]:
-            gato.add_health(- gato.health + gato.max_health)
-            gato.add_mood(- gato.mood + gato.max_mood)
-            gato.add_hunger(- gato.hunger + gato.max_hunger)
-            gato.add_energy(- gato.energy + gato.max_energy)
+            gato.health = gato.max_health
+            gato.mood = gato.max_mood
+            gato.hunger = gato.max_hunger
+            gato.energy = gato.max_energy
+
+        await ctx.send("Done! ✅")
+
+
+    @gato.command(name="fastforward", aliases=["ff"])
+    async def ff(self, ctx: commands.Context, seconds: int):
+        if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
+            embed = discord.Embed(
+                title=f"Claim rewards",
+                description="No team has been deployed! Check `?gato deploy` to deploy one first!",
+                colour=discord.Colour.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        tm = self.teams[ctx.author.id]
+        tm.deployed_at -= timedelta(seconds=seconds)
 
         await ctx.send("Done! ✅")
 

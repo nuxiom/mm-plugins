@@ -102,7 +102,7 @@ class ABaseGato(ABC):
             if self.energy < 10:
                 total_efficiency -= 0.2
             elif self.energy < 20:
-                total_efficiency -= 0.2
+                total_efficiency -= 0.1
 
             currency = 1 * total_efficiency
 
