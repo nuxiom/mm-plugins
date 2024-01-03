@@ -67,7 +67,7 @@ class GatoGame(commands.Cog):
             nursery.append(gato)
             embed = discord.Embed(
                 title="Pull",
-                colour=discord.Colour.green(),
+                colour=discord.Colour.teal(),
                 description=f"{ctx.author.mention} you just obtained a **{pulled}** named **{gato_name}** !!"
             )
             await ctx.send(embed=embed)
@@ -76,14 +76,14 @@ class GatoGame(commands.Cog):
             embed = discord.Embed(
                 title="Pull",
                 colour=discord.Colour.gold(),
-                description=f"{ctx.author.mention} you just obtained a **{pulled}** !! **{gato_name}**'s Eidolon level increased to **{gato.eidolon}**!"
+                description=f"{ctx.author.mention} you just obtained a **{pulled}** !! **{gato.name}**'s Eidolon level increased to **{gato.eidolon}**!"
             )
             await ctx.send(embed=embed)
         else:
             embed = discord.Embed(
                 title="Pull",
                 colour=discord.Colour.teal(),
-                description=f"{ctx.author.mention} your **{gato_name}** is already at Eidolon level 6! You got **666** {CURRENCY_EMOJI} as a compensation!"
+                description=f"{ctx.author.mention} your **{gato.name}** is already at Eidolon level 6! You got **666** {CURRENCY_EMOJI} as a compensation!"
             )
             await ctx.send(embed=embed)
 
@@ -124,17 +124,17 @@ class GatoGame(commands.Cog):
                 gato = nursery[number]
                 desc = gato.__doc__.format(eidolon=gato.eidolon)
 
-                description = f"Health: {round(gato.health)}\n" + \
+                description = f"{desc}\n" + \
+                f"Health: {round(gato.health)}\n" + \
                 f"Hunger: {round(gato.hunger)}\n" + \
                 f"Mood: {round(gato.mood)}\n" + \
                 f"Hunger: {round(gato.hunger)}\n" + \
-                f"\n✨ Eidolon {gato.eidolon}\n" + \
-                f"\n{desc}"
+                f"\n✨ **Eidolon {gato.eidolon}**"
 
                 embed = discord.Embed(
                     title=gato.name,
                     description=description,
-                    colour=discord.Colour.red()
+                    colour=discord.Colour.teal()
                 )
                 embed.set_thumbnail(url=gato.image)
                 await ctx.send(embed=embed)
