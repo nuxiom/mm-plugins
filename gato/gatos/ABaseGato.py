@@ -39,6 +39,7 @@ class ABaseGato(ABC):
         "fainted": "fainted.",
         "bitten": "is angry and bites you (x{count}). You loose **{amount}** {currency} in total"
     }
+    BASE_EARN_RATE: float = 0.25
 
 
     def __init__(self, **kwargs):
@@ -103,7 +104,7 @@ class ABaseGato(ABC):
             elif self.energy < 20:
                 total_efficiency -= 0.1
 
-            currency = 1 * total_efficiency
+            currency = self.BASE_EARN_RATE * total_efficiency
 
             objects = []
             if self._time_deployed % 60 == 0 and self.efficiency >= 1:

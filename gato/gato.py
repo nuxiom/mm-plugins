@@ -80,6 +80,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="pull")
     async def pull(self, ctx: commands.Context, *, gato_name: str = None):
+        """ Pull for a random Gato. You can specify a name to give it if it's a gato type you don't own yet. """
+
         if ctx.author.id not in self.nurseries:
             self.nurseries[ctx.author.id] = []
 
@@ -124,6 +126,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="nursery")
     async def nursery(self, ctx: commands.Context):
+        """ Show your Gato nursery. """
+
         description = ""
         colour = discord.Colour.teal()
         if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
@@ -143,6 +147,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="info")
     async def info(self, ctx: commands.Context, number: int):
+        """ Show info about a Gato from your nursery. """
+
         if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
             nursery = self.nurseries[ctx.author.id]
             number -= 1
@@ -183,6 +189,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="deploy")
     async def deploy(self, ctx: commands.Context, *gato_numbers):
+        """ Deploy a team of gatos. Specify numbers from your nursery (example: `?gato deploy 3 2 1 4`) or user `?gato deploy` alone to redeploy previous team. ⚠️ Order matters! Gato skills will take effect in deployment order (for example, put Gatos that boost the whole team in first place). """
+
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
@@ -273,6 +281,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="claim")
     async def claim(self, ctx: commands.Context):
+        """ Claim what the deployed team has gathered. """
+
         if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
             embed = discord.Embed(
                 title=f"Claim rewards",
@@ -311,6 +321,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="nanook")
     async def nanook(self, ctx: commands.Context):
+        """ Set all the stats of all your Gatos to 1 """
+
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
@@ -331,6 +343,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="yaoshi")
     async def yaoshi(self, ctx: commands.Context):
+        """ Set all the stats of all your Gatos to maximum """
+
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
@@ -351,6 +365,8 @@ class GatoGame(commands.Cog):
 
     @gato.command(name="fastforward", aliases=["ff"])
     async def ff(self, ctx: commands.Context, seconds: int):
+        """ Fastforward the ongoing Gato expedition by a specified amount of time (in seconds) """
+
         if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
             embed = discord.Embed(
                 title=f"Claim rewards",
