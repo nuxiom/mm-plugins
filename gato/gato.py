@@ -54,7 +54,7 @@ class GatoGame(commands.Cog):
 
         for gato in team:
             for event in gato._events:
-                description += "- **{gato.name}** "
+                description += f"- **{gato.name}** "
 
                 args = {}
                 if "bitten" in event:
