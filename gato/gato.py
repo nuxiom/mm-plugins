@@ -198,6 +198,8 @@ class GatoGame(commands.Cog):
                     await ctx.send(embed=embed)
                 else:
                     tm.deployed_at = datetime.now()
+                    for gato in tm.gatos:
+                        gato.deploy()
                     gato_names = "**, **".join([gato.name for gato in tm.gatos])
                     embed = discord.Embed(
                         title=f"Deploy team",
@@ -248,6 +250,8 @@ class GatoGame(commands.Cog):
 
             tm = team.Team(legatos)
             self.teams[ctx.author.id] = tm
+            for gato in tm.gatos:
+                gato.deploy()
 
             gato_names = "**, **".join([gato.name for gato in legatos])
             embed = discord.Embed(

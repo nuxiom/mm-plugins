@@ -36,6 +36,8 @@ class ExampleGato(ABaseGato):
         self._find_object_cooldown -= seconds
 
         if self._find_object_cooldown <= 0:
+            self._find_object_cooldown = 60
+
             chances = 0.01
             if self.eidolon == 6:
                 chances = 0.02
