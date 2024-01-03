@@ -70,7 +70,7 @@ class GatoGame(commands.Cog):
 
 
     @gato.command(name="pull")
-    async def pull(self, ctx, *, gato_name: str = None):
+    async def pull(self, ctx: commands.Context, *, gato_name: str = None):
         if ctx.author.id not in self.nurseries:
             self.nurseries[ctx.author.id] = []
 
@@ -133,7 +133,7 @@ class GatoGame(commands.Cog):
 
 
     @gato.command(name="info")
-    async def info(self, ctx, number: int):
+    async def info(self, ctx: commands.Context, number: int):
         if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
             nursery = self.nurseries[ctx.author.id]
             number -= 1
@@ -173,7 +173,7 @@ class GatoGame(commands.Cog):
 
 
     @gato.command(name="deploy")
-    async def deploy(self, ctx, *gato_numbers: list[int]):
+    async def deploy(self, ctx: commands.Context, *gato_numbers):
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
@@ -195,9 +195,15 @@ class GatoGame(commands.Cog):
                         colour=discord.Colour.red()
                     )
                     await ctx.send(embed=embed)
-                    return
-
-                tm.deployed_at = datetime.now()
+                else:
+                    tm.deployed_at = datetime.now()
+                    gato_names = "**, **".join([gato.name for gato in tm.gatos])
+                    embed = discord.Embed(
+                        title=f"Deploy team",
+                        description=f"A team with **{gato_names}** has been deployed! Check back in a while with `?gato claim` to see what they fetched for you!",
+                        colour=discord.Colour.teal()
+                    )
+                    await ctx.send(embed=embed)
             else:
                 embed = discord.Embed(
                     title=f"Deploy team",
@@ -205,11 +211,27 @@ class GatoGame(commands.Cog):
                     colour=discord.Colour.red()
                 )
                 await ctx.send(embed=embed)
-                return
         else:
+            if ctx.author.id in self.teams and self.teams[ctx.author.id].deployed_at is not None:
+                embed = discord.Embed(
+                    title=f"Deploy team",
+                    description="A team is already deployed! Use `?gato claim` to see what they fetched for you!",
+                    colour=discord.Colour.red()
+                )
+                await ctx.send(embed=embed)
+                return
+
             legatos: list[gatos.Gato] = []
             for i in list(set(gato_numbers))[:4]:
-                number = i-1
+                if not i.isnumeric():
+                    embed = discord.Embed(
+                        title=f"Deploy team",
+                        description=f"{i} is not a valid number! Example usage: `?gato deploy 1 2 3 4`!",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return
+                number = int(i)-1
                 if number >= 0 and number < len(nursery):
                     legatos.append(nursery[number])
                 else:
@@ -222,6 +244,7 @@ class GatoGame(commands.Cog):
                     return
 
             tm = team.Team(legatos)
+            self.teams[ctx.author.id] = tm
 
             gato_names = "**, **".join([gato.name for gato in legatos])
             embed = discord.Embed(
