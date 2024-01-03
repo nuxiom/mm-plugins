@@ -25,6 +25,8 @@ class ABaseGato:
     _fainted: bool = False
 
     name: str
+    eidolon: int
+    image: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
 
 
     def __init__(self, **kwargs):
@@ -35,6 +37,7 @@ class ABaseGato:
         self.efficiency = self.base_efficiency
 
         self.name = self.__class__.__name__
+        self.eidolon = 0
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -51,7 +54,8 @@ class ABaseGato:
                 "hunger": self.hunger,
                 "energy": self.energy,
                 "health": self.health,
-                "efficiency": self.efficiency
+                "efficiency": self.efficiency,
+                "eidolon": self.eidolon
             }
         }
 
