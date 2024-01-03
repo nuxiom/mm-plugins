@@ -301,6 +301,46 @@ class GatoGame(commands.Cog):
         await ctx.send(embed=embed)
 
 
+    @gato.command(name="nanook")
+    async def nanook(self, ctx):
+        if ctx.author.id not in self.nurseries:
+            embed = discord.Embed(
+                title=f"Deploy team",
+                description="You have no gatos silly goose ! Use `?gato pull (name of the gato)`",
+                colour=discord.Colour.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        for gato in self.nurseries[ctx.author.id]:
+            gato.add_health(- gato.health + 1)
+            gato.add_mood(- gato.mood + 1)
+            gato.add_hunger(- gato.hunger + 1)
+            gato.add_energy(- gato.energy + 1)
+
+        await ctx.send("Done! ✅")
+
+
+    @gato.command(name="yaoshi")
+    async def yaoshi(self, ctx):
+        if ctx.author.id not in self.nurseries:
+            embed = discord.Embed(
+                title=f"Deploy team",
+                description="You have no gatos silly goose ! Use `?gato pull (name of the gato)`",
+                colour=discord.Colour.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        for gato in self.nurseries[ctx.author.id]:
+            gato.add_health(- gato.health + gato.max_health)
+            gato.add_mood(- gato.mood + gato.max_mood)
+            gato.add_hunger(- gato.hunger + gato.max_hunger)
+            gato.add_energy(- gato.energy + gato.max_energy)
+
+        await ctx.send("Done! ✅")
+
+
 
 async def setup(bot):
     await bot.add_cog(GatoGame(bot))
