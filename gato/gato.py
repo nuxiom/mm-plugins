@@ -119,7 +119,7 @@ class GatoGame(commands.Cog):
         colour = discord.Colour.teal()
         if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
             for i, gato in enumerate(self.nurseries[ctx.author.id]):
-                description += f"{i+1}. {gato.name}: {gato.__class__.__name__} (E{gato.eidolon})"
+                description += f"{i+1}. **{gato.name}**: {gato.__class__.__name__} *(✨ E{gato.eidolon})*\n"
         else:
             description = "You have no gatos silly goose ! Use `?gato pull (name of the gato)`"
             colour = discord.Colour.red()
@@ -161,7 +161,7 @@ class GatoGame(commands.Cog):
                     description=description,
                     colour=discord.Colour.teal()
                 )
-                embed.set_thumbnail(url=gato.image)
+                embed.set_thumbnail(url=gato.IMAGE)
                 await ctx.send(embed=embed)
         else:
             embed = discord.Embed(
