@@ -282,11 +282,13 @@ class GatoGame(commands.Cog):
                 objects += o
 
         events = self.handle_events(ctx.author.id, tm.gatos)
+        if len(events) == 0:
+            events = "*Nothing specific happened*"
         obj = '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects]))
 
         embed = discord.Embed(
             title=f"Claim rewards",
-            description=f"### Expedition results\nYour gatos brought back {currency} {CURRENCY_EMOJI} and {obj}\n### Event log\n{events}",
+            description=f"### Expedition results\nYour gatos brought back {int(currency)} {CURRENCY_EMOJI} and {obj}\n### Event log\n{events}",
             colour=discord.Colour.teal()
         )
         await ctx.send(embed=embed)
