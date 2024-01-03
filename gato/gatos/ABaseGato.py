@@ -3,7 +3,7 @@ from random import random
 
 
 def require_alive(function):
-    def new_function(gato: ABaseGato, *args, **kwargs):
+    def new_function(gato: "ABaseGato", *args, **kwargs):
         if not gato._fainted:
             return function(gato, *args, **kwargs)
 
