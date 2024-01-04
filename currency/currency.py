@@ -939,7 +939,7 @@ class Effects:
         player = plugin.save[ctx.author.id]
         if all(dna in player.inventory.keys() for dna in dna_list):
             role_name = await Effects.give_role(plugin, ctx, dna_role_id)
-            await ctx.author.send(f'Congrats! You collected all the parts to assemble Ruan Mei\'s hairping! You received the role "{role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
+            await ctx.author.send(f'Congrats! You collected all the parts to assemble Ruan Mei\'s hairpin! You received the role "{role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
 
     @staticmethod
     async def currency_boost(plugin: Currency, ctx: commands.Context):
