@@ -37,7 +37,7 @@ class ABaseGato(ABC):
     IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
     EVENT_DESCRIPTIONS = {
         "fainted": "fainted.",
-        "bitten": "is angry and bites you (x{count}). You loose **{amount}** {currency} in total"
+        "bitten": "is angry and bites you (x{count}). You lose **{amount}** {currency} in total"
     }
     BASE_EARN_RATE: float = 0.25
 
