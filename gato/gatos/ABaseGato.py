@@ -96,7 +96,6 @@ class ABaseGato(ABC):
             self.friendship += 0.1
 
 
-    @require_alive
     def lose_stats_over_time(self, seconds):
         self.add_hunger(-0.01 * seconds)
         self.add_energy(-0.02 * seconds)
@@ -112,7 +111,6 @@ class ABaseGato(ABC):
                 self._events.append({"bitten": None})
 
 
-    @require_alive
     def compute_currency(self, seconds):
         self.efficiency = self.base_efficiency + self.efficiency_boost
         if self.energy < 10:
@@ -123,7 +121,6 @@ class ABaseGato(ABC):
         return seconds * self.BASE_EARN_RATE * self.efficiency
 
 
-    @require_alive
     def random_object(self, seconds):
         objects = []
         if self._time_deployed % 60 == 0 and self.efficiency >= 1:

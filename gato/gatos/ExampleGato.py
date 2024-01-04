@@ -34,9 +34,8 @@ class ExampleGato(ABaseGato):
             self._has_buff = False
 
 
-    @require_alive
     def random_object(self, seconds):
-        super().random_object(seconds)
+        objects = super().random_object(seconds)
 
         self._find_object_cooldown -= seconds
 
@@ -48,7 +47,9 @@ class ExampleGato(ABaseGato):
                 chances = 0.02
 
             if random() < chances:
-                return ["Rare treasure"]
+                objects.append("Rare treasure")
+
+        return objects
 
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
