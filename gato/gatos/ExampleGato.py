@@ -36,6 +36,8 @@ class ExampleGato(ABaseGato):
 
     @require_alive
     def random_object(self, seconds):
+        super().random_object(seconds)
+
         self._find_object_cooldown -= seconds
 
         if self._find_object_cooldown <= 0:

@@ -40,6 +40,7 @@ class ABaseGato(ABC):
         "bitten": "is angry and bites you (x{count}). You lose **{amount}** {currency} in total"
     }
     BASE_EARN_RATE: float = 0.25
+    BITE_CHANCE: float = 1/200
 
 
     def __init__(self, **kwargs):
@@ -85,34 +86,53 @@ class ABaseGato(ABC):
             self._fainted = False
 
 
+    @require_alive
+    def lose_stats_over_time(self, seconds):
+        self.add_hunger(-0.01 * seconds)
+        self.add_energy(-0.02 * seconds)
+
+        if self._time_deployed >= 30*60:
+            self.add_mood(-0.01 * seconds)
+
+        if self.hunger < 10:
+            self.add_health(-0.02 * seconds)
+
+        if self.mood < 10:
+            if random() < self.BITE_CHANCE:
+                self._events.append({"bitten": None})
+
+
+    @require_alive
+    def compute_currency(self, seconds):
+        total_efficiency = self.base_efficiency + self.efficiency_boost
+        if self.energy < 10:
+            total_efficiency -= 0.2
+        elif self.energy < 20:
+            total_efficiency -= 0.1
+
+        return seconds * self.BASE_EARN_RATE * total_efficiency
+
+
+    @require_alive
+    def random_object(self, seconds):
+        objects = []
+        if self._time_deployed % 60 == 0 and self.efficiency >= 1:
+            if random() < self.luck / 100:
+                objects.append("Shiny thing")
+
+        return objects
+
+
     @abstractmethod
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         if self.health > 0:
-            self._time_deployed += 1
+            self._time_deployed += seconds
 
-            self.add_hunger(-0.01 * seconds)
-            self.add_mood(-0.01 * seconds)
-            self.add_energy(-0.02 * seconds)
+            self.lose_stats_over_time(seconds)
 
-            if self.hunger < 10:
-                self.add_health(-0.02 * seconds)
+            currency = self.compute_currency(seconds)
 
-            if self.mood < 10:
-                if random() < 1/100:
-                    self._events.append({"bitten": None})
-
-            total_efficiency = self.base_efficiency + self.efficiency_boost
-            if self.energy < 10:
-                total_efficiency -= 0.2
-            elif self.energy < 20:
-                total_efficiency -= 0.1
-
-            currency = self.BASE_EARN_RATE * total_efficiency
-
-            objects = []
-            if self._time_deployed % 60 == 0 and self.efficiency >= 1:
-                if random() < self.luck / 100:
-                    objects.append("Shiny thing")
+            objects = self.random_object(seconds)
 
             return currency, objects
         else:
