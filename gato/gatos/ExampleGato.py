@@ -58,10 +58,5 @@ class ExampleGato(ABaseGato):
         # Then call the parent simulation (VERY IMPORTANT)
         currency, objects = super().simulate(seconds)
 
-        # Then find additional objects once per minute
-        add_objects = self.random_object(seconds)
-        if add_objects is not None:
-            objects += add_objects
-
         return currency, objects
 

@@ -26,6 +26,8 @@ class ABaseGato(ABC):
     base_efficiency: float = 1.0
     luck: float = 1.0
     efficiency_boost: float = 0.0
+    friendship: float = 1.0
+    deployed_today: int = 0
 
     _fainted: bool = False
     _events: list[dict] = []
@@ -40,7 +42,20 @@ class ABaseGato(ABC):
         "bitten": "is angry and bites you (x{count}). You lose **{amount}** {currency} in total"
     }
     BASE_EARN_RATE: float = 0.25
-    BITE_CHANCE: float = 1/200
+    BITE_CHANCE: float = 1/100
+
+    VALUES_TO_SAVE = [
+        "name",
+        "mood",
+        "health",
+        "hunger",
+        "energy",
+        "health",
+        "efficiency_boost",
+        "eidolon",
+        "friendship",
+        "deployed_today"
+    ]
 
 
     def __init__(self, **kwargs):
@@ -62,15 +77,7 @@ class ABaseGato(ABC):
     def to_json(self):
         return {
             "type": self.__class__.__name__,
-            "values": {
-                "name": self.name,
-                "mood": self.mood,
-                "hunger": self.hunger,
-                "energy": self.energy,
-                "health": self.health,
-                "efficiency_boost": self.efficiency_boost,
-                "eidolon": self.eidolon
-            }
+            "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE)
         }
 
     @classmethod
@@ -85,6 +92,9 @@ class ABaseGato(ABC):
         if self.health > 0:
             self._fainted = False
 
+        if self.friendship < 10 and self.deployed_today < 5:
+            self.friendship += 0.1
+
 
     @require_alive
     def lose_stats_over_time(self, seconds):
@@ -98,19 +108,19 @@ class ABaseGato(ABC):
             self.add_health(-0.02 * seconds)
 
         if self.mood < 10:
-            if random() < self.BITE_CHANCE:
+            if random() < self.BITE_CHANCE / self.friendship:
                 self._events.append({"bitten": None})
 
 
     @require_alive
     def compute_currency(self, seconds):
-        total_efficiency = self.base_efficiency + self.efficiency_boost
+        self.efficiency = self.base_efficiency + self.efficiency_boost
         if self.energy < 10:
-            total_efficiency -= 0.2
+            self.efficiency -= 0.2
         elif self.energy < 20:
-            total_efficiency -= 0.1
+            self.efficiency -= 0.1
 
-        return seconds * self.BASE_EARN_RATE * total_efficiency
+        return seconds * self.BASE_EARN_RATE * self.efficiency
 
 
     @require_alive

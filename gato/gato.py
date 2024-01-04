@@ -169,6 +169,7 @@ class GatoGame(commands.Cog):
                 f"**Hunger:** {round(gato.hunger)} / {round(gato.max_hunger)}\n" + \
                 f"**Mood:** {round(gato.mood)} / {round(gato.max_mood)}\n" + \
                 f"**Energy:** {round(gato.energy)} / {round(gato.max_energy)}\n" + \
+                f"**Friendship:** {int(gato.friendship)}/10\n" + \
                 f"\n✨ **Eidolon {gato.eidolon}**"
 
                 embed = discord.Embed(
