@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+from functools import wraps
 from random import random
 
 
 def require_alive(function):
     """Decorator that only executes a function if the gato has not fainted. **Warning:** Don't add that to functions that shouldn't return `None`."""
+    @wraps(function)
     def new_function(gato: "ABaseGato", *args, **kwargs):
         if not gato._fainted:
             return function(gato, *args, **kwargs)
@@ -101,7 +103,7 @@ class ABaseGato(ABC):
 
 
     _fainted: bool = False
-    """Becomes :keyword:`True` if the gato's health is 0. Updated by :py:meth:`add_health`"""
+    """Becomes :token:`True` if the gato's health is 0. Updated by :py:meth:`add_health`"""
 
     _events: list[dict] = []
     """List of events. Cleared everytime the rewards are claimed. An event is a dict like `{"event_name": "optional value (can be any type)"}`"""
@@ -118,7 +120,6 @@ class ABaseGato(ABC):
 
 
     def __init__(self, **kwargs):
-        """Constructor."""
         self.mood = self.max_mood
         self.hunger = self.max_hunger
         self.energy = self.max_energy
