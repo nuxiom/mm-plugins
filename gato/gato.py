@@ -32,36 +32,79 @@ class PullView(discord.ui.View):
 
     frames: list[dict] = []
     current_frame: int = 0
+    title: str
+    result_ids: list[str]
 
     message: discord.Message
     context: commands.Context
     ongoing: bool = True
+    skipped_yet: bool = False
 
-    def __init__(self, ctx: commands.Context, anims: list[dict]):
+    def __init__(self, ctx: commands.Context, anims: list[dict], result_ids: list[str]):
         super().__init__()
         self.frames = anims
         self.ctx = ctx
+        self.title = f"{self.ctx.author.display_name}'s pull"
+        self.result_ids = result_ids
 
-    async def first_frame(self, desc=""):
-        embed = discord.Embed(title=f"{self.ctx.author.display_name}'s pull", description=desc)
-        embed.set_image(url=self.frames[0]["anim"])
-        self.message = await self.ctx.send(embed=embed, view=self)
-        await asyncio.sleep(self.frames[0]["duration"])
-        await self.message.edit(content=str(self.current_frame))
-        self.ongoing = False
+    async def handle_frame(self, frame: int, skipping=False):
+        if skipping:
+            self.skipped_yet = True
+
+        if frame == len(self.frames):
+            self.ongoing = False
+            self.stop()
+            if len(self.frames) == 1:
+                embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
+                if skipping:
+                    embed.set_image(url=self.frames[0]["solo"])
+                    await self.message.edit(embed=embed, view=None)
+                    await asyncio.sleep(self.frames[0]["solo_duration"] + 2)
+                    embed.set_image(url=self.frames[0]["static"])
+                    await self.message.edit(embed=embed)
+                else:
+                    embed.set_image(url=self.frames[0]["static"])
+                    await self.message.edit(embed=embed, view=None)
+            else:
+                ls = "- " + "\n- ".join([eval(itm).DISPLAY_NAME for itm in self.result_ids])
+                embed = discord.Embed(title=self.title, colour=discord.Colour.teal(), description=ls)
+                await self.message.edit(embed=embed, view=None)
+        else:
+            embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
+            if skipping:
+                embed.set_image(url=self.frames[frame]["static"])
+                await self.message.edit(embed=embed, view=self)
+            else:
+                embed.set_image(url=self.frames[frame]["anim"])
+                await self.message.edit(embed=embed, view=self)
+                await asyncio.sleep(self.frames[frame]["duration"] + 3)
+                self.skipped_yet = True
+                if self.current_frame == frame:
+                    embed.set_image(url=self.frames[frame]["static"])
+                    await self.message.edit(embed=embed, view=self)
+
+    async def first_frame(self):
+        self.message = await self.ctx.send(self.ctx.author.mention)
+        await self.handle_frame(0, skipping=False)
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
-    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button):
-        """Skip animation."""
-        self.current_frame += 1
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Next item."""
         await interaction.response.defer()
+        if not self.skipped_yet:
+            if len(self.frames) == 1:
+                self.current_frame += 1
+            await self.handle_frame(self.current_frame, skipping=True)
+        else:
+            self.current_frame += 1
+            await self.handle_frame(self.current_frame)
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="⏩")
-    async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Skip pulls to result."""
-        self.current_frame = len(self.frames)
-        self.ongoing = False
         await interaction.response.defer()
+        self.current_frame = len(self.frames)
+        await self.handle_frame(self.current_frame, skipping=True)
 
 
 
@@ -84,7 +127,7 @@ class GatoGame(commands.Cog):
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
     async def critter(self, ctx: commands.Context):
         """
-        Ruan Mei Mains' gato gacha game!
+        Ruan Mei Mains' critter gacha game!
         """
 
         await ctx.send_help(ctx.command)
@@ -251,9 +294,9 @@ class GatoGame(commands.Cog):
                 "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
             })
 
-        pv = PullView(ctx, anims_lists)
+        pv = PullView(ctx, anims_lists, pull_results_ids)
         self.ongoing_pulls[player_id] = pv
-        await pv.first_frame("\n".join(pull_results_ids))
+        await pv.first_frame()
 
         # img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
         # if command in MULTIS:
@@ -276,7 +319,7 @@ class GatoGame(commands.Cog):
 
     @critter.command(name="nursery")
     async def nursery(self, ctx: commands.Context):
-        """ Show your Gato nursery. """
+        """ Show your critter nursery. """
 
         description = ""
         colour = discord.Colour.teal()
@@ -284,7 +327,7 @@ class GatoGame(commands.Cog):
             for i, gato in enumerate(self.nurseries[ctx.author.id]):
                 description += f"{i+1}. **{gato.name}**: {gato.__class__.__name__} *(✨ E{gato.eidolon})*\n"
         else:
-            description = "You have no gatos silly goose ! Use `?critter pull (name of the gato)`"
+            description = "You have no critter silly goose ! Use `?critter pull/multi`"
             colour = discord.Colour.red()
 
         embed = discord.Embed(
@@ -297,7 +340,7 @@ class GatoGame(commands.Cog):
 
     @critter.command(name="info")
     async def info(self, ctx: commands.Context, number: int):
-        """ Show info about a Gato from your nursery. """
+        """ Show info about a critter from your nursery. """
 
         if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
             nursery = self.nurseries[ctx.author.id]
@@ -306,7 +349,7 @@ class GatoGame(commands.Cog):
             if number < 0 or number >= len(nursery):
                 embed = discord.Embed(
                     title=f"Error",
-                    description=f"Gato number {number + 1} not found. Use `?critter nursery`",
+                    description=f"Critter number {number + 1} not found. Use `?critter nursery`",
                     colour=discord.Colour.red()
                 )
                 await ctx.send(embed=embed)
@@ -333,7 +376,7 @@ class GatoGame(commands.Cog):
         else:
             embed = discord.Embed(
                 title=f"{ctx.author.display_name}'s nursery",
-                description="You have no gatos silly goose ! Use `?critter pull (name of the gato)`",
+                description="You have no critter silly goose ! Use `?critter pull/multi`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
@@ -341,12 +384,12 @@ class GatoGame(commands.Cog):
 
     @critter.command(name="deploy")
     async def deploy(self, ctx: commands.Context, *gato_numbers):
-        """ Deploy a team of gatos. Specify numbers from your nursery (example: `?critter deploy 3 2 1 4`) or user `?critter deploy` alone to redeploy previous team. ⚠️ Order matters! Gato skills will take effect in deployment order (for example, put Gatos that boost the whole team in first place). """
+        """ Deploy a team of critters. Specify numbers from your nursery (example: `?critter deploy 3 2 1 4`) or use `?critter deploy` alone to redeploy previous team. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
 
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
-                description="You have no gatos silly goose ! Use `?critter pull (name of the gato)`",
+                description="You have no critter silly goose ! Use `?critter pull/multi`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
@@ -378,7 +421,7 @@ class GatoGame(commands.Cog):
             else:
                 embed = discord.Embed(
                     title=f"Deploy team",
-                    description="No team was previously deployed! Example use `?critter deploy 1 2 3 4` (check gato numbers with `?critter nursery`)",
+                    description="No team was previously deployed! Example use `?critter deploy 1 2 3 4` (check critter numbers with `?critter nursery`)",
                     colour=discord.Colour.red()
                 )
                 await ctx.send(embed=embed)
@@ -410,7 +453,7 @@ class GatoGame(commands.Cog):
                 else:
                     embed = discord.Embed(
                         title=f"Deploy team",
-                        description=f"Gato number {i} not found in your nursery! Check gato numbers with `?critter nursery`!",
+                        description=f"Critter number {i} not found in your nursery! Check critter numbers with `?critter nursery`!",
                         colour=discord.Colour.red()
                     )
                     await ctx.send(embed=embed)
@@ -471,7 +514,7 @@ class GatoGame(commands.Cog):
 
         embed = discord.Embed(
             title=f"Claim rewards",
-            description=f"### Expedition results\nYour gatos brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
+            description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
             colour=discord.Colour.teal()
         )
         await ctx.send(embed=embed)
@@ -479,12 +522,12 @@ class GatoGame(commands.Cog):
 
     @critter.command(name="nanook")
     async def nanook(self, ctx: commands.Context):
-        """ Set all the stats of all your Gatos to 1 """
+        """ Set all the stats of all your critters to 1 """
 
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
-                description="You have no gatos silly goose ! Use `?critter pull (name of the gato)`",
+                description="You have no critter silly goose ! Use `?critter pull/multi`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
@@ -501,12 +544,12 @@ class GatoGame(commands.Cog):
 
     @critter.command(name="yaoshi")
     async def yaoshi(self, ctx: commands.Context):
-        """ Set all the stats of all your Gatos to maximum """
+        """ Set all the stats of all your Critters to maximum """
 
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
-                description="You have no gatos silly goose ! Use `?critter pull (name of the gato)`",
+                description="You have no critter silly goose ! Use `?critter pull/multi`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
