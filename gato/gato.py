@@ -37,8 +37,8 @@ class PullManager:
     context: commands.Context
     ongoing: bool = True
 
-    def __init__(self, ctx: commands.Context, *images: dict):
-        self.frames = images
+    def __init__(self, ctx: commands.Context, anims: list[dict]):
+        self.frames = anims
         self.ctx = ctx
 
     async def first_frame(self):
@@ -229,6 +229,7 @@ class GatoGame(commands.Cog):
             
             anims_lists.append({
                 "anim": data.Data.animations[gato.ANIMATIONS][anim_name]["url"],
+                "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
                 "static": data.Data.animations[gato.ANIMATIONS]["static"]["url"],
                 "duration": data.Data.animations[gato.ANIMATIONS][anim_name]["duration"],
             })
