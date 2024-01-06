@@ -28,7 +28,7 @@ CURRENCY_NAME = "Plum Blossom"
 CURRENCY_EMOJI = "🌸"
 
 
-class PullManager:
+class PullView(discord.ui.View):
 
     frames: list[dict] = []
     current_frame: int = 0
@@ -38,13 +38,29 @@ class PullManager:
     ongoing: bool = True
 
     def __init__(self, ctx: commands.Context, anims: list[dict]):
+        super().__init__()
         self.frames = anims
         self.ctx = ctx
 
     async def first_frame(self, desc=""):
         embed = discord.Embed(title=f"{self.ctx.author.display_name}'s pull", description=desc)
         embed.set_image(url=self.frames[0]["anim"])
-        await self.ctx.send(embed=embed)
+        self.message = await self.ctx.send(embed=embed, view=self)
+        await asyncio.sleep(self.frames[0]["duration"])
+        await self.message.edit(content=str(self.current_frame))
+        self.ongoing = False
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
+    async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Skip animation."""
+        self.current_frame += 1
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="⏩")
+    async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Skip pulls to result."""
+        self.current_frame = len(self.frames)
+        self.ongoing = False
+
 
 
 class GatoGame(commands.Cog):
@@ -60,7 +76,7 @@ class GatoGame(commands.Cog):
 
         self.teams: dict[int, team.Team] = {}
 
-        self.ongoing_pulls: dict[int, PullManager] = {}
+        self.ongoing_pulls: dict[int, PullView] = {}
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
@@ -200,8 +216,6 @@ class GatoGame(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        title = f"{ctx.author.display_name}'s {command} on {bann.name}"
-
         pull_results = []
         pull_results_ids = []
         anims_lists = []
@@ -232,12 +246,12 @@ class GatoGame(commands.Cog):
                 "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
                 "static": data.Data.animations[gato.ANIMATIONS]["static"]["url"],
                 "duration": data.Data.animations[gato.ANIMATIONS][anim_name]["duration"],
+                "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
             })
 
-        pm = PullManager(ctx, anims_lists)
-        self.ongoing_pulls[player_id] = pm
-
-        await pm.first_frame("\n".join(pull_results_ids))
+        pv = PullView(ctx, anims_lists)
+        self.ongoing_pulls[player_id] = pv
+        await pv.first_frame("\n".join(pull_results_ids))
 
         # img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
         # if command in MULTIS:
