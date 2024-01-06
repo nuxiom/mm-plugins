@@ -29,6 +29,9 @@ class ABaseGato(ABC):
     DISPLAY_NAME: str = "Base Gato"
     """Display name of this gato class. **OVERRIDE IT!**"""
 
+    RARITY: int = 3
+    """Rarity of the gato in stars (3-5). **OVERRIDE IT!**"""
+
     EVENT_DESCRIPTIONS = {
         "fainted": "fainted.",
         "bitten": "is angry and bites you (x{count}). You lose **{amount}** {currency} in total"

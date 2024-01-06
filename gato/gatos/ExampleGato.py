@@ -10,9 +10,10 @@ class ExampleGato(ABaseGato):
     """
 
     # Override constants
-    IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
-    ANIMATIONS: str = "mooncake"
-    DISPLAY_NAME: str = "Example Gato"
+    IMAGE = "https://media.discordapp.net/attachments/435078369852260353/1192961669467488307/cyx_gato.png"
+    ANIMATIONS = "5star"
+    DISPLAY_NAME = "Crème Brûlée"
+    RARITY = 5
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
         "buff_duration",
         "buff_cooldown",
