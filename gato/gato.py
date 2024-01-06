@@ -41,8 +41,8 @@ class PullManager:
         self.frames = anims
         self.ctx = ctx
 
-    async def first_frame(self):
-        embed = discord.Embed(title=f"{self.ctx.author.display_name}'s pull")
+    async def first_frame(self, desc=""):
+        embed = discord.Embed(title=f"{self.ctx.author.display_name}'s pull", description=desc)
         embed.set_image(url=self.frames[0]["anim"])
         await self.ctx.send(embed=embed)
 
@@ -205,17 +205,17 @@ class GatoGame(commands.Cog):
         pull_results = []
         pull_results_ids = []
         anims_lists = []
-        mini = 2
+        max_rarity = 3
         for _ in range(pull_count):
             rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
             for i in range(len(bann._cumulative_weights)):
                 if rnd < bann._cumulative_weights[i]:
-                    if i < mini:
-                        mini = i
                     weight = sorted(bann.drop_weights.keys())[i]
                     item_id = random.choice(bann.drop_weights[weight])
                     pull_results_ids.append(item_id)
                     item = eval(item_id)
+                    if item.RARITY > max_rarity:
+                        max_rarity = item.RARITY
                     pull_results.append(item)
                     break
 
@@ -223,7 +223,7 @@ class GatoGame(commands.Cog):
         for i, gato in enumerate(pull_results):
             anim_name: str
             if i == 0:
-                anim_name = f"train{5-mini}"
+                anim_name = f"train{max_rarity}"
             else:
                 anim_name = "solo"
             
@@ -237,7 +237,7 @@ class GatoGame(commands.Cog):
         pm = PullManager(ctx, anims_lists)
         self.ongoing_pulls[player_id] = pm
 
-        await pm.first_frame()
+        await pm.first_frame("\n".join(pull_results_ids))
 
         # img = Image.open(os.path.join(DIR, "img", "gachabg.png"))
         # if command in MULTIS:
