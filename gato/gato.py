@@ -51,15 +51,17 @@ class PullView(discord.ui.View):
         self.ongoing = False
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
-    async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Skip animation."""
         self.current_frame += 1
+        await interaction.response.defer()
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="⏩")
-    async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Skip pulls to result."""
         self.current_frame = len(self.frames)
         self.ongoing = False
+        await interaction.response.defer()
 
 
 
