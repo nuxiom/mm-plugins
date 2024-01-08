@@ -83,7 +83,7 @@ class Data:
             name="Standard Banner",
             img="https://media.discordapp.net/attachments/1106791361157541898/1193230143217479690/chloe_banner_6.png",
             colour=0x669D96,
-            pull_cost=100,
+            pull_cost=1000,
             items=[
                 ExampleGato,
                 NormalGato,
@@ -99,7 +99,7 @@ class Data:
             name="The same banner lol",
             img="https://media.discordapp.net/attachments/1106791361157541898/1193230143729188986/xiao_banner_2.png",
             colour=0xA83319,
-            pull_cost=100,
+            pull_cost=1000,
             items=[
                 ExampleGato,
                 NormalGato,

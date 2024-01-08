@@ -34,6 +34,7 @@ class PullView(discord.ui.View):
     current_frame: int = 0
     title: str
     results: list[gatos.Gato]
+    result_lines: list[str]
 
     channel: discord.TextChannel
     author: discord.User
@@ -41,13 +42,14 @@ class PullView(discord.ui.View):
     ongoing: bool = True
     skipped_yet: bool = False
 
-    def __init__(self, channel: discord.TextChannel, author: discord.User, anims: list[dict], results: list[gatos.Gato]):
+    def __init__(self, channel: discord.TextChannel, author: discord.User, anims: list[dict], results: list[gatos.Gato], result_lines: list[str]):
         super().__init__()
         self.frames = anims
         self.channel = channel
         self.author = author
         self.title = f"{self.author.display_name}'s pull"
         self.results = results
+        self.result_lines = result_lines
 
     async def handle_frame(self, frame: int, skipping=False):
         if skipping:
@@ -56,20 +58,23 @@ class PullView(discord.ui.View):
         if frame == len(self.frames):
             self.ongoing = False
             self.stop()
+            description="\n".join(self.result_lines)
             if len(self.frames) == 1:
                 embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
                 if skipping:
                     embed.set_image(url=self.frames[0]["solo"])
                     await self.message.edit(embed=embed, view=None)
                     await asyncio.sleep(self.frames[0]["solo_duration"] + 2)
+                    embed.description = description
                     embed.set_image(url=self.frames[0]["static"])
                     await self.message.edit(embed=embed)
                 else:
+                    embed.description = description
                     embed.set_image(url=self.frames[0]["static"])
                     await self.message.edit(embed=embed, view=None)
             else:
                 ls = "- " + "\n- ".join([itm.DISPLAY_NAME for itm in self.results])
-                embed = discord.Embed(title=self.title, colour=discord.Colour.teal(), description=ls)
+                embed = discord.Embed(title=self.title, colour=discord.Colour.teal(), description=description)
                 await self.message.edit(embed=embed, view=None)
         else:
             embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
@@ -130,12 +135,13 @@ class BannersView(discord.ui.View):
     banners: list[data.Banner]
     current_banner: int
     ongoing_pulls: dict[int, PullView]
+    gato_game: "GatoGame"
     
     author_id: int
     ctx: commands.Context
     message: discord.Message
 
-    def __init__(self, ctx: commands.Context, banners: list[data.Banner], message: discord.Message):
+    def __init__(self, ctx: commands.Context, banners: list[data.Banner], message: discord.Message, gato_game: "GatoGame"):
         super().__init__()
         self.banners = banners
         self.current_banner = 0
@@ -143,6 +149,7 @@ class BannersView(discord.ui.View):
         self.message = message
         self.ctx = ctx
         self.author_id = ctx.author.id
+        self.gato_game = gato_game
 
     async def refresh_embed(self):
         desc = " | ".join([
@@ -180,14 +187,13 @@ class BannersView(discord.ui.View):
 
     async def start_pulls(self, interaction: discord.Interaction, pull_count: int):
         player_id = interaction.user.id
-        if player_id in self.ongoing_pulls and self.ongoing_pulls[player_id].ongoing:
+        if player_id in self.gato_game.ongoing_pulls and self.gato_game.ongoing_pulls[player_id].ongoing:
             description = f"You already have an ongoing pull, please be patient!"
             embed = discord.Embed(
                 title="Error",
                 description=description.strip(),
                 colour=discord.Colour.red()
             )
-            embed.set_footer(text=self.footer)
             await self.ctx.send(embed=embed)
             return
 
@@ -197,7 +203,35 @@ class BannersView(discord.ui.View):
         pull_results = bann.get_pulls_results(pull_count)
         max_rarity = max(itm.RARITY for itm in pull_results)
 
+        if player_id not in self.gato_game.nurseries:
+            self.gato_game.nurseries[player_id] = []
+        nursery = self.gato_game.nurseries[player_id]
+
+        result_lines = []
         gato: gatos.Gato
+        for gato in pull_results:
+            thegato: gatos.Gato = None
+            for g in nursery:
+                if isinstance(g, gato):
+                    thegato = g
+            if thegato is None:
+                thegato = gato(name=f"{interaction.user.name}'s {gato.DISPLAY_NAME}")
+                nursery.append(thegato)
+                result_lines.append(f"- **{gato.DISPLAY_NAME}** obtained!")
+            elif thegato.eidolon < 6:
+                thegato.eidolon += 1
+                result_lines.append(f"- **{thegato.name}**'s eidolon level increased to **E{thegato.eidolon}**!")
+            else:
+                cpr = {
+                    6: 10*bann.pull_cost,
+                    5: 5*bann.pull_cost,
+                    4: 1*bann.pull_cost,
+                    3: bann.pull_cost//2
+                }
+                money = cpr[thegato.RARITY]
+                # refund player
+                result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
+
         for i, gato in enumerate(pull_results):
             anim_name: str
             if i == 0:
@@ -213,11 +247,10 @@ class BannersView(discord.ui.View):
                 "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
             })
 
-        print(anims_lists)
-
-        pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results)
-        self.ongoing_pulls[player_id] = pv
+        pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results, result_lines)
+        self.gato_game.ongoing_pulls[player_id] = pv
         await pv.first_frame()
+
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, custom_id="left", emoji="⬅️")
     async def left(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -282,6 +315,8 @@ class GatoGame(commands.Cog):
 
         self.teams: dict[int, team.Team] = {}
 
+        self.ongoing_pulls = {}
+
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
     async def critter(self, ctx: commands.Context):
@@ -310,7 +345,7 @@ class GatoGame(commands.Cog):
                 if et == "bitten":
                     args["amount"] = 0
                     for _ in value:
-                        rnd = random.randint(10, 50)
+                        rnd = random.randint(2, 10)
                         args["amount"] += rnd
                     args["currency"] = CURRENCY_EMOJI
                     args["count"] = len(value)
@@ -326,7 +361,7 @@ class GatoGame(commands.Cog):
         """List banners and allow to pull on them"""
         message = await ctx.send("Loading...")
 
-        bv = BannersView(ctx, data.Data.banners, message)
+        bv = BannersView(ctx, data.Data.banners, message, self)
         await bv.refresh_buttons()
         await bv.refresh_embed()
 
@@ -339,7 +374,7 @@ class GatoGame(commands.Cog):
         colour = discord.Colour.teal()
         if ctx.author.id in self.nurseries and len(self.nurseries[ctx.author.id]) > 0:
             for i, gato in enumerate(self.nurseries[ctx.author.id]):
-                description += f"{i+1}. **{gato.name}**: {gato.__class__.__name__} *(✨ E{gato.eidolon})*\n"
+                description += f"{i+1}. **{gato.name}**: {gato.DISPLAY_NAME} *(✨ E{gato.eidolon})*\n"
         else:
             description = "You have no critter silly goose ! Use `?critter pull/multi`"
             colour = discord.Colour.red()

@@ -39,7 +39,7 @@ class ABaseGato(ABC):
     """Description for the gato's events. *Can be overriden or completed with custom events.*
     For example, `SkellyGato` has a custom event called `"resurrect"` with a custom description."""
 
-    BASE_EARN_RATE: float = 0.25
+    BASE_EARN_RATE: float = 1/16
     """Number of currency per second the gato earns. **DON'T OVERRIDE IT**, rather override :py:attr:`base_efficiency`."""
 
     BITE_CHANCE: float = 1/100
