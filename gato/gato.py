@@ -80,8 +80,11 @@ class PullView(discord.ui.View):
                 await asyncio.sleep(self.frames[frame]["duration"] + 3)
                 self.skipped_yet = True
                 if self.current_frame == frame:
-                    embed.set_image(url=self.frames[frame]["static"])
-                    await self.message.edit(embed=embed, view=self)
+                    if len(self.frames) == 1:
+                        await self.handle_frame(1)
+                    else:
+                        embed.set_image(url=self.frames[frame]["static"])
+                        await self.message.edit(embed=embed, view=self)
 
     async def first_frame(self):
         self.message = await self.ctx.send(self.ctx.author.mention)
@@ -90,6 +93,11 @@ class PullView(discord.ui.View):
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Next item."""
+        if interaction.user.id != self.ctx.author.id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person pulling can interact.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
         await interaction.response.defer()
         if not self.skipped_yet:
             if len(self.frames) == 1:
@@ -102,6 +110,11 @@ class PullView(discord.ui.View):
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="⏩")
     async def skip(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Skip pulls to result."""
+        if interaction.user.id != self.ctx.author.id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person pulling can interact.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
         await interaction.response.defer()
         self.current_frame = len(self.frames)
         await self.handle_frame(self.current_frame, skipping=True)
