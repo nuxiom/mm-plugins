@@ -149,6 +149,7 @@ class BannersView(discord.ui.View):
             description=desc,
             colour=self.banners[self.current_banner].colour
         )
+        embed.set_image(url=self.banners[self.current_banner].img)
         await self.message.edit(content="", embed=embed)
 
     async def refresh_buttons(self):
@@ -184,7 +185,7 @@ class BannersView(discord.ui.View):
         bann = self.banners[self.current_banner]
         embed = discord.Embed(
             title=f"{bann.name} details",
-            description=bann,
+            description=bann.get_rates_text(),
             colour=discord.Colour.dark_embed()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
