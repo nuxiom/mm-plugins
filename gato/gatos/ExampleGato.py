@@ -38,7 +38,7 @@ class ExampleGato(ABaseGato):
         self.buff_cooldown -= seconds
 
         # Apply buff if cooldown is over
-        if self.buff_cooldown <= 0:
+        if self.buff_cooldown <= 0 or self.buff_duration > 0:
             # Increase efficiency boost
             self.efficiency_boosts[self.BUFF_KEY] = 20/100 + (2/100 * self.eidolon)
 

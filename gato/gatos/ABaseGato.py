@@ -102,6 +102,15 @@ class ABaseGato(ABC):
     damage_reductions: dict[str, float] = {}
     """Reduces damage taken. The gato or other gatos can add things to it, with a unique key per gato."""
 
+    hunger_reductions: dict[str, float] = {}
+    """Reduces hunger loss. The gato or other gatos can add things to it, with a unique key per gato."""
+
+    mood_loss_reductions: dict[str, float] = {}
+    """Reduces mood loss. The gato or other gatos can add things to it, with a unique key per gato."""
+
+    energy_loss_reductions: dict[str, float] = {}
+    """Reduces energy loss. The gato or other gatos can add things to it, with a unique key per gato."""
+
     friendship: float = 1.0
     """Friendship stat, starts at 1, max 10."""
 
@@ -133,13 +142,16 @@ class ABaseGato(ABC):
         self.health = self.max_health
         self.efficiency = self.base_efficiency
 
-        self.name = self.__class__.__name__
+        self.name = self.DISPLAY_NAME
         self.eidolon = 0
 
         # Initialize objects to new objects (not shared by the class)
         self._events = []
         self.efficiency_boosts = {}
         self.damage_reductions = {}
+        self.hunger_reductions = {}
+        self.mood_loss_reductions = {}
+        self.energy_loss_reductions = {}
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -176,6 +188,10 @@ class ABaseGato(ABC):
 
         self._time_deployed = 0
         self.efficiency_boosts = {}
+        self.damage_reductions = {}
+        self.hunger_reductions = {}
+        self.mood_loss_reductions = {}
+        self.energy_loss_reductions = {}
 
         if self.health > 0:
             self._fainted = False
@@ -293,6 +309,9 @@ class ABaseGato(ABC):
         :type amount: float
         """
 
+        if amount < 0:
+            amount /= 1 + sum(self.mood_loss_reductions.values())
+
         self.mood += amount
 
         if self.mood > self.max_mood:
@@ -313,6 +332,9 @@ class ABaseGato(ABC):
         :type amount: float
         """
 
+        if amount < 0:
+            amount /= 1 + sum(self.hunger_reductions.values())
+
         self.hunger += amount
 
         if self.hunger > self.max_hunger:
@@ -332,6 +354,9 @@ class ABaseGato(ABC):
         :param amount: Amount of energy to add.
         :type amount: float
         """
+
+        if amount < 0:
+            amount /= 1 + sum(self.energy_loss_reductions.values())
 
         self.energy += amount
 
