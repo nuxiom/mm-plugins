@@ -123,6 +123,95 @@ class PullView(discord.ui.View):
         await self.handle_frame(self.current_frame, skipping=True)
 
 
+class BannersView(discord.ui.View):
+
+    banners: list[data.Banner]
+    current_banner: int
+    
+    author_id: int
+    ctx: commands.Context
+    message: discord.Message
+
+    def __init__(self, ctx: commands.Context, banners: list[data.Banner], message: discord.Message):
+        super().__init__()
+        self.banners = banners
+        self.current_banner = 0
+        self.message = message
+        self.ctx = ctx
+        self.author_id = ctx.author.id
+
+    async def refresh_embed(self):
+        desc = " | ".join([
+            bann.name if i != self.current_banner else f"**{bann.name}**" for i, bann in enumerate(self.banners)
+        ])
+        embed = discord.Embed(
+            title="Gacha banners",
+            description=desc,
+            colour=self.banners[self.current_banner].colour
+        )
+        await self.message.edit(content="", embed=embed)
+
+    async def refresh_buttons(self):
+        pull_cost = self.banners[self.current_banner].pull_cost
+        btn: discord.ui.Button
+        for btn in self.children:
+            if btn.custom_id == "1pull":
+                btn.label = f"{pull_cost} - Pull 1"
+            elif btn.custom_id == "10pull":
+                btn.label = f"{pull_cost*10} - Pull 10"
+            elif btn.custom_id == "left":
+                btn.disabled = True if self.current_banner == 0 else False
+            elif btn.custom_id == "right":
+                btn.disabled = True if self.current_banner+1 == len(self.banners) else False
+        await self.message.edit(view=self)
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, custom_id="left", emoji="⬅️")
+    async def left(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author_id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person who did the command can interact with this.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        self.current_banner -= 1
+        if self.current_banner < 0:
+            self.current_banner = 0
+        await self.refresh_buttons()
+        await self.refresh_embed()
+
+    @discord.ui.button(style=discord.ButtonStyle.gray, label="Details", emoji="📄")
+    async def details(self, interaction: discord.Interaction, button: discord.ui.Button):
+        bann = self.banners[self.current_banner]
+        embed = discord.Embed(
+            title=f"{bann.name} details",
+            description=bann,
+            colour=discord.Colour.dark_embed()
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="1pull", label="... - Pull 1", emoji="🌸")
+    async def single(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="10pull", label="... - Pull 10", emoji="🌸")
+    async def multi(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, custom_id="right", emoji="➡️")
+    async def right(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author_id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person who did the command can interact with this.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        self.current_banner += 1
+        if self.current_banner >= len(self.banners):
+            self.current_banner = len(self.banners) - 1
+        await self.refresh_buttons()
+        await self.refresh_embed()
+
+
 
 class GatoGame(commands.Cog):
     """Critter gacha game plugin"""
@@ -224,7 +313,17 @@ class GatoGame(commands.Cog):
     #         await ctx.send(embed=embed)
 
 
-    @critter.command(name="pull", aliases=["single", "multi", "10pull"])
+    @critter.command(name="banners", aliases=["banner", "bann", "pull"])
+    async def banners(self, ctx: commands.Context):
+        """List banners and allow to pull on them"""
+        message = await ctx.send("Loading...")
+
+        bv = BannersView(ctx, data.Data.banners, message)
+        await bv.refresh_buttons()
+        await bv.refresh_embed()
+
+
+    # @critter.command(name="pull", aliases=["single", "multi", "10pull"])
     async def pull(self, ctx: commands.Context, *, banner: str = "1"):
         """Pull on a banner (defaults to banner number 1)"""
 

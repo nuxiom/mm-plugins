@@ -9,6 +9,12 @@ class Banner():
     """ Banner/event name """
     name: str
 
+    """ Banner art """
+    img: str
+
+    """ Banner colour """
+    colour: int
+
     """ Items (dict  drop_weight -> list[item_id]) """
     drop_weights: dict[int, list[str]] # eg: if weight is 1 and sum of weights is 3000, 1 among 3000 chances to get one in the list
 
@@ -17,8 +23,10 @@ class Banner():
 
     _cumulative_weights = []
 
-    def __init__(self, name: str, pull_cost: int, drop_weights: dict = {}):
+    def __init__(self, name: str, img: str, colour: int, pull_cost: int, drop_weights: dict = {}):
         self.name = name
+        self.img = img
+        self.colour = colour
         self.pull_cost = pull_cost
         self.drop_weights = drop_weights
 
@@ -47,22 +55,22 @@ class Banner():
     #     d["drop_weights"] = new_drop_weights
     #     return Banner(**d)
 
-    # def get_rates_text(self, items: dict[str, Item]):
-    #     text = f"### Pulls cost: {self.pull_cost} {CURRENCY_EMOJI}\n\n"
+    def get_rates_text(self):
+        text = f"### Pulls cost: {self.pull_cost} {CURRENCY_EMOJI}\n\n"
 
-    #     sorted_rates = sorted(self.drop_weights.keys())
-    #     total_weight = sum(sorted_rates)
+        sorted_rates = sorted(self.drop_weights.keys())
+        total_weight = sum(sorted_rates)
 
-    #     for weight in sorted_rates:
-    #         rate = weight / total_weight * 100
-    #         text += f"{rate:.2f}% chance to get one of the following:\n"
+        for weight in sorted_rates:
+            rate = weight / total_weight * 100
+            text += f"{rate:.2f}% chance to get one of the following:\n"
 
-    #         for item_id in self.drop_weights[weight]:
-    #             text += f"- {items[item_id].name}\n"
+            for item_id in self.drop_weights[weight]:
+                text += f"- {item_id}\n"
 
-    #         text += "\n"
+            text += "\n"
 
-    #     return text.strip()
+        return text.strip()
 
 
 class Data:
@@ -70,7 +78,20 @@ class Data:
     banners = [
         Banner(
             "Standard Banner",
-            200,
+            "https://media.discordapp.net/attachments/1106791361157541898/1193230143217479690/chloe_banner_6.png",
+            0x669D96,
+            100,
+            {
+                1: ["gatos.ExampleGato"],
+                10: ["gatos.NormalGato"],
+                20: ["gatos.NormalGato2"]
+            }
+        ),
+        Banner(
+            "The same banner lol",
+            "https://media.discordapp.net/attachments/1106791361157541898/1193230143729188986/xiao_banner_2.png",
+            0xA83319,
+            100,
             {
                 1: ["gatos.ExampleGato"],
                 10: ["gatos.NormalGato"],
