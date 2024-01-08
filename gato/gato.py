@@ -376,7 +376,7 @@ class GatoGame(commands.Cog):
             for i, gato in enumerate(self.nurseries[ctx.author.id]):
                 description += f"{i+1}. **{gato.name}**: {gato.DISPLAY_NAME} *(✨ E{gato.eidolon})*\n"
         else:
-            description = "You have no critter silly goose ! Use `?critter pull/multi`"
+            description = "You have no critter silly goose ! Use `?critter pull`"
             colour = discord.Colour.red()
 
         embed = discord.Embed(
@@ -425,20 +425,20 @@ class GatoGame(commands.Cog):
         else:
             embed = discord.Embed(
                 title=f"{ctx.author.display_name}'s nursery",
-                description="You have no critter silly goose ! Use `?critter pull/multi`",
+                description="You have no critter silly goose ! Use `?critter pull`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
 
 
-    @critter.command(name="deploy")
+    @critter.command(name="deploy", aliases=["dispatch"])
     async def deploy(self, ctx: commands.Context, *gato_numbers):
         """ Deploy a team of critters. Specify numbers from your nursery (example: `?critter deploy 3 2 1 4`) or use `?critter deploy` alone to redeploy previous team. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
 
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
-                description="You have no critter silly goose ! Use `?critter pull/multi`",
+                description="You have no critter silly goose ! Use `?critter pull`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
@@ -576,7 +576,7 @@ class GatoGame(commands.Cog):
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
-                description="You have no critter silly goose ! Use `?critter pull/multi`",
+                description="You have no critter silly goose ! Use `?critter pull`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
@@ -598,7 +598,7 @@ class GatoGame(commands.Cog):
         if ctx.author.id not in self.nurseries:
             embed = discord.Embed(
                 title=f"Deploy team",
-                description="You have no critter silly goose ! Use `?critter pull/multi`",
+                description="You have no critter silly goose ! Use `?critter pull`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
