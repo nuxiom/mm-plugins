@@ -152,6 +152,14 @@ class BannersView(discord.ui.View):
         embed.set_image(url=self.banners[self.current_banner].img)
         await self.message.edit(content="", embed=embed)
 
+    async def on_timeout(self) -> None:
+        self.stop()
+        embed = discord.Embed(
+            title="Gacha banners",
+            description="This view has expired. Use `?critter banners` to show one again!"
+        )
+        await self.message.edit(embed=embed, view=None)
+
     async def refresh_buttons(self):
         pull_cost = self.banners[self.current_banner].pull_cost
         btn: discord.ui.Button
@@ -184,9 +192,9 @@ class BannersView(discord.ui.View):
     async def details(self, interaction: discord.Interaction, button: discord.ui.Button):
         bann = self.banners[self.current_banner]
         embed = discord.Embed(
-            title=f"{bann.name} details",
+            title=f"{bann.name} - Details",
             description=bann.get_rates_text(),
-            colour=discord.Colour.teal()
+            colour=bann.colour
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -314,7 +322,7 @@ class GatoGame(commands.Cog):
     #         await ctx.send(embed=embed)
 
 
-    @critter.command(name="banners", aliases=["banner", "bann", "pull"])
+    @critter.command(name="banners", aliases=["banner", "bann", "pull", "gacha"])
     async def banners(self, ctx: commands.Context):
         """List banners and allow to pull on them"""
         message = await ctx.send("Loading...")
