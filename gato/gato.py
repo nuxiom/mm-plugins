@@ -33,7 +33,7 @@ class PullView(discord.ui.View):
     frames: list[dict] = []
     current_frame: int = 0
     title: str
-    result_ids: list[str]
+    results: list[gatos.Gato]
 
     channel: discord.TextChannel
     author: discord.User
@@ -41,13 +41,13 @@ class PullView(discord.ui.View):
     ongoing: bool = True
     skipped_yet: bool = False
 
-    def __init__(self, channel: discord.TextChannel, author: discord.User, anims: list[dict], result_ids: list[str]):
+    def __init__(self, channel: discord.TextChannel, author: discord.User, anims: list[dict], results: list[gatos.Gato]):
         super().__init__()
         self.frames = anims
         self.channel = channel
         self.author = author
         self.title = f"{self.author.display_name}'s pull"
-        self.result_ids = result_ids
+        self.results = results
 
     async def handle_frame(self, frame: int, skipping=False):
         if skipping:
@@ -68,7 +68,7 @@ class PullView(discord.ui.View):
                     embed.set_image(url=self.frames[0]["static"])
                     await self.message.edit(embed=embed, view=None)
             else:
-                ls = "- " + "\n- ".join([eval(itm).DISPLAY_NAME for itm in self.result_ids])
+                ls = "- " + "\n- ".join([itm.DISPLAY_NAME for itm in self.results])
                 embed = discord.Embed(title=self.title, colour=discord.Colour.teal(), description=ls)
                 await self.message.edit(embed=embed, view=None)
         else:
@@ -191,23 +191,11 @@ class BannersView(discord.ui.View):
             await self.ctx.send(embed=embed)
             return
 
-        pull_results = []
-        pull_results_ids = []
         anims_lists = []
-        max_rarity = 3
+        anims_lists = []
         bann = self.banners[self.current_banner]
-        for _ in range(pull_count):
-            rnd = random.randint(0, bann._cumulative_weights[-1] - 1)
-            for i in range(len(bann._cumulative_weights)):
-                if rnd < bann._cumulative_weights[i]:
-                    weight = sorted(bann.drop_weights.keys())[i]
-                    item_id = random.choice(bann.drop_weights[weight])
-                    pull_results_ids.append(item_id)
-                    item = eval(item_id)
-                    if item.RARITY > max_rarity:
-                        max_rarity = item.RARITY
-                    pull_results.append(item)
-                    break
+        pull_results = bann.get_pulls_results(pull_count)
+        max_rarity = max(itm.RARITY for itm in pull_results)
 
         gato: gatos.Gato
         for i, gato in enumerate(pull_results):
@@ -227,7 +215,7 @@ class BannersView(discord.ui.View):
 
         print(anims_lists)
 
-        pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results_ids)
+        pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results)
         self.ongoing_pulls[player_id] = pv
         await pv.first_frame()
 

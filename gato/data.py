@@ -1,5 +1,6 @@
 import json
 import os
+import random
 
 from gatos import *
 
@@ -24,7 +25,7 @@ class Banner():
     pull_cost: int
 
     _cumulative_weights = []
-    _item_by_rarity: dict[int, list[Gato]] = {}
+    _items_by_rarity: dict[int, list[Gato]] = {}
 
     def __init__(self, name: str, img: str, colour: int, pull_cost: int, items: list[Gato], drop_weights: dict = {}):
         self.name = name
@@ -34,21 +35,33 @@ class Banner():
         self.drop_weights = drop_weights
 
         self._cumulative_weights = [0]
-        for w in sorted(self.drop_weights.values()):
+        for w in self.drop_weights.values():
             self._cumulative_weights.append(self._cumulative_weights[0] + w)
         self._cumulative_weights.pop(0)
 
-        self._item_by_rarity = {rarity: [] for rarity in drop_weights.keys()}
+        self._items_by_rarity = {rarity: [] for rarity in drop_weights.keys()}
         for itm in items:
-            if itm.RARITY in self._item_by_rarity:
-                self._item_by_rarity[itm.RARITY].append(itm)
+            if itm.RARITY in self._items_by_rarity:
+                self._items_by_rarity[itm.RARITY].append(itm)
+
+    def get_pulls_results(self, pull_count: int):
+        pull_results = []
+        for _ in range(pull_count):
+            rnd = random.randint(0, self._cumulative_weights[-1] - 1)
+            for i in range(len(self._cumulative_weights)):
+                if rnd < self._cumulative_weights[i]:
+                    rarity = list(self.drop_weights.keys())[i]
+                    item = random.choice(self._items_by_rarity[rarity])
+                    pull_results.append(item)
+                    break
+        return pull_results
 
     def get_rates_text(self):
         text = f"### Pulls cost: {self.pull_cost} {CURRENCY_EMOJI}\n"
 
         text += "### Items\n"
 
-        for r, i in self._item_by_rarity.items():
+        for r, i in self._items_by_rarity.items():
             itms = ", ".join([itm.DISPLAY_NAME for itm in i])
             text += f"- {r}⭐ items: **{itms}**\n"
 
@@ -84,8 +97,8 @@ class Data:
         ),
         Banner(
             name="The same banner lol",
-            img="https://media.discordapp.net/attachments/1106791361157541898/1193230143217479690/chloe_banner_6.png",
-            colour=0x669D96,
+            img="https://media.discordapp.net/attachments/1106791361157541898/1193230143729188986/xiao_banner_2.png",
+            colour=0xA83319,
             pull_cost=100,
             items=[
                 ExampleGato,
