@@ -27,7 +27,7 @@ class ExampleGato(ABaseGato):
     # Custom variables used for this gato
     buff_duration: int = 0              # Remaining duration for its buff
     buff_cooldown: int = 0              # Remaining cooldown until its buff can be triggered again
-    has_buff: bool = False              # Whether the gato currently is under its buff or not
+    BUFF_KEY: str = "EG_eff_buff"       # dict key to keep track of this gato's buffs
     find_object_cooldown: int = 0       # Remaining cooldown until it can find a rare object again
 
 
@@ -40,7 +40,7 @@ class ExampleGato(ABaseGato):
         # Apply buff if cooldown is over
         if self.buff_cooldown <= 0:
             # Increase efficiency boost
-            self.efficiency_boost += 20/100 + (2/100 * self.eidolon)
+            self.efficiency_boosts[self.BUFF_KEY] = 20/100 + (2/100 * self.eidolon)
 
             # Set base cooldown and duration
             self.buff_duration += 20*60
@@ -49,7 +49,7 @@ class ExampleGato(ABaseGato):
 
         # Remove buff if duration is over
         if self.buff_duration <= 0 and self.has_buff:
-            self.efficiency_boost -= 20/100 + (2/100 * self.eidolon)
+            self.efficiency_boosts.pop(self.BUFF_KEY)
             self.has_buff = False
 
 

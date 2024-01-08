@@ -95,8 +95,11 @@ class ABaseGato(ABC):
     luck: float = 1.0
     """Multiplier for the chance to find treasures. *You can override that.*"""
 
-    efficiency_boost: float = 0.0
-    """Boost of the efficiency stat. Can be affected by the gato or other gatos."""
+    efficiency_boosts: dict[str, float] = {}
+    """Boosts of the efficiency stat. The gato or other gatos can add things to it, with a unique key per gato."""
+
+    damage_reductions: dict[str, float] = {}
+    """Reduces damage taken. The gato or other gatos can add things to it, with a unique key per gato."""
 
     friendship: float = 1.0
     """Friendship stat, starts at 1, max 10."""
@@ -166,7 +169,7 @@ class ABaseGato(ABC):
         """Called when a gato is deployed."""
 
         self._time_deployed = 0
-        self.efficiency_boost = 0.0
+        self.efficiency_boosts = {}
 
         if self.health > 0:
             self._fainted = False
@@ -199,7 +202,7 @@ class ABaseGato(ABC):
 
     def compute_currency(self, seconds):
         """Computes efficiency and currency gain over time. Called by :py:meth:`simulate`. *Can be overriden.*"""
-        self.efficiency = self.base_efficiency + self.efficiency_boost
+        self.efficiency = self.base_efficiency + sum(self.efficiency_boosts.values())
         if self.energy < 10:
             self.efficiency -= 0.2
         elif self.energy < 20:
@@ -258,6 +261,9 @@ class ABaseGato(ABC):
         :param amount: Amount of health to add.
         :type amount: float
         """
+
+        if amount < 0:
+            amount /= 1 + sum(self.damage_reductions.values())
 
         self.health += amount
 
