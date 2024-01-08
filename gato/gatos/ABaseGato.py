@@ -52,7 +52,8 @@ class ABaseGato(ABC):
         "hunger",
         "energy",
         "health",
-        "efficiency_boost",
+        "efficiency_boosts",
+        "damage_reductions",
         "eidolon",
         "friendship",
         "deployed_today"
@@ -134,6 +135,11 @@ class ABaseGato(ABC):
 
         self.name = self.__class__.__name__
         self.eidolon = 0
+
+        # Initialize objects to new objects (not shared by the class)
+        self._events = []
+        self.efficiency_boosts = {}
+        self.damage_reductions = {}
 
         for k, v in kwargs.items():
             setattr(self, k, v)
