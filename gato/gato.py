@@ -186,7 +186,7 @@ class BannersView(discord.ui.View):
         embed = discord.Embed(
             title=f"{bann.name} details",
             description=bann.get_rates_text(),
-            colour=discord.Colour.dark_embed()
+            colour=discord.Colour.teal()
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
