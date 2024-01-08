@@ -90,6 +90,9 @@ class PullView(discord.ui.View):
         self.message = await self.ctx.send(self.ctx.author.mention)
         await self.handle_frame(0, skipping=False)
 
+    async def on_timeout(self):
+        await self.handle_frame(len(self.frames))
+
     @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Next item."""
