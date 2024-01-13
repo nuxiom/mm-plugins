@@ -10,8 +10,8 @@ from functools import reduce, wraps
 import discord
 from discord.ext import commands
 
-from core import checks
-from core.models import PermissionLevel
+# from core import checks
+# from core.models import PermissionLevel
 
 sys.path.append(os.path.dirname(__file__))
 import player
