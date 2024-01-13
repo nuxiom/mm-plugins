@@ -10,3 +10,5 @@ test/
 ds-*.bat
 ds-*.sh
 ds-*.py
+# Poetry files
+**/__pycache__/
