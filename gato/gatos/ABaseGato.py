@@ -183,7 +183,7 @@ class ABaseGato(ABC):
         return cls(**json["values"])
 
 
-    def deploy(self):
+    def deploy(self, team: list["ABaseGato"]):
         """Called when a gato is deployed."""
 
         self._time_deployed = 0
@@ -245,7 +245,8 @@ class ABaseGato(ABC):
 
     @abstractmethod
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
-        """Runs a simulation of the gato over a certain amount of time.
+        """Runs a simulation of the gato.
+        **Called pretty much every seconds.**
         Abstract method, **needs to be overriden**. Overriding method should still call superclass method (see :py:class:`ExampleGato`).
         Returns 0-values when gato is fainted.
 
