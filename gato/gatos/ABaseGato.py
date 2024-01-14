@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from functools import wraps
 from random import random
 
+from ABaseItem import ABaseItem, ItemType
+
 
 def require_alive(function):
     """Decorator that only executes a function if the gato has not fainted. **Warning:** Don't add that to functions that shouldn't return `None`."""
@@ -14,7 +16,7 @@ def require_alive(function):
 
 
 
-class ABaseGato(ABC):
+class ABaseGato(ABaseItem):
     """**Abstract class** to implement for every gato.
 
     Attributes starting with a `_` should not be modified manually.
@@ -59,6 +61,9 @@ class ABaseGato(ABC):
         "deployed_today"
     ]
     """Attributes that will be saved when exporting the gato to JSON. *Can be overriden or completed with custom attributes.*"""
+
+    ITEM_TYPE = ItemType.GATO
+    """This is just because ABaseGato now extends ABaseItem. **DON'T OVERRIDE IT**, it would make no sense..."""
 
 
     max_mood: float = 100.0
