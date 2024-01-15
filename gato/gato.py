@@ -594,6 +594,19 @@ class GatoGame(commands.Cog):
         await ctx.send("Done! ✅")
 
 
+    @critter.command(name="transactions")
+    @init_nursery
+    async def transactions(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
+        if member is None:
+            member = ctx.author
+
+        if member.id in self.players:
+            player = self.players[member.id]
+            await ctx.send(content=f"```json\n{json.dumps(player.transactions.to_json())}``` ✅ *This is a debug command*")
+        else:
+            await ctx.send(content="❌ This player isn't in our records")
+
+
 
 async def setup(bot):
     await bot.add_cog(GatoGame(bot))
