@@ -14,6 +14,8 @@ from core import checks
 from core.models import PermissionLevel
 
 sys.path.append(os.path.dirname(__file__))
+import player
+importlib.reload(player)
 import gatos
 importlib.reload(gatos)
 import team
