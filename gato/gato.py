@@ -304,7 +304,7 @@ class BannersView(discord.ui.View):
 def init_nursery(function):
     """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
     @wraps(function)
-    def new_function(self: "GatoGame", ctx: commands.Context, *args, **kwargs):
+    async def new_function(self: "GatoGame", ctx: commands.Context, *args, **kwargs):
         player_id = ctx.author.id
 
         if player_id not in self.players:
@@ -313,7 +313,7 @@ def init_nursery(function):
             p.nursery.append(gato3s)
             self.players[player_id] = p
 
-        return function(self, ctx, *args, **kwargs)
+        return await function(self, ctx, *args, **kwargs)
 
     return new_function
 
