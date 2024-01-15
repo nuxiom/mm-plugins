@@ -39,6 +39,9 @@ class Transactions:
     rm_items: list[str]
 
     def __init__(self, **kwargs) -> None:
+        self.add_items = []
+        self.rm_items = []
+
         for k, v in kwargs.items():
             setattr(self, k, v)
 
