@@ -207,6 +207,8 @@ class BannersView(discord.ui.View):
         player = self.gato_game.players[player_id]
         nursery = player.nursery
 
+        player.transactions.currency -= pull_count * bann.pull_cost
+
         result_lines = []
         gato: gatos.Gato
         for gato in pull_results:
@@ -229,7 +231,7 @@ class BannersView(discord.ui.View):
                     3: bann.pull_cost//2
                 }
                 money = cpr[thegato.RARITY]
-                # refund player
+                player.transactions.currency += money
                 result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
 
         for i, gato in enumerate(pull_results):
@@ -530,6 +532,9 @@ class GatoGame(commands.Cog):
                 c, o = gato.simulate(tm.gatos, TIME_STEP)
                 currency += c
                 objects += o
+
+        player.transactions.currency += currency
+        player.transactions.add_items += objects
 
         events = self.handle_events(player, tm.gatos)
         if len(events) == 0:
