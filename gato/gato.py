@@ -5,7 +5,7 @@ import os
 import random
 import sys
 from datetime import datetime, timedelta
-from functools import reduce
+from functools import reduce, wraps
 
 import discord
 from discord.ext import commands
@@ -136,7 +136,6 @@ class BannersView(discord.ui.View):
 
     banners: list[data.Banner]
     current_banner: int
-    ongoing_pulls: dict[int, PullView]
     gato_game: "GatoGame"
     
     author_id: int
@@ -147,7 +146,6 @@ class BannersView(discord.ui.View):
         super().__init__()
         self.banners = banners
         self.current_banner = 0
-        self.ongoing_pulls: dict[int, PullView] = {}
         self.message = message
         self.ctx = ctx
         self.author_id = ctx.author.id
@@ -189,7 +187,8 @@ class BannersView(discord.ui.View):
 
     async def start_pulls(self, interaction: discord.Interaction, pull_count: int):
         player_id = interaction.user.id
-        if player_id in self.gato_game.ongoing_pulls and self.gato_game.ongoing_pulls[player_id].ongoing:
+        ongoing_pulls = self.gato_game.players[player_id]._pull_view
+        if ongoing_pulls is not None and ongoing_pulls.ongoing:
             description = f"You already have an ongoing pull, please be patient!"
             embed = discord.Embed(
                 title="Error",
@@ -205,9 +204,8 @@ class BannersView(discord.ui.View):
         pull_results = bann.get_pulls_results(pull_count)
         max_rarity = max(itm.RARITY for itm in pull_results)
 
-        if player_id not in self.gato_game.nurseries:
-            self.gato_game.nurseries[player_id] = []
-        nursery = self.gato_game.nurseries[player_id]
+        player = self.gato_game.players[player_id]
+        nursery = player.nursery
 
         result_lines = []
         gato: gatos.Gato
@@ -250,7 +248,7 @@ class BannersView(discord.ui.View):
             })
 
         pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results, result_lines)
-        self.gato_game.ongoing_pulls[player_id] = pv
+        player._pull_view = pv
         await pv.first_frame()
 
 
@@ -303,6 +301,22 @@ class BannersView(discord.ui.View):
         await self.refresh_embed()
 
 
+def init_nursery(function):
+    """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
+    @wraps(function)
+    def new_function(self: "GatoGame", ctx: commands.Context, *args, **kwargs):
+        player_id = ctx.author.id
+
+        if player_id not in self.players:
+            p = player.Player()
+            gato3s = gatos.NormalGato()
+            p.nursery.append(gato3s)
+            self.players[player_id] = p
+
+        return function(self, ctx, *args, **kwargs)
+
+    return new_function
+
 
 class GatoGame(commands.Cog):
     """Critter gacha game plugin"""
@@ -311,13 +325,7 @@ class GatoGame(commands.Cog):
         self.bot = bot
         self.footer = ""  # TODO: REPLACE ME
 
-        self.nurseries: dict[int, list[gatos.Gato]] = {
-            200282032771694593: [gatos.ExampleGato(name="Cyxo's critter")]
-        }
-
-        self.teams: dict[int, team.Team] = {}
-
-        self.ongoing_pulls = {}
+        self.players: dict[int, player.Player] = {}
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
@@ -359,6 +367,7 @@ class GatoGame(commands.Cog):
 
 
     @critter.command(name="banners", aliases=["banner", "bann", "pull", "gacha"])
+    @init_nursery
     async def banners(self, ctx: commands.Context):
         """List banners and allow to pull on them"""
         message = await ctx.send("Loading...")
@@ -369,17 +378,16 @@ class GatoGame(commands.Cog):
 
 
     @critter.command(name="nursery")
+    @init_nursery
     async def nursery(self, ctx: commands.Context):
         """ Show your critter nursery. """
 
         description = ""
         colour = discord.Colour.teal()
-        if ctx.author.id in self.nurseries and len(self.nurseries[ctx.author.id]) > 0:
-            for i, gato in enumerate(self.nurseries[ctx.author.id]):
-                description += f"{i+1}. **{gato.name}**: {gato.DISPLAY_NAME} *(✨ E{gato.eidolon})*\n"
-        else:
-            description = "You have no critter silly goose ! Use `?critter pull`"
-            colour = discord.Colour.red()
+        player = self.players[ctx.author.id]
+
+        for i, gato in enumerate(player.nursery):
+            description += f"{i+1}. **{gato.name}**: {gato.DISPLAY_NAME} *(✨ E{gato.eidolon})*\n"
 
         embed = discord.Embed(
             title=f"{ctx.author.display_name}'s nursery",
@@ -390,67 +398,53 @@ class GatoGame(commands.Cog):
 
 
     @critter.command(name="info")
+    @init_nursery
     async def info(self, ctx: commands.Context, number: int):
         """ Show info about a critter from your nursery. """
 
-        if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
-            nursery = self.nurseries[ctx.author.id]
-            number -= 1
+        nursery = self.players[ctx.author.id].nursery
+        number -= 1
 
-            if number < 0 or number >= len(nursery):
-                embed = discord.Embed(
-                    title=f"Error",
-                    description=f"Critter number {number + 1} not found. Use `?critter nursery`",
-                    colour=discord.Colour.red()
-                )
-                await ctx.send(embed=embed)
-            else:
-                gato = nursery[number]
-                desc = gato.__doc__.format(eidolon=gato.eidolon)
-
-                description = f"{desc}\n" + \
-                f"**Health:** {round(gato.health)} / {round(gato.max_health)}\n" + \
-                f"**Hunger:** {round(gato.hunger)} / {round(gato.max_hunger)}\n" + \
-                f"**Mood:** {round(gato.mood)} / {round(gato.max_mood)}\n" + \
-                f"**Energy:** {round(gato.energy)} / {round(gato.max_energy)}\n" + \
-                f"**Friendship:** {int(gato.friendship)}/10\n" + \
-                f"\n✨ **Eidolon {gato.eidolon}**"
-
-                embed = discord.Embed(
-                    title=gato.name,
-                    description=description,
-                    colour=discord.Colour.teal()
-                )
-                embed.set_thumbnail(url=gato.IMAGE)
-                embed.set_footer(text="For now, stats don't update in real time. Only when you claim rewards.")
-                await ctx.send(embed=embed)
-        else:
+        if number < 0 or number >= len(nursery):
             embed = discord.Embed(
-                title=f"{ctx.author.display_name}'s nursery",
-                description="You have no critter silly goose ! Use `?critter pull`",
+                title=f"Error",
+                description=f"Critter number {number + 1} not found. Use `?critter nursery`",
                 colour=discord.Colour.red()
             )
+            await ctx.send(embed=embed)
+        else:
+            gato = nursery[number]
+            desc = gato.__doc__.format(eidolon=gato.eidolon)
+
+            description = f"{desc}\n" + \
+            f"**Health:** {round(gato.health)} / {round(gato.max_health)}\n" + \
+            f"**Hunger:** {round(gato.hunger)} / {round(gato.max_hunger)}\n" + \
+            f"**Mood:** {round(gato.mood)} / {round(gato.max_mood)}\n" + \
+            f"**Energy:** {round(gato.energy)} / {round(gato.max_energy)}\n" + \
+            f"**Friendship:** {int(gato.friendship)}/10\n" + \
+            f"\n✨ **Eidolon {gato.eidolon}**"
+
+            embed = discord.Embed(
+                title=gato.name,
+                description=description,
+                colour=discord.Colour.teal()
+            )
+            embed.set_thumbnail(url=gato.IMAGE)
+            embed.set_footer(text="For now, stats don't update in real time. Only when you claim rewards.")
             await ctx.send(embed=embed)
 
 
     @critter.command(name="deploy", aliases=["dispatch"])
+    @init_nursery
     async def deploy(self, ctx: commands.Context, *gato_numbers):
         """ Deploy a team of critters. Specify numbers from your nursery (example: `?critter deploy 3 2 1 4`) or use `?critter deploy` alone to redeploy previous team. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
 
-        if ctx.author.id not in self.nurseries:
-            embed = discord.Embed(
-                title=f"Deploy team",
-                description="You have no critter silly goose ! Use `?critter pull`",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
-
-        nursery = self.nurseries[ctx.author.id]
+        player = self.players[ctx.author.id]
+        nursery = player.nursery
 
         if len(gato_numbers) == 0:
-            if ctx.author.id in self.teams:
-                tm = self.teams[ctx.author.id]
+            if player.deployed_team is not None:
+                tm = player.deployed_team
                 if tm.deployed_at is not None:
                     embed = discord.Embed(
                         title=f"Deploy team",
@@ -477,7 +471,7 @@ class GatoGame(commands.Cog):
                 )
                 await ctx.send(embed=embed)
         else:
-            if ctx.author.id in self.teams and self.teams[ctx.author.id].deployed_at is not None:
+            if player.deployed_team is not None and player.deployed_team.deployed_at is not None:
                 embed = discord.Embed(
                     title=f"Deploy team",
                     description="A team is already deployed! Use `?critter claim` to see what they fetched for you!",
@@ -511,7 +505,7 @@ class GatoGame(commands.Cog):
                     return
 
             tm = team.Team(legatos)
-            self.teams[ctx.author.id] = tm
+            player.deployed_team = tm
             for gato in tm.gatos:
                 gato.deploy(tm.gatos)
 
@@ -526,10 +520,12 @@ class GatoGame(commands.Cog):
 
 
     @critter.command(name="claim")
+    @init_nursery
     async def claim(self, ctx: commands.Context):
         """ Claim what the deployed team has gathered. """
 
-        if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
+        player = self.players[ctx.author.id]
+        if player.deployed_team is None or player.deployed_team.deployed_at is None:
             embed = discord.Embed(
                 title=f"Claim rewards",
                 description="No team has been deployed! Check `?critter deploy` to deploy one first!",
@@ -538,7 +534,7 @@ class GatoGame(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        tm = self.teams[ctx.author.id]
+        tm = player.deployed_team
         now = datetime.now()
         delta = int((now - tm.deployed_at).total_seconds())
         tm.deployed_at = None
@@ -571,55 +567,39 @@ class GatoGame(commands.Cog):
         await ctx.send(embed=embed)
 
 
-    @critter.command(name="nanook")
-    async def nanook(self, ctx: commands.Context):
-        """ Set all the stats of all your critters to 1 """
+    # @critter.command(name="nanook")
+    # async def nanook(self, ctx: commands.Context):
+    #     """ Set all the stats of all your critters to 1 """
 
-        if ctx.author.id not in self.nurseries:
-            embed = discord.Embed(
-                title=f"Deploy team",
-                description="You have no critter silly goose ! Use `?critter pull`",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
+    #     for gato in self.players[ctx.author.id].nursery:
+    #         gato.health = 1
+    #         gato.mood = 1
+    #         gato.hunger = 1
+    #         gato.energy = 1
 
-        for gato in self.nurseries[ctx.author.id]:
-            gato.health = 1
-            gato.mood = 1
-            gato.hunger = 1
-            gato.energy = 1
-
-        await ctx.send("Done! ✅")
+    #     await ctx.send("Done! ✅")
 
 
-    @critter.command(name="yaoshi")
-    async def yaoshi(self, ctx: commands.Context):
-        """ Set all the stats of all your Critters to maximum """
+    # @critter.command(name="yaoshi")
+    # async def yaoshi(self, ctx: commands.Context):
+    #     """ Set all the stats of all your Critters to maximum """
 
-        if ctx.author.id not in self.nurseries:
-            embed = discord.Embed(
-                title=f"Deploy team",
-                description="You have no critter silly goose ! Use `?critter pull`",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
+    #     for gato in self.players[ctx.author.id].nursery:
+    #         gato.health = gato.max_health
+    #         gato.mood = gato.max_mood
+    #         gato.hunger = gato.max_hunger
+    #         gato.energy = gato.max_energy
 
-        for gato in self.nurseries[ctx.author.id]:
-            gato.health = gato.max_health
-            gato.mood = gato.max_mood
-            gato.hunger = gato.max_hunger
-            gato.energy = gato.max_energy
-
-        await ctx.send("Done! ✅")
+    #     await ctx.send("Done! ✅")
 
 
     @critter.command(name="fastforward", aliases=["ff"])
+    @init_nursery
     async def ff(self, ctx: commands.Context, seconds: int):
         """ Fastforward the ongoing Gato expedition by a specified amount of time (in seconds) """
 
-        if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
+        player = self.players[ctx.author.id]
+        if player.deployed_team is None or player.deployed_team.deployed_at is None:
             embed = discord.Embed(
                 title=f"Claim rewards",
                 description="No team has been deployed! Check `?critter deploy` to deploy one first!",
@@ -628,7 +608,7 @@ class GatoGame(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        tm = self.teams[ctx.author.id]
+        tm = player.deployed_team
         tm.deployed_at -= timedelta(seconds=seconds)
 
         await ctx.send("Done! ✅")

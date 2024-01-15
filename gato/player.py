@@ -64,6 +64,7 @@ class Player:
     command_channel: int
 
     currency: float = 0
+    inventory: list
 
     _pull_view: discord.ui.View
 
@@ -76,6 +77,7 @@ class Player:
         self.command_channel = None
 
         self._pull_view = None
+        self.inventory = []
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -91,9 +93,9 @@ class Player:
         }
 
     @classmethod
-    def from_json(cls, d: dict):
-        d["nursery"] = [eval(g["type"]).from_json(g) for g in d["nursery"]]
-        d["pulls_status"] = PullsStatus.from_json(d["pulls_status"])
-        d["deployed_team"] = team.Team.from_json(d["deployed_team"], d["nursery"])
-        d["transactions"] = Transactions.from_json(d["transactions"])
-        return cls(**d)
+    def from_json(cls, plyr: dict, curr: dict):
+        plyr["nursery"] = [eval(g["type"]).from_json(g) for g in plyr["nursery"]]
+        plyr["pulls_status"] = PullsStatus.from_json(plyr["pulls_status"])
+        plyr["deployed_team"] = team.Team.from_json(plyr["deployed_team"], plyr["nursery"])
+        plyr["transactions"] = Transactions.from_json(plyr["transactions"])
+        return cls(**plyr)
