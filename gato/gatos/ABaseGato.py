@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from functools import wraps
-from random import random
+from random import random, randint
 
 from ABaseItem import ABaseItem, ItemType
 
@@ -211,6 +211,63 @@ class ABaseGato(ABaseItem):
         self.claimed_today += 1
 
 
+    def get_args_for_event(self, event_name: str, values: list) -> dict:
+        """Called in :py:meth:`handle_events` to get formatting arguments for specific events.
+        The `count` of this event and the `currency` emoji are always included.
+        **You can override it if needed**, but be sure to call the super-class method and add to its dict.
+
+        :param event_name: The name/id of the event
+        :type event_name: str
+        :param values: Values that were passed when adding the event, one element for each event occurence
+        :type values: list
+        :return: Arguments that will be used to format this event's description.
+        :rtype: dict
+        """
+        args = {}
+        if event_name == "bitten":
+            args["amount"] = 0
+            for value in values:
+                args["amount"] += value
+        return args
+
+
+    def handle_events(self, player, CURRENCY_EMOJI: str) -> list[str]:
+        """Generate a description line for each event type that happened to this gato and return the list.
+        **Don't override it**, rather override :py:meth:`get_args_for_event`
+
+        :param player: Owner of the gatos, used to remove 
+        :type player: :py:class:`Player`
+        :param CURRENCY_EMOJI: The emoji for this plugin's currency
+        :type CURRENCY_EMOJI: str
+        :return: A list of description lines for each event type
+        :rtype: list[str]
+        """
+
+        lines = []
+
+        events_by_type = {}
+        for event in self._events:
+            for et in event.keys():
+                if et not in events_by_type:
+                    events_by_type[et] = []
+                events_by_type[et].append(event[et])
+
+        for et, values in events_by_type.items():
+            line = f"- **{self.name}** "
+
+            args = self.get_args_for_event(et, values)
+            args["count"] = len(values)
+            args["currency"] = CURRENCY_EMOJI
+
+            if et == "bitten":
+                player.transactions.currency -= args["amount"]
+
+            line += self.EVENT_DESCRIPTIONS[et].format(**args)
+            lines.append(line)
+
+        return lines
+
+
     def lose_stats_over_time(self, seconds):
         """Computes stat loss over time. Called by :py:meth:`simulate`. *Can be overriden.*"""
         self.add_hunger(-0.01 * seconds)
@@ -224,7 +281,7 @@ class ABaseGato(ABaseItem):
 
         if self.mood < 10:
             if random() < self.BITE_CHANCE / self.friendship:
-                self._events.append({"bitten": None})
+                self._events.append({"bitten": randint(2, 10)})
 
 
     def compute_currency(self, seconds):

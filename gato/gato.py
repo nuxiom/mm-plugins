@@ -337,33 +337,13 @@ class GatoGame(commands.Cog):
         await ctx.send_help(ctx.command)
 
 
-    def handle_events(self, user_id: int, team: list[gatos.Gato]):
-        description = ""
+    def handle_events(self, plyr: player.Player, team: list[gatos.Gato]):
+        lines = []
 
         for gato in team:
-            events_by_type = {}
-            for event in gato._events:
-                et = list(event.keys())[0]
-                if et not in events_by_type:
-                    events_by_type[et] = []
-                events_by_type[et].append(event[et])
+            lines += gato.handle_events(plyr, CURRENCY_EMOJI)
 
-            for et, value in events_by_type.items():
-                description += f"- **{gato.name}** "
-
-                args = {}
-                if et == "bitten":
-                    args["amount"] = 0
-                    for _ in value:
-                        rnd = random.randint(2, 10)
-                        args["amount"] += rnd
-                    args["currency"] = CURRENCY_EMOJI
-                    args["count"] = len(value)
-
-                description += gato.EVENT_DESCRIPTIONS[et].format(**args)
-                description += "\n"
-
-        return description
+        return "\n".join(lines)
 
 
     @critter.command(name="banners", aliases=["banner", "bann", "pull", "gacha"])
@@ -551,7 +531,7 @@ class GatoGame(commands.Cog):
                 currency += c
                 objects += o
 
-        events = self.handle_events(ctx.author.id, tm.gatos)
+        events = self.handle_events(player, tm.gatos)
         if len(events) == 0:
             events = "*Nothing specific happened.*"
         if len(objects) > 0:
