@@ -532,6 +532,7 @@ class GatoGame(commands.Cog):
                 c, o = gato.simulate(tm.gatos, TIME_STEP)
                 currency += c
                 objects += o
+                gato.claim()
 
         player.transactions.currency += currency
         player.transactions.add_items += objects
