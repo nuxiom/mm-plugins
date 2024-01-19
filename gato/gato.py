@@ -582,6 +582,18 @@ class GatoGame(commands.Cog):
     #     await ctx.send("Done! ✅")
 
 
+    @critter.command(name="use", aliases=["consume"])
+    @init_nursery
+    async def use(self, ctx: commands.Context, *, item_name: str):
+        """ Use a consumable """
+
+        # TODO: Check if the consumable is in inventory or in transactions.add_item, and remove one if yes
+        cls = discord.utils.find(lambda cs: cs.DISPLAY_NAME.lower() == item_name.lower(), gatos.CONSUMABLES)
+        item: gatos.Consumable = cls()
+
+        await item.consume(ctx, self)
+
+
     @critter.command(name="fastforward", aliases=["ff"])
     @init_nursery
     async def ff(self, ctx: commands.Context, seconds: int):
