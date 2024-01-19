@@ -342,7 +342,6 @@ class GatoGame(commands.Cog):
 
         for gato in team:
             lines += gato.handle_events(plyr, CURRENCY_EMOJI)
-            print(lines)
 
         return "\n".join(lines)
 
@@ -540,7 +539,6 @@ class GatoGame(commands.Cog):
                 c, o = gato.simulate(tm.gatos, TIME_STEP)
                 currency += c
                 objects += o
-                gato.claim()
 
         player.transactions.currency += currency
         player.transactions.add_items += objects
@@ -552,6 +550,9 @@ class GatoGame(commands.Cog):
             obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
         else:
             obj = "*no objects*"
+
+        for gato in tm.gatos:
+            gato.claim()
 
         embed = discord.Embed(
             title=f"Claim rewards",
