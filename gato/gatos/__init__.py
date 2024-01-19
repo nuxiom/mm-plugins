@@ -12,12 +12,14 @@ importlib.reload(ABaseGato)
 import SwedeGato
 import ExampleGato, LNYGato
 import SeeleGato
+import QingqueGato
 import NormalGato
 
 importlib.reload(SwedeGato)
 importlib.reload(LNYGato)
 importlib.reload(ExampleGato)
 importlib.reload(SeeleGato)
+importlib.reload(QingqueGato)
 importlib.reload(NormalGato)
 
 Gato = ABaseGato.ABaseGato
@@ -25,6 +27,7 @@ SwedeGato = SwedeGato.SwedeGato
 LNYGato = LNYGato.LNYGato
 ExampleGato = ExampleGato.ExampleGato
 SeeleGato = SeeleGato.SeeleGato
+QingqueGato = QingqueGato.QingqueGato
 NormalGato = NormalGato.NormalGato
 
 ## Items
