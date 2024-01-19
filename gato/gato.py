@@ -307,14 +307,7 @@ def init_nursery(function):
     """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
     @wraps(function)
     async def new_function(self: "GatoGame", ctx: commands.Context, *args, **kwargs):
-        player_id = ctx.author.id
-
-        if player_id not in self.players:
-            p = player.Player()
-            gato3s = gatos.NormalGato()
-            p.nursery.append(gato3s)
-            self.players[player_id] = p
-
+        self.create_player(ctx)
         return await function(self, ctx, *args, **kwargs)
 
     return new_function
@@ -346,6 +339,16 @@ class GatoGame(commands.Cog):
             lines += gato.handle_events(plyr, CURRENCY_EMOJI)
 
         return "\n".join(lines)
+
+
+    def create_player(self, ctx: commands.Context):
+        player_id = ctx.author.id
+
+        if player_id not in self.players:
+            p = player.Player()
+            gato3s = gatos.NormalGato()
+            p.nursery.append(gato3s)
+            self.players[player_id] = p
 
 
     @critter.command(name="banners", aliases=["banner", "bann", "pull", "gacha"])
