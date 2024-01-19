@@ -186,72 +186,79 @@ class BannersView(discord.ui.View):
         await self.message.edit(view=self)
 
     async def start_pulls(self, interaction: discord.Interaction, pull_count: int):
-        player_id = interaction.user.id
-        ongoing_pulls = self.gato_game.players[player_id]._pull_view
-        if ongoing_pulls is not None and ongoing_pulls.ongoing:
-            description = f"You already have an ongoing pull, please be patient!"
-            embed = discord.Embed(
-                title="Error",
-                description=description.strip(),
-                colour=discord.Colour.red()
-            )
-            await self.ctx.send(embed=embed)
-            return
+        try:
+            player_id = interaction.user.id
+            ongoing_pulls = self.gato_game.players[player_id]._pull_view
+            if ongoing_pulls is not None and ongoing_pulls.ongoing:
+                description = f"You already have an ongoing pull, please be patient!"
+                embed = discord.Embed(
+                    title="Error",
+                    description=description.strip(),
+                    colour=discord.Colour.red()
+                )
+                await self.ctx.send(embed=embed)
+                return
 
-        anims_lists = []
-        anims_lists = []
-        bann = self.banners[self.current_banner]
-        pull_results = bann.get_pulls_results(pull_count)
-        max_rarity = max(itm.RARITY for itm in pull_results)
+            anims_lists = []
+            anims_lists = []
+            bann = self.banners[self.current_banner]
+            pull_results = bann.get_pulls_results(pull_count)
+            max_rarity = max(itm.RARITY for itm in pull_results)
 
-        player = self.gato_game.players[player_id]
-        nursery = player.nursery
+            player = self.gato_game.players[player_id]
+            nursery = player.nursery
 
-        player.transactions.currency -= pull_count * bann.pull_cost
+            player.transactions.currency -= pull_count * bann.pull_cost
 
-        result_lines = []
-        gato: gatos.Gato
-        for gato in pull_results:
-            thegato: gatos.Gato = None
-            for g in nursery:
-                if isinstance(g, gato):
-                    thegato = g
-            if thegato is None:
-                thegato = gato(name=f"{interaction.user.name}'s {gato.DISPLAY_NAME}")
-                nursery.append(thegato)
-                result_lines.append(f"- **{gato.DISPLAY_NAME}** obtained!")
-            elif thegato.eidolon < 6:
-                thegato.eidolon += 1
-                result_lines.append(f"- **{thegato.name}**'s eidolon level increased to **E{thegato.eidolon}**!")
-            else:
-                cpr = {
-                    6: 10*bann.pull_cost,
-                    5: 5*bann.pull_cost,
-                    4: 1*bann.pull_cost,
-                    3: bann.pull_cost//2
-                }
-                money = cpr[thegato.RARITY]
-                player.transactions.currency += money
-                result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
+            result_lines = []
+            item: gatos.Item
+            for item in pull_results:
+                if item.ITEM_TYPE == gatos.ABaseItem.ItemType.GATO:
+                    gato: gatos.Gato = item
+                    thegato: gatos.Gato = None
+                    for g in nursery:
+                        if isinstance(g, gato):
+                            thegato = g
+                    if thegato is None:
+                        thegato = gato(name=f"{interaction.user.name}'s {gato.DISPLAY_NAME}")
+                        nursery.append(thegato)
+                        result_lines.append(f"- **{gato.DISPLAY_NAME}** obtained!")
+                    elif thegato.eidolon < 6:
+                        thegato.eidolon += 1
+                        result_lines.append(f"- **{thegato.name}**'s eidolon level increased to **E{thegato.eidolon}**!")
+                    else:
+                        cpr = {
+                            6: 10*bann.pull_cost,
+                            5: 5*bann.pull_cost,
+                            4: 1*bann.pull_cost,
+                            3: bann.pull_cost//2
+                        }
+                        money = cpr[thegato.RARITY]
+                        player.transactions.currency += money
+                        result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
+                else:
+                    player.transactions.add_items.append(f"gatos.{item.__class__.__name__}")
 
-        for i, gato in enumerate(pull_results):
-            anim_name: str
-            if i == 0:
-                anim_name = f"train{max_rarity}"
-            else:
-                anim_name = "solo"
-            
-            anims_lists.append({
-                "anim": data.Data.animations[gato.ANIMATIONS][anim_name]["url"],
-                "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
-                "static": data.Data.animations[gato.ANIMATIONS]["static"]["url"],
-                "duration": data.Data.animations[gato.ANIMATIONS][anim_name]["duration"],
-                "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
-            })
+            for i, gato in enumerate(pull_results):
+                anim_name: str
+                if i == 0:
+                    anim_name = f"train{max_rarity}"
+                else:
+                    anim_name = "solo"
+                
+                anims_lists.append({
+                    "anim": data.Data.animations[gato.ANIMATIONS][anim_name]["url"],
+                    "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
+                    "static": data.Data.animations[gato.ANIMATIONS]["static"]["url"],
+                    "duration": data.Data.animations[gato.ANIMATIONS][anim_name]["duration"],
+                    "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
+                })
 
-        pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results, result_lines)
-        player._pull_view = pv
-        await pv.first_frame()
+            pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results, result_lines)
+            player._pull_view = pv
+            await pv.first_frame()
+        except Exception as e:
+            print(e)
 
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, custom_id="left", emoji="⬅️")
