@@ -92,7 +92,7 @@ class RedPacketView(View):
 class RedPacketConsumable(AConsumable):
 
     IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
-    ANIMATIONS: str = "3star"
+    ANIMATIONS: str = "redpacket"
     DISPLAY_NAME: str = "Red Packet"
     RARITY: int = 3
 

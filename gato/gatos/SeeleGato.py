@@ -11,7 +11,7 @@ class SeeleGato(ABaseGato):
 
     # Override constants
     IMAGE = "https://media.discordapp.net/attachments/435078369852260353/1192963553934704730/seelegato.png"
-    ANIMATIONS = "4star"
+    ANIMATIONS = "seelegato"
     DISPLAY_NAME = "Berry Butterfly"
     RARITY = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [

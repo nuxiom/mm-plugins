@@ -6,7 +6,7 @@ class NormalGato(ABaseGato):
     """
 
     IMAGE = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
-    ANIMATIONS = "3star"
+    ANIMATIONS = "mooncakegato"
     DISPLAY_NAME = "Mooncake"
     RARITY = 3
 

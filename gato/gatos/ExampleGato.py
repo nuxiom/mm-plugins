@@ -11,7 +11,7 @@ class ExampleGato(ABaseGato):
 
     # Override constants
     IMAGE = "https://media.discordapp.net/attachments/435078369852260353/1192961669467488307/cyx_gato.png"
-    ANIMATIONS = "5star"
+    ANIMATIONS = "cyxgato"
     DISPLAY_NAME = "Crème Brûlée"
     RARITY = 5
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
