@@ -9,16 +9,16 @@ sys.path.append(DIR)
 import ABaseGato
 importlib.reload(ABaseGato)
 
-import ExampleGato, NormalGato, NormalGato2
+import ExampleGato, NormalGato, LNYGato
 
 importlib.reload(ExampleGato)
 importlib.reload(NormalGato)
-importlib.reload(NormalGato2)
+importlib.reload(LNYGato)
 
 Gato = ABaseGato.ABaseGato
 ExampleGato = ExampleGato.ExampleGato
 NormalGato = NormalGato.NormalGato
-NormalGato2 = NormalGato2.NormalGato2
+LNYGato = LNYGato.LNYGato
 
 # Consumables
 
