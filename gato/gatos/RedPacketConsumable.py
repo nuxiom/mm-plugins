@@ -46,47 +46,44 @@ class RedPacketView(View):
 
     @discord.ui.button(style=discord.ButtonStyle.blurple, label="Claim")
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            player_id = interaction.user.id
-            if player_id in self.claimed:
-                await interaction.response.send_message(embed=discord.Embed(
-                    title="Error",
-                    description="You already claimed this red packet"
-                ), ephemeral=True)
-            elif self.count == self.MAX_CLAIMS:
-                await interaction.response.send_message(embed=discord.Embed(
-                    title="Error",
-                    description="Sorry, this red packet was already entirely claimed"
-                ), ephemeral=True)
+        player_id = interaction.user.id
+        if player_id in self.claimed:
+            await interaction.response.send_message(embed=discord.Embed(
+                title="Error",
+                description="You already claimed this red packet"
+            ), ephemeral=True)
+        elif self.count == self.MAX_CLAIMS:
+            await interaction.response.send_message(embed=discord.Embed(
+                title="Error",
+                description="Sorry, this red packet was already entirely claimed"
+            ), ephemeral=True)
+        else:
+            await interaction.response.defer()
+
+            self.count += 1
+            if self.count < self.MAX_CLAIMS:
+                amt = randint(1, self.left + self.count - self.MAX_CLAIMS)
             else:
-                await interaction.response.defer()
+                amt = self.left
 
-                self.count += 1
-                if self.count < self.MAX_CLAIMS:
-                    amt = randint(1, self.left + self.count - self.MAX_CLAIMS)
-                else:
-                    amt = self.left
+            self.left -= amt
 
-                self.left -= amt
+            if player_id not in self.gatogame.players:
+                self.gatogame.create_player(player_id)
+            player = self.gatogame.players[player_id]
+            player.transactions.currency += amt
 
-                if player_id not in self.gatogame.players:
-                    self.gatogame.create_player(player_id)
-                player = self.gatogame.players[player_id]
-                player.transactions.currency += amt
+            self.claimed[player_id] = f"- {interaction.user.display_name} received {amt} {CURRENCY_EMOJI}"
+            embed = discord.Embed(
+                title=f"{self.owner}'s Red Packet",
+                description="\n".join(self.claimed.values()),
+                colour=discord.Colour.gold()
+            )
 
-                self.claimed[player_id] = f"- {interaction.user.display_name} received {amt} {CURRENCY_EMOJI}"
-                embed = discord.Embed(
-                    title=f"{self.owner}'s Red Packet",
-                    description="\n".join(self.claimed.values()),
-                    colour=discord.Colour.gold()
-                )
-
-                if self.count == self.MAX_CLAIMS:
-                    await self.message.edit(embed=embed, view=None)
-                else:
-                    await self.message.edit(embed=embed)
-        except Exception as e:
-            print(e)
+            if self.count == self.MAX_CLAIMS:
+                await self.message.edit(embed=embed, view=None)
+            else:
+                await self.message.edit(embed=embed)
 
 
 class RedPacketConsumable(AConsumable):
