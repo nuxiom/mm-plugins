@@ -307,7 +307,7 @@ def init_nursery(function):
     """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
     @wraps(function)
     async def new_function(self: "GatoGame", ctx: commands.Context, *args, **kwargs):
-        self.create_player(ctx)
+        self.create_player(ctx.author.id)
         return await function(self, ctx, *args, **kwargs)
 
     return new_function
@@ -341,8 +341,7 @@ class GatoGame(commands.Cog):
         return "\n".join(lines)
 
 
-    def create_player(self, ctx: commands.Context):
-        player_id = ctx.author.id
+    def create_player(self, player_id):
 
         if player_id not in self.players:
             p = player.Player()
