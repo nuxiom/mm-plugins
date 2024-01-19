@@ -1,7 +1,6 @@
 from random import random
 
 from ABaseGato import ABaseGato, require_alive
-from gato.gatos.ABaseGato import ABaseGato
 
 class SeeleGato(ABaseGato):
     """
@@ -33,7 +32,7 @@ class SeeleGato(ABaseGato):
     @require_alive
     def efficiency_buff(self, seconds):
         # Update buff duration
-        if self.has_buff:
+        if self.SEELE_BUFF_KEY in self.efficiency_boosts:
             self.buff_duration -= seconds
 
         CURRENCY_THRESHOLD = 20
@@ -50,14 +49,12 @@ class SeeleGato(ABaseGato):
 
             # Set base cooldown and duration
             self.buff_duration += 5*60
-            self.has_buff = True
 
             self._events.append({self.SEELE_EVENT_KEY: None})
 
         # Remove buff if duration is over
-        if self.buff_duration <= 0 and self.has_buff:
+        if self.buff_duration <= 0 and self.SEELE_BUFF_KEY in self.efficiency_boosts:
             self.efficiency_boosts.pop(self.SEELE_BUFF_KEY)
-            self.has_buff = False
 
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
