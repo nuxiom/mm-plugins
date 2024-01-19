@@ -25,7 +25,7 @@ class Banner():
     pull_cost: int
 
     _cumulative_weights = []
-    _items_by_rarity: dict[int, list[Gato]] = {}
+    _items_by_rarity: dict[int, list[Item]] = {}
 
     def __init__(self, name: str, img: str, colour: int, pull_cost: int, items: list[Gato], drop_weights: dict = {}):
         self.name = name
@@ -80,35 +80,46 @@ class Data:
 
     banners = [
         Banner(
-            name="Standard Banner",
+            name="Lunar New Year Banner",
             img="https://media.discordapp.net/attachments/1106791361157541898/1193230143217479690/chloe_banner_6.png",
             colour=0x669D96,
             pull_cost=1000,
             items=[
+                SwedeGato,
+                LNYGato,
                 ExampleGato,
+                SeeleGato,
                 NormalGato,
-                NormalGato2
+                MedikitConsumable,
+                RedPacketConsumable,
+                TrashConsumable
             ],
             drop_weights={
-                5: 1,
-                4: 10,
-                3: 20
+                6: 1,
+                5: 12,
+                4: 102,
+                3: 1885
             }
         ),
         Banner(
-            name="The same banner lol",
+            name="Permanent Banner",
             img="https://media.discordapp.net/attachments/1106791361157541898/1193230143729188986/xiao_banner_2.png",
             colour=0xA83319,
             pull_cost=1000,
             items=[
+                SwedeGato,
                 ExampleGato,
+                SeeleGato,
                 NormalGato,
-                NormalGato2
+                MedikitConsumable,
+                RedPacketConsumable,
+                TrashConsumable
             ],
             drop_weights={
-                5: 1,
-                4: 10,
-                3: 20
+                6: 1,
+                5: 12,
+                4: 102,
+                3: 1885
             }
         )
     ]
