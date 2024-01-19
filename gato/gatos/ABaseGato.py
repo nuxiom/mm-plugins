@@ -264,6 +264,7 @@ class ABaseGato(ABaseItem):
 
             line += self.EVENT_DESCRIPTIONS[et].format(**args)
             lines.append(line)
+            print(line)
 
         return lines
 

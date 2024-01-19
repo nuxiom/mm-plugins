@@ -4,7 +4,7 @@ from ABaseGato import ABaseGato, require_alive
 
 class LNYGato(ABaseGato):
     """
-        > Finds a Red Packet every hour. Red Packets will give 1000 🌸 in total randomly dispatched accross to 10 people who claim it.
+        > Finds a Red Packet every hour. Red Packets will give 1000 🌸 in total randomly dispatched accross 10 people who claim it.
     """
 
     # Override constants

@@ -342,6 +342,7 @@ class GatoGame(commands.Cog):
 
         for gato in team:
             lines += gato.handle_events(plyr, CURRENCY_EMOJI)
+            print(lines)
 
         return "\n".join(lines)
 
