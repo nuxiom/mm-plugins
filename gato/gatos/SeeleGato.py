@@ -1,6 +1,7 @@
 from random import random
 
 from ABaseGato import ABaseGato, require_alive
+from gato.gatos.ABaseGato import ABaseGato
 
 class SeeleGato(ABaseGato):
     """
@@ -26,7 +27,6 @@ class SeeleGato(ABaseGato):
     # Custom variables used for this gato
     buff_duration: int = 0              # Remaining duration for its buff
     SEELE_BUFF_KEY: str = "SG_eff_buff" # dict key to keep track of this gato's buffs
-    has_buff: bool = False              # To not stack buff / overly extend the duration
     currency_fetched: float = 0         # To keep track of how much currency the gato fetched since last buff
 
 
@@ -41,7 +41,7 @@ class SeeleGato(ABaseGato):
             CURRENCY_THRESHOLD = 15
 
         # Apply buff if cooldown is over
-        if (self.currency_fetched > CURRENCY_THRESHOLD or self.buff_duration > 0) and not self.has_buff:
+        if (self.currency_fetched > CURRENCY_THRESHOLD or self.buff_duration > 0) and not self.SEELE_BUFF_KEY in self.efficiency_boosts:
             # Reset currency fetched
             self.currency_fetched = 0
 

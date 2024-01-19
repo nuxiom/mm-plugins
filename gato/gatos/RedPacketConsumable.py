@@ -24,7 +24,7 @@ class RedPacketView(View):
     MAX_CLAIMS: int = 10
 
     def __init__(self, gatogame):
-        super().__init__()
+        super().__init__(timeout=86400)
 
         self.gatogame = gatogame
         self.count = 0
