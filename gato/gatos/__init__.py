@@ -27,11 +27,15 @@ SeeleGato = SeeleGato.SeeleGato
 import AConsumable
 importlib.reload(AConsumable)
 
-import RedPacketConsumable
+import RedPacketConsumable, TrashConsumable, MedikitConsumable
 
 importlib.reload(RedPacketConsumable)
+importlib.reload(TrashConsumable)
+importlib.reload(MedikitConsumable)
 
 Consumable = AConsumable.AConsumable
 RedPacketConsumable = RedPacketConsumable.RedPacketConsumable
+TrashConsumable = TrashConsumable.TrashConsumable
+MedikitConsumable = MedikitConsumable.MedikitConsumable
 
-CONSUMABLES = [RedPacketConsumable]
+CONSUMABLES = [RedPacketConsumable, TrashConsumable, MedikitConsumable]
