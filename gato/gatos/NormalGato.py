@@ -5,10 +5,10 @@ class NormalGato(ABaseGato):
         > A gato with 140 base HP.
     """
 
-    IMAGE = "https://media.discordapp.net/attachments/435078369852260353/1192963553934704730/seelegato.png"
-    ANIMATIONS = "4star"
-    DISPLAY_NAME = "Berry Butterfly"
-    RARITY = 4
+    IMAGE = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    ANIMATIONS = "3star"
+    DISPLAY_NAME = "Mooncake"
+    RARITY = 3
 
     max_health: float = 140.0   # Create custom attributes for this gato class
 
