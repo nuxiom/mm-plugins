@@ -93,17 +93,16 @@ class QingqueGato(ABaseGato):
 
         # Recover stats
         for stat in target_stats:
-            match (stat):
-                case RecoverableStat.MOOD:
-                    self.add_mood(-amount)
-                case RecoverableStat.HUNGER:
-                    self.add_hunger(-amount)
-                case RecoverableStat.ENERGY:
-                    self.add_energy(-amount)
-                case RecoverableStat.HEALTH:
-                    self.add_health(-amount)
-                case RecoverableStat.EFFICIENCY:
-                    self.add_efficiency_buff(-amount * 0.25)
+            if str(stat) == str(RecoverableStat.MOOD):
+                self.add_mood(-amount)
+            elif str(stat) == str(RecoverableStat.HUNGER):
+                self.add_hunger(-amount)
+            elif str(stat) == str(RecoverableStat.ENERGY):
+                self.add_energy(-amount)
+            elif str(stat) == str(RecoverableStat.HEALTH):
+                self.add_health(-amount)
+            elif str(stat) == str(RecoverableStat.EFFICIENCY):
+                self.add_efficiency_buff(-amount * 0.25)
 
         # Send event
         self._events.append({event_type: None})
