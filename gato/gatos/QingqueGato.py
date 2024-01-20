@@ -40,7 +40,7 @@ class QingqueGato(ABaseGato):
 
     IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1198011033458049184/qingque_gato.PNG"
     ANIMATIONS = "qingquegato"
-    DISPLAY_NAME = "Qingque Gato"
+    DISPLAY_NAME = "Lucky Snack"
     RARITY = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
         "e6_tiles",
