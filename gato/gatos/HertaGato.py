@@ -15,7 +15,7 @@ class HertaGato(ABaseGato):
 
     IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1198011033130901665/herta_gato.png"
     ANIMATIONS = "hertagato"
-    DISPLAY_NAME = "Herta Gato"
+    DISPLAY_NAME = "Wisteria Cake"
     RARITY = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
         "buff_duration",
