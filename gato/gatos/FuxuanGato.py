@@ -13,12 +13,14 @@ class FuxuanGato(ABaseGato):
         > E6: (health restored increases to 85% and cooldown decreases by 30 minutes)
     """
 
+    # TODO: name & animation
     IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1198174175936917504/fuxuangato.png"
     ANIMATIONS = "fuxuangato"
     DISPLAY_NAME = "Fuxuan Gato"
     RARITY = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
-
+        "recent_heal_ts",
+        "heal_cooldown"
     ]
 
     FX_MATRIX_EVENT_TYPE = "fx_matrix_of_prescience"

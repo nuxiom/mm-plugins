@@ -11,18 +11,15 @@ class GuinaifenGato(ABaseGato):
         > E6: increases mood/energy gained upon deployment to 25.
     """
 
-    # TODO: img & display name
-    IMAGE: str = ""
+    # TODO: img & display name & animation
+    IMAGE: str = "https://cdn.discordapp.com/attachments/1198010808672723075/1201435790845165658/nuxiom_gato.PNG"
     ANIMATIONS: str = "guinaifengato"
     DISPLAY_NAME: str = "Guinaifen Gato"
     RARITY: int = 4
-<<<<<<< Updated upstream
-=======
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
         "max_stats_buffs",
         "recent_stats_buff_ts"
     ]
->>>>>>> Stashed changes
 
     GUINAIFEN_STATS_UP_EVENT_TYPE: str = "guinaifen_stats_up"
     GUINAIFEN_STATS_LOSS_DOWN_EVENT_TYPE: str = "guinaifen_stats_loss_down"

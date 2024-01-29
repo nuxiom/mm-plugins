@@ -12,8 +12,8 @@ class ClaraGato(ABaseGato):
         > E6: (decreases health decrease by 30%)
     """
 
-    # TODO: img and display name
-    IMAGE: str = ""
+    # TODO: img & animation
+    IMAGE: str = "https://cdn.discordapp.com/attachments/1198010808672723075/1201435790845165658/nuxiom_gato.PNG"
     ANIMATIONS: str = "claragato"
     DISPLAY_NAME: str = "Pure Sugar Child"
     RARITY: int = 4

@@ -9,8 +9,8 @@ class BladeGato(ABaseGato):
         > E6: increase max hp by 20
     """
 
-    # TODO: img
-    IMAGE: str = ""
+    # TODO: img and animation
+    IMAGE: str = "https://cdn.discordapp.com/attachments/1198010808672723075/1201435790845165658/nuxiom_gato.PNG"
     ANIMATIONS: str = "bladegato"
     DISPLAY_NAME: str = "Sesame Cake"
     RARITY: int = 4
