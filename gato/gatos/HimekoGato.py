@@ -42,8 +42,8 @@ class HimekoGato(ABaseGato):
         if self.eidolon == 6:
             if self._time_deployed == 0:
                 self.himeko_charge += 1 # increases charges gained upon deployment to 2
-        elif self.eidolon >= 1:
-            self.energy_to_recover = 20 + 2*self.eidolon # increases energy recovered to 20, 2 per eidolon
+        if self.eidolon >= 1:
+            self.energy_to_recover = min(20, 10 + 2*self.eidolon) # increases energy recovered 2 per eidolon, cap at 20
 
         if self.energy_cooldown == 0:
             if self.charge_cooldown <= 0:
