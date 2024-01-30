@@ -39,7 +39,7 @@ class ArgentiGato(ABaseGato):
         if self.eidolon == 6:
             self.max_energy = 110
             self.max_stacks = 5
-        elif self.eidolon >= 1:
+        if self.eidolon >= 1:
             self.energy_threshold = 60 - self.eidolon*4
 
         diff_energy = self.energy - self.energy_threshold
