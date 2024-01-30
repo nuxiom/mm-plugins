@@ -61,21 +61,16 @@ class FuxuanGato(ABaseGato):
         self.heal_cooldown = 7200 if self.eidolon < 6 else 5400
         self._events.append({self.FX_HEAL_EVENT_TYPE: None})
 
-    def deploy(self, team: list["ABaseGato"]):
-        # Deploy base class first to reset modifiers
-        super().deploy(team)
-
-        # Apply damage reduction to the team
-        dmg_reduction_amount = 0.2 + 0.02 * min(self.eidolon, 5)
-        for gato in team:
-            gato.damage_reductions[self.FX_DMG_REDUCTION_KEY] = dmg_reduction_amount
-
-        # Send event
-        self._events.append({self.FX_MATRIX_EVENT_TYPE: None})
-
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         # Run base class game tick to apply stats loss first
         currency, objects = super().simulate(team, seconds)
+
+        # Apply damage reduction to the team if we haven't
+        dmg_reduction_amount = 0.2 + 0.02 * min(self.eidolon, 5)
+        for gato in team:
+            if self.FX_DMG_REDUCTION_KEY not in gato.damage_reductions:
+                gato.damage_reductions[self.FX_DMG_REDUCTION_KEY] = dmg_reduction_amount
+                self._events.append({self.FX_MATRIX_EVENT_TYPE: None})        
 
         # Apply self heal if applicable
         self.maybe_apply_heal(seconds)
