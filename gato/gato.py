@@ -333,11 +333,16 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         self.players: dict[int, player.Player] = {}
 
 
+    @init_nursery
     async def nursery_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
-        print(self)
-        print(interaction)
-        print(current)
-        return [app_commands.Choice(name="yeeee", value=0)]
+        choices = []
+
+        player = self.players[interaction.user.id]
+        for i, gato in enumerate(player.nursery):
+            if current.lower() in gato.name.lower() or current.lower in gato.DISPLAY_NAME.lower() or str(i).startswith(current):
+                choices.append(app_commands.Choice(name=f"{gato.name} ({gato.DISPLAY_NAME})", value=i+1))
+
+        return choices
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
@@ -422,6 +427,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         """ Show info about a critter from your nursery. """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
+        print(number, number.__class__.__name__)
 
         nursery = self.players[ctx.author.id].nursery
         number -= 1
