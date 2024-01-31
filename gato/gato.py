@@ -644,6 +644,8 @@ class GatoGame(commands.Cog):
 async def setup(bot: commands.Bot):
     await bot.add_cog(GatoGame(bot))
     synced = await bot.tree.sync()
+    gc = 0
     for guild in bot.guilds:
         await bot.tree.sync(guild=guild)
-    print(f"Synced {len(synced)} command(s).")
+        gc += 1
+    print(f"Synced {len(synced)} command(s) on {gc} guilds.")
