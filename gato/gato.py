@@ -311,9 +311,9 @@ class BannersView(discord.ui.View):
 def init_nursery(function):
     """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
     @wraps(function)
-    async def new_function(self: "GatoGame", ctx: commands.Context, *args, **kwargs):
-        self.create_player(ctx.author.id)
-        return await function(self, ctx, *args, **kwargs)
+    async def new_function(self: "GatoGame", interaction: discord.interactions.Interaction, *args, **kwargs):
+        self.create_player(interaction.user.id)
+        return await function(self, interaction, *args, **kwargs)
 
     return new_function
 
@@ -366,10 +366,16 @@ class GatoGame(commands.Cog):
         await bv.refresh_embed()
 
 
-    @critter.command(name="nursery")
+    @discord.app_commands.command(
+        name="nursery",
+        description="Show your critter nursery.",
+        auto_locale_strings=False
+    )
     @init_nursery
-    async def nursery(self, ctx: commands.Context):
+    async def nursery(self, interaction: discord.interactions.Interaction):
         """ Show your critter nursery. """
+        interaction.response.defer()
+        ctx = commands.Context.from_interaction(interaction)
 
         description = ""
         colour = discord.Colour.teal()
