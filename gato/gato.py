@@ -223,7 +223,7 @@ class BannersView(discord.ui.View):
                     nursery.append(thegato)
                     result_lines.append(f"- **{gato.DISPLAY_NAME}** obtained!")
                 elif thegato.eidolon < 6:
-                    thegato.eidolon += 1
+                    thegato.set_eidolon(thegato.eidolon + 1)
                     result_lines.append(f"- **{thegato.name}**'s eidolon level increased to **E{thegato.eidolon}**!")
                 else:
                     cpr = {

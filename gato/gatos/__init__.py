@@ -14,6 +14,10 @@ import ExampleGato, LNYGato
 import SeeleGato
 import QingqueGato
 import HertaGato
+import FuxuanGato
+import ClaraGato
+import BladeGato
+import GuinaifenGato
 import NormalGato
 
 importlib.reload(SwedeGato)
@@ -22,6 +26,10 @@ importlib.reload(ExampleGato)
 importlib.reload(SeeleGato)
 importlib.reload(QingqueGato)
 importlib.reload(HertaGato)
+importlib.reload(FuxuanGato)
+importlib.reload(ClaraGato)
+importlib.reload(BladeGato)
+importlib.reload(GuinaifenGato)
 importlib.reload(NormalGato)
 
 Gato = ABaseGato.ABaseGato
@@ -31,6 +39,10 @@ ExampleGato = ExampleGato.ExampleGato
 SeeleGato = SeeleGato.SeeleGato
 QingqueGato = QingqueGato.QingqueGato
 HertaGato = HertaGato.HertaGato
+FuxuanGato = FuxuanGato.FuxuanGato
+ClaraGato = ClaraGato.ClaraGato
+BladeGato = BladeGato.BladeGato
+GuinaifenGato = GuinaifenGato.GuinaifenGato
 NormalGato = NormalGato.NormalGato
 
 ## Items

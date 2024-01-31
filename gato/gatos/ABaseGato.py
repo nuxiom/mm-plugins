@@ -427,3 +427,16 @@ class ABaseGato(ABaseItem):
             self.energy = self.max_energy
         elif self.energy <= 0.0:
             self.energy = 0.0
+
+    def set_eidolon(self, value: int):
+        """Setter for a gato's eidolon value.
+        Value must be an integer between 0 and 6 (inclusive).
+        Use this rather than modifying :py:attr:`eidolon` directly.
+        *Can be overriden.* 
+
+        :param amount: New eidolon value to set.
+        :type amount: int
+        """
+        
+        # clamp value to [0, 6]
+        self.eidolon = max(min(value, 6), 0)
