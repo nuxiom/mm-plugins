@@ -374,8 +374,8 @@ class GatoGame(commands.Cog):
     @init_nursery
     async def nursery(self, interaction: discord.interactions.Interaction):
         """ Show your critter nursery. """
-        interaction.response.defer()
-        ctx = commands.Context.from_interaction(interaction)
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         description = ""
         colour = discord.Colour.teal()
@@ -641,7 +641,9 @@ class GatoGame(commands.Cog):
 
 
 
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(GatoGame(bot))
     synced = await bot.tree.sync()
+    for guild in bot.guilds:
+        await bot.tree.sync(guild=guild)
     print(f"Synced {len(synced)} command(s).")
