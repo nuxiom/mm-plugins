@@ -9,6 +9,7 @@ from functools import reduce, wraps
 
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 from core import checks
 from core.models import PermissionLevel
@@ -318,7 +319,11 @@ def init_nursery(function):
     return new_function
 
 
-class GatoGame(commands.Cog):
+@app_commands.guilds(
+    311149232402726912,
+    1106785082028597258
+)
+class GatoGame(commands.GroupCog, group_name="critter"):
     """Critter gacha game plugin"""
 
     def __init__(self, bot):
@@ -366,7 +371,7 @@ class GatoGame(commands.Cog):
         await bv.refresh_embed()
 
 
-    @discord.app_commands.command(
+    @app_commands.command(
         name="nursery",
         description="Show your critter nursery.",
         auto_locale_strings=False
