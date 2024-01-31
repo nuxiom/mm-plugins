@@ -312,7 +312,7 @@ class BannersView(discord.ui.View):
 def init_nursery(function):
     """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
     @wraps(function)
-    async def new_function(self: "GatoGame", interaction: discord.interactions.Interaction, *args, **kwargs):
+    async def new_function(self: "GatoGame", interaction: discord.Interaction, *args, **kwargs):
         self.create_player(interaction.user.id)
         return await function(self, interaction, *args, **kwargs)
 
@@ -331,6 +331,13 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         self.footer = ""  # TODO: REPLACE ME
 
         self.players: dict[int, player.Player] = {}
+
+
+    async def nursery_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        print(self)
+        print(interaction)
+        print(current)
+        return [app_commands.Choice(name="yeeee", value=0)]
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
@@ -360,10 +367,17 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             self.players[player_id] = p
 
 
-    @critter.command(name="banners", aliases=["banner", "bann", "pull", "gacha"])
+    @app_commands.command(
+        name="pull",
+        description="List banners and allow to pull on them",
+        auto_locale_strings=False
+    )
     @init_nursery
-    async def banners(self, ctx: commands.Context):
+    async def banners(self, interaction: discord.Interaction):
         """List banners and allow to pull on them"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
         message = await ctx.send("Loading...")
 
         bv = BannersView(ctx, data.Data.banners, message, self)
@@ -373,12 +387,12 @@ class GatoGame(commands.GroupCog, group_name="critter"):
 
     @app_commands.command(
         name="nursery",
-        description="Show your critter nursery.",
+        description="Show your critter nursery",
         auto_locale_strings=False
     )
     @init_nursery
-    async def nursery(self, interaction: discord.interactions.Interaction):
-        """ Show your critter nursery. """
+    async def nursery(self, interaction: discord.Interaction):
+        """ Show your critter nursery """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
@@ -397,10 +411,17 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         await ctx.send(embed=embed)
 
 
-    @critter.command(name="info")
+    @app_commands.command(
+        name="info",
+        description="Show your critter nursery",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(number=nursery_autocomplete)
     @init_nursery
-    async def info(self, ctx: commands.Context, number: int):
+    async def info(self, interaction: discord.Interaction, number: int):
         """ Show info about a critter from your nursery. """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         nursery = self.players[ctx.author.id].nursery
         number -= 1
