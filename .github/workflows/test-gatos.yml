@@ -1,0 +1,32 @@
+name: Gatos smoke test
+run-name: ${{ github.actor }} testing gatos
+
+on:   
+  issue_comment:
+    types: [ created ]
+
+jobs:
+  test:
+    if: ${{ startsWith(github.event.comment.body, '/test-gatos') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      - uses: Gr1N/setup-poetry@v8
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+      - run: poetry install --no-root
+      - run: poetry run python -m unittest gato.tests.gatos.smoke_test
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Smoke test result status: ${{ job.status }}.'
+            })
