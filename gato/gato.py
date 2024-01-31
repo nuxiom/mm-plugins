@@ -643,3 +643,5 @@ class GatoGame(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(GatoGame(bot))
+    synced = await bot.tree.sync()
+    print(f"Synced {len(synced)} command(s).")
