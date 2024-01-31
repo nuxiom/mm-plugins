@@ -17,7 +17,17 @@ def batched(iterable, n):
         yield batch
 
 
+class FakeTransactions:
+    currency = 0.0
+
+
+class FakePlayer:
+    transactions = FakeTransactions()
+
+
 class SmokeTests(unittest.TestCase):
+
+    CURRENCY_EMOJI = "💎"
 
     @staticmethod
     def is_gato(obj):
@@ -30,10 +40,13 @@ class SmokeTests(unittest.TestCase):
             sys.modules['gato.gatos'], SmokeTests.is_gato)
         gato_instances = [gato_cls() for name, gato_cls in gato_cls_list]
         self.teams = batched(gato_instances, 4)
+        self.player = FakePlayer()
 
     def test(self):
+        lines = []
         # run each team
         for team in self.teams:
+            lines += [f'\nteam: {", ".join([g.name for g in team])}']
             # deploy each gato in the team
             for gato in team:
                 gato.deploy(team)
@@ -41,6 +54,10 @@ class SmokeTests(unittest.TestCase):
             for _ in range(0, 86400):
                 for gato in team:
                     gato.simulate(team, 1)
+            # print events
+            for gato in team:
+                lines += gato.handle_events(self.player, self.CURRENCY_EMOJI)
             # claim each gato
             for gato in team:
                 gato.claim()
+        print('\n'.join(lines))
