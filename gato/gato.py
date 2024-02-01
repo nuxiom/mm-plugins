@@ -9,6 +9,7 @@ from functools import reduce, wraps
 
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 from core import checks
 from core.models import PermissionLevel
@@ -311,14 +312,18 @@ class BannersView(discord.ui.View):
 def init_nursery(function):
     """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
     @wraps(function)
-    async def new_function(self: "GatoGame", ctx: commands.Context, *args, **kwargs):
-        self.create_player(ctx.author.id)
-        return await function(self, ctx, *args, **kwargs)
+    async def new_function(self: "GatoGame", interaction: discord.Interaction, *args, **kwargs):
+        self.create_player(interaction.user.id)
+        return await function(self, interaction, *args, **kwargs)
 
     return new_function
 
 
-class GatoGame(commands.Cog):
+@app_commands.guilds(
+    311149232402726912,
+    1106785082028597258
+)
+class GatoGame(commands.GroupCog, group_name="critter"):
     """Critter gacha game plugin"""
 
     def __init__(self, bot):
@@ -326,6 +331,28 @@ class GatoGame(commands.Cog):
         self.footer = ""  # TODO: REPLACE ME
 
         self.players: dict[int, player.Player] = {}
+
+
+    @init_nursery
+    async def nursery_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        choices = []
+
+        player = self.players[interaction.user.id]
+        for i, gato in enumerate(player.nursery):
+            if current.lower() in gato.name.lower() or current.lower() in gato.DISPLAY_NAME.lower() or str(i).startswith(current):
+                choices.append(app_commands.Choice(name=f"{gato.name} ({gato.DISPLAY_NAME})", value=i+1))
+
+        return choices
+
+    @init_nursery
+    async def consumables_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        choices = []
+
+        player = self.players[interaction.user.id]
+        
+        # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
+
+        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME) for itm in gatos.CONSUMABLES]
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
@@ -355,10 +382,17 @@ class GatoGame(commands.Cog):
             self.players[player_id] = p
 
 
-    @critter.command(name="banners", aliases=["banner", "bann", "pull", "gacha"])
+    @app_commands.command(
+        name="pull",
+        description="List banners and allow to pull on them",
+        auto_locale_strings=False
+    )
     @init_nursery
-    async def banners(self, ctx: commands.Context):
+    async def banners(self, interaction: discord.Interaction):
         """List banners and allow to pull on them"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
         message = await ctx.send("Loading...")
 
         bv = BannersView(ctx, data.Data.banners, message, self)
@@ -366,10 +400,16 @@ class GatoGame(commands.Cog):
         await bv.refresh_embed()
 
 
-    @critter.command(name="nursery")
+    @app_commands.command(
+        name="nursery",
+        description="Show your critter nursery",
+        auto_locale_strings=False
+    )
     @init_nursery
-    async def nursery(self, ctx: commands.Context):
-        """ Show your critter nursery. """
+    async def nursery(self, interaction: discord.Interaction):
+        """ Show your critter nursery """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         description = ""
         colour = discord.Colour.teal()
@@ -386,52 +426,74 @@ class GatoGame(commands.Cog):
         await ctx.send(embed=embed)
 
 
-    @critter.command(name="info")
+    @app_commands.command(
+        name="info",
+        description="Show your critter nursery",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(gato=nursery_autocomplete)
     @init_nursery
-    async def info(self, ctx: commands.Context, number: int):
+    async def info(self, interaction: discord.Interaction, gato: int):
         """ Show info about a critter from your nursery. """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         nursery = self.players[ctx.author.id].nursery
-        number -= 1
+        gato -= 1
 
-        if number < 0 or number >= len(nursery):
+        if gato < 0 or gato >= len(nursery):
             embed = discord.Embed(
                 title=f"Error",
-                description=f"Critter number {number + 1} not found. Use `?critter nursery`",
+                description=f"Critter number {gato + 1} not found. Use `?critter nursery`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
         else:
-            gato = nursery[number]
-            desc = gato.__doc__.format(eidolon=gato.eidolon)
+            g = nursery[gato]
+            desc = g.__doc__.format(eidolon=g.eidolon)
 
             description = f"{desc}\n" + \
-            f"**Health:** {round(gato.health)} / {round(gato.max_health)}\n" + \
-            f"**Hunger:** {round(gato.hunger)} / {round(gato.max_hunger)}\n" + \
-            f"**Mood:** {round(gato.mood)} / {round(gato.max_mood)}\n" + \
-            f"**Energy:** {round(gato.energy)} / {round(gato.max_energy)}\n" + \
-            f"**Friendship:** {int(gato.friendship)}/10\n" + \
-            f"\n✨ **Eidolon {gato.eidolon}**"
+            f"**Health:** {round(g.health)} / {round(g.max_health)}\n" + \
+            f"**Hunger:** {round(g.hunger)} / {round(g.max_hunger)}\n" + \
+            f"**Mood:** {round(g.mood)} / {round(g.max_mood)}\n" + \
+            f"**Energy:** {round(g.energy)} / {round(g.max_energy)}\n" + \
+            f"**Friendship:** {int(g.friendship)}/10\n" + \
+            f"\n✨ **Eidolon {g.eidolon}**"
 
             embed = discord.Embed(
-                title=gato.name,
+                title=g.name,
                 description=description,
                 colour=discord.Colour.teal()
             )
-            embed.set_thumbnail(url=gato.IMAGE)
+            embed.set_thumbnail(url=g.IMAGE)
             embed.set_footer(text="For now, stats don't update in real time. Only when you claim rewards.")
             await ctx.send(embed=embed)
 
 
-    @critter.command(name="deploy", aliases=["dispatch"])
+    @app_commands.command(
+        name="deploy",
+        description="(Re)deploy a team of critters. ⚠️ Order matters! Critter skills will take effect in deployment order",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(
+        gato1=nursery_autocomplete,
+        gato2=nursery_autocomplete,
+        gato3=nursery_autocomplete,
+        gato4=nursery_autocomplete
+    )
     @init_nursery
-    async def deploy(self, ctx: commands.Context, *gato_numbers):
-        """ Deploy a team of critters. Specify numbers from your nursery (example: `?critter deploy 3 2 1 4`) or use `?critter deploy` alone to redeploy previous team. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
+    async def deploy(self, interaction: discord.Interaction, gato1: int = None, gato2: int = None, gato3: int = None, gato4: int = None):
+        """ (Re)deploy a team of critters. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         player = self.players[ctx.author.id]
         nursery = player.nursery
+        gatos = [gato1, gato2, gato3, gato4]
+        print(gatos)
 
-        if len(gato_numbers) == 0:
+        if all([gato is None for gato in gatos]):
+            print("No gatos")
             if player.deployed_team is not None:
                 tm = player.deployed_team
                 if tm.deployed_at is not None:
@@ -460,6 +522,7 @@ class GatoGame(commands.Cog):
                 )
                 await ctx.send(embed=embed)
         else:
+            print("Gatos")
             if player.deployed_team is not None and player.deployed_team.deployed_at is not None:
                 embed = discord.Embed(
                     title=f"Deploy team",
@@ -470,18 +533,10 @@ class GatoGame(commands.Cog):
                 return
 
             # Get unique numbers
-            gato_numbers = reduce(lambda re, x: re+[x] if x not in re else re, gato_numbers, [])
+            gatos = reduce(lambda re, x: re+[x] if x not in re and x is not None else re, gatos, [])
             legatos: list[gatos.Gato] = []
-            for i in gato_numbers[:4]:
-                if not i.isnumeric():
-                    embed = discord.Embed(
-                        title=f"Deploy team",
-                        description=f"{i} is not a valid number! Example usage: `?critter deploy 1 2 3 4`!",
-                        colour=discord.Colour.red()
-                    )
-                    await ctx.send(embed=embed)
-                    return
-                number = int(i)-1
+            for i in gatos[:4]:
+                number = i-1
                 if number >= 0 and number < len(nursery):
                     legatos.append(nursery[number])
                 else:
@@ -492,6 +547,7 @@ class GatoGame(commands.Cog):
                     )
                     await ctx.send(embed=embed)
                     return
+            print(legatos)
 
             tm = team.Team(legatos)
             player.deployed_team = tm
@@ -508,10 +564,16 @@ class GatoGame(commands.Cog):
             return
 
 
-    @critter.command(name="claim")
+    @app_commands.command(
+        name="claim",
+        description="Claim what the deployed team has gathered",
+        auto_locale_strings=False
+    )
     @init_nursery
-    async def claim(self, ctx: commands.Context):
+    async def claim(self, interaction: discord.Interaction):
         """ Claim what the deployed team has gathered. """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         player = self.players[ctx.author.id]
         if player.deployed_team is None or player.deployed_team.deployed_at is None:
@@ -562,48 +624,35 @@ class GatoGame(commands.Cog):
         await ctx.send(embed=embed)
 
 
-    # @critter.command(name="nanook")
-    # async def nanook(self, ctx: commands.Context):
-    #     """ Set all the stats of all your critters to 1 """
-
-    #     for gato in self.players[ctx.author.id].nursery:
-    #         gato.health = 1
-    #         gato.mood = 1
-    #         gato.hunger = 1
-    #         gato.energy = 1
-
-    #     await ctx.send("Done! ✅")
-
-
-    # @critter.command(name="yaoshi")
-    # async def yaoshi(self, ctx: commands.Context):
-    #     """ Set all the stats of all your Critters to maximum """
-
-    #     for gato in self.players[ctx.author.id].nursery:
-    #         gato.health = gato.max_health
-    #         gato.mood = gato.max_mood
-    #         gato.hunger = gato.max_hunger
-    #         gato.energy = gato.max_energy
-
-    #     await ctx.send("Done! ✅")
-
-
-    @critter.command(name="use", aliases=["consume"])
+    @app_commands.command(
+        name="use",
+        description="Use a consumable",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(item=consumables_autocomplete)
     @init_nursery
-    async def use(self, ctx: commands.Context, *, item_name: str):
+    async def use(self, interaction: discord.Interaction, item: str):
         """ Use a consumable """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         # TODO: Check if the consumable is in inventory or in transactions.add_item, and remove one if yes
-        cls = discord.utils.find(lambda cs: cs.DISPLAY_NAME.lower() == item_name.lower(), gatos.CONSUMABLES)
+        cls = discord.utils.find(lambda cs: cs.DISPLAY_NAME.lower() == item.lower(), gatos.CONSUMABLES)
         item: gatos.Consumable = cls()
 
         await item.consume(ctx, self)
 
 
-    @critter.command(name="fastforward", aliases=["ff"])
+    @app_commands.command(
+        name="fastforward",
+        description="Fastforward the ongoing Gato expedition by a specified amount of time (in seconds)",
+        auto_locale_strings=False
+    )
     @init_nursery
-    async def ff(self, ctx: commands.Context, seconds: int):
+    async def ff(self, interaction: discord.Interaction, seconds: int):
         """ Fastforward the ongoing Gato expedition by a specified amount of time (in seconds) """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         player = self.players[ctx.author.id]
         if player.deployed_team is None or player.deployed_team.deployed_at is None:
@@ -621,19 +670,35 @@ class GatoGame(commands.Cog):
         await ctx.send("Done! ✅")
 
 
-    @critter.command(name="transactions")
+    @app_commands.command(
+        name="transactions",
+        description="Debug command to see recent transactions",
+        auto_locale_strings=False
+    )
     @init_nursery
-    async def transactions(self, ctx: commands.Context, *, member: commands.MemberConverter = None):
+    async def transactions(self, interaction: discord.Interaction, member: discord.Member = None):
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
         if member is None:
             member = ctx.author
 
         if member.id in self.players:
             player = self.players[member.id]
-            await ctx.send(content=f"```json\n{json.dumps(player.transactions.to_json())}``` ✅ *This is a debug command*")
+            dct = player.transactions.to_json()
+            dct["add_items"] = dct["add_items"][-20:]
+            dct["rm_items"] = dct["rm_items"][-20:]
+            await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
         else:
             await ctx.send(content="❌ This player isn't in our records")
 
 
 
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(GatoGame(bot))
+    synced = await bot.tree.sync()
+    gc = 0
+    for guild in bot.guilds:
+        await bot.tree.sync(guild=guild)
+        gc += 1
+    print(f"Synced {len(synced)} command(s) on {gc} guilds.")
