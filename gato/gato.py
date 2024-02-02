@@ -644,6 +644,28 @@ class GatoGame(commands.GroupCog, group_name="critter"):
 
 
     @app_commands.command(
+        name="rename",
+        description="Rename your critter"
+    )
+    @app_commands.autocomplete(critter=nursery_autocomplete)
+    @init_nursery
+    async def rename(self, interaction: discord.Interaction, critter: int, name: str):
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        idx = critter - 1
+        player = self.players[ctx.author.id]
+        gato = player.nursery[idx]
+        gato.name = name
+
+        embed = discord.Embed(
+            title="Rename success",
+            description=f'Your *{gato.DISPLAY_NAME}* has been successfully renamed "{gato.name}"',
+            colour=discord.colour.teal()
+        )
+
+
+    @app_commands.command(
         name="fastforward",
         description="Fastforward the ongoing Gato expedition by a specified amount of time (in seconds)",
         auto_locale_strings=False
