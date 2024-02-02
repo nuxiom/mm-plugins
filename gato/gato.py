@@ -661,8 +661,9 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         embed = discord.Embed(
             title="Rename success",
             description=f'Your *{gato.DISPLAY_NAME}* has been successfully renamed "{gato.name}"',
-            colour=discord.colour.teal()
+            colour=discord.Colour.teal()
         )
+        await ctx.send(embed=embed)
 
 
     @app_commands.command(
