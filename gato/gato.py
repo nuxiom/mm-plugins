@@ -38,21 +38,27 @@ class PullView(discord.ui.View):
     title: str
     results: list[gatos.Gato]
     result_lines: list[str]
+    banner: data.Banner
+    gato_game: "GatoGame"
 
     channel: discord.TextChannel
+    ctx: commands.Context
     author: discord.User
     message: discord.Message
     ongoing: bool = True
     skipped_yet: bool = False
 
-    def __init__(self, channel: discord.TextChannel, author: discord.User, anims: list[dict], results: list[gatos.Gato], result_lines: list[str]):
+    def __init__(self, ctx: commands.Context, author: discord.User, anims: list[dict], results: list[gatos.Gato], result_lines: list[str], banner: data.Banner, gato_game: "GatoGame"):
         super().__init__()
         self.frames = anims
-        self.channel = channel
+        self.ctx = ctx
+        self.channel = ctx.channel
         self.author = author
         self.title = f"{self.author.display_name}'s pull"
         self.results = results
         self.result_lines = result_lines
+        self.banner = banner
+        self.gato_game = gato_game
 
     async def handle_frame(self, frame: int, skipping=False):
         if skipping:
@@ -62,11 +68,13 @@ class PullView(discord.ui.View):
             self.ongoing = False
             self.stop()
             description="\n".join(self.result_lines)
+            pull_again_view = PullAgainView(self.ctx, self.message, self.banner, self.gato_game)
+            await pull_again_view.refresh_buttons()
             if len(self.frames) == 1:
                 embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
                 if skipping:
                     embed.set_image(url=self.frames[0]["solo"])
-                    await self.message.edit(embed=embed, view=None)
+                    await self.message.edit(embed=embed, view=pull_again_view)
                     await asyncio.sleep(self.frames[0]["solo_duration"] + 2)
                     embed.description = description
                     embed.set_image(url=self.frames[0]["static"])
@@ -74,11 +82,11 @@ class PullView(discord.ui.View):
                 else:
                     embed.description = description
                     embed.set_image(url=self.frames[0]["static"])
-                    await self.message.edit(embed=embed, view=None)
+                    await self.message.edit(embed=embed, view=pull_again_view)
             else:
                 ls = "- " + "\n- ".join([itm.DISPLAY_NAME for itm in self.results])
                 embed = discord.Embed(title=self.title, colour=discord.Colour.teal(), description=description)
-                await self.message.edit(embed=embed, view=None)
+                await self.message.edit(embed=embed, view=pull_again_view)
         else:
             embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
             if skipping:
@@ -131,6 +139,44 @@ class PullView(discord.ui.View):
         await interaction.response.defer()
         self.current_frame = len(self.frames)
         await self.handle_frame(self.current_frame, skipping=True)
+
+
+class PullAgainView(discord.ui.View):
+
+    banner: data.Banner
+
+    message: discord.Message
+    banners_view: "BannersView"
+
+    def __init__(self, ctx: commands.Context, message: discord.Message, banner: data.Banner, gato_game):
+        super().__init__()
+        self.banner = banner
+        self.banners_view = BannersView(ctx, [banner], None, gato_game)
+        self.message = message
+
+    async def on_timeout(self) -> None:
+        self.stop()
+        await self.message.edit(view=None)
+
+    async def refresh_buttons(self):
+        pull_cost = self.banner.pull_cost
+        btn: discord.ui.Button
+        for btn in self.children:
+            if btn.custom_id == "1pull":
+                btn.label = f"{pull_cost} - Pull 1"
+            elif btn.custom_id == "10pull":
+                btn.label = f"{pull_cost*10} - Pull 10"
+        await self.message.edit(view=self)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="1pull", label="... - Pull 1", emoji="🌸")
+    async def single(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        await self.banners_view.start_pulls(interaction, 1)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="10pull", label="... - Pull 10", emoji="🌸")
+    async def multi(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        await self.banners_view.start_pulls(interaction, 10)
 
 
 class BannersView(discord.ui.View):
@@ -255,7 +301,7 @@ class BannersView(discord.ui.View):
                 "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
             })
 
-        pv = PullView(self.ctx.channel, interaction.user, anims_lists, pull_results, result_lines)
+        pv = PullView(self.ctx, interaction.user, anims_lists, pull_results, result_lines, bann, self.gato_game)
         player._pull_view = pv
         await pv.first_frame()
 
