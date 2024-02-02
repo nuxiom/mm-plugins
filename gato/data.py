@@ -92,7 +92,7 @@ class Data:
                 HertaGato,
                 QingqueGato,
                 NormalGato,
-                MedikitConsumable,
+                MedkitConsumable,
                 RedPacketConsumable,
                 TrashConsumable
             ],
@@ -115,7 +115,7 @@ class Data:
                 HertaGato,
                 QingqueGato,
                 NormalGato,
-                MedikitConsumable,
+                MedkitConsumable,
                 RedPacketConsumable,
                 TrashConsumable
             ],

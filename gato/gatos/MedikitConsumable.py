@@ -9,11 +9,11 @@ from discord.ui import View
 from AConsumable import AConsumable
 
 
-class MedikitConsumable(AConsumable):
+class MedkitConsumable(AConsumable):
 
     IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
-    ANIMATIONS: str = "medikit"
-    DISPLAY_NAME: str = "Medikit"
+    ANIMATIONS: str = "medkit"
+    DISPLAY_NAME: str = "Medkit"
     RARITY: int = 3
 
     async def consume(self, ctx: Context, gatogame):

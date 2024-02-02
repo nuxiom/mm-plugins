@@ -56,15 +56,15 @@ Item = ABaseItem.ABaseItem
 import AConsumable
 importlib.reload(AConsumable)
 
-import RedPacketConsumable, TrashConsumable, MedikitConsumable
+import RedPacketConsumable, TrashConsumable, MedkitConsumable
 
 importlib.reload(RedPacketConsumable)
 importlib.reload(TrashConsumable)
-importlib.reload(MedikitConsumable)
+importlib.reload(MedkitConsumable)
 
 Consumable = AConsumable.AConsumable
 RedPacketConsumable = RedPacketConsumable.RedPacketConsumable
 TrashConsumable = TrashConsumable.TrashConsumable
-MedikitConsumable = MedikitConsumable.MedikitConsumable
+MedkitConsumable = MedkitConsumable.MedkitConsumable
 
-CONSUMABLES = [RedPacketConsumable, TrashConsumable, MedikitConsumable]
+CONSUMABLES = [RedPacketConsumable, TrashConsumable, MedkitConsumable]
