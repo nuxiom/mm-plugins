@@ -139,6 +139,9 @@ class ABaseGato(ABaseItem):
     eidolon: int
     """Eidolon level of the gato. Starts at 0, max 6."""
 
+    equipments: list[ABaseItem]
+    """List of equipments on this gato"""
+
 
     def __init__(self, **kwargs):
         self.mood = self.max_mood
@@ -172,7 +175,8 @@ class ABaseGato(ABaseItem):
         """
         return {
             "type": self.__class__.__name__,
-            "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE)
+            "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE),
+            "equipments": [eq.to_json() for eq in self.equipments]
         }
 
     @classmethod

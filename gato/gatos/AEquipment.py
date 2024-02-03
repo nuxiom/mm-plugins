@@ -16,6 +16,10 @@ class AEquipment(ABaseItem):
     used_up: bool = False
     """Setting it to `True` will remove it from the equipped gato's `equipment`"""
 
+    def to_json(self):
+        return {
+            "type": self.__class__.__name__
+        }
 
     def deploy(self, gato):
         """Called when the equipped gato is deployed."""

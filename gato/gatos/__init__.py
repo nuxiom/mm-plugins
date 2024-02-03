@@ -68,3 +68,6 @@ TrashConsumable = TrashConsumable.TrashConsumable
 MedkitConsumable = MedkitConsumable.MedkitConsumable
 
 CONSUMABLES = [RedPacketConsumable, TrashConsumable, MedkitConsumable]
+
+EQUIPEMENTS = []
+TEAM_EQUIPMENTS = []
