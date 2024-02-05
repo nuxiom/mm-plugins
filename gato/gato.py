@@ -711,32 +711,35 @@ class GatoGame(commands.GroupCog, group_name="critter"):
     @init_nursery
     async def equip(self, interaction: discord.Interaction, item: str, critter: int):
         """ Equip an item """
-        await interaction.response.defer()
-        ctx = await commands.Context.from_interaction(interaction)
+        try:
+            await interaction.response.defer()
+            ctx = await commands.Context.from_interaction(interaction)
 
-        player = self.players[ctx.author.id]
+            player = self.players[ctx.author.id]
 
-        # TODO: Check if the equipment is in inventory or in transactions.add_item, and remove one if yes
-        cls = discord.utils.find(lambda eq: eq.DISPLAY_NAME.lower() == item.lower(), gatos.EQUIPMENTS + gatos.TEAM_EQUIPMENTS)
-        item: gatos.Equipment = cls()
+            # TODO: Check if the equipment is in inventory or in transactions.add_item, and remove one if yes
+            cls = discord.utils.find(lambda eq: eq.DISPLAY_NAME.lower() == item.lower(), gatos.EQUIPMENTS + gatos.TEAM_EQUIPMENTS)
+            item: gatos.Equipment = cls()
 
-        if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
-            idx = critter - 1
-            gato = player.nursery[idx]
-            gato.equipments.append(item)
-        elif str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPMENT):
-            if player.deployed_team is None or player.deployed_team.deployed_at is None:
-                embed = discord.Embed(
-                    title=f"Using team equipment",
-                    description="No team has been deployed! Check `?critter deploy` to deploy one first!",
-                    colour=discord.Colour.red()
-                )
-                await ctx.send(embed=embed)
-                return
+            if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
+                idx = critter - 1
+                gato = player.nursery[idx]
+                gato.equipments.append(item)
+            elif str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPMENT):
+                if player.deployed_team is None or player.deployed_team.deployed_at is None:
+                    embed = discord.Embed(
+                        title=f"Using team equipment",
+                        description="No team has been deployed! Check `?critter deploy` to deploy one first!",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return
 
-            tm = player.deployed_team
-            for g in tm.gatos:
-                g.equipments.append(item)
+                tm = player.deployed_team
+                for g in tm.gatos:
+                    g.equipments.append(item)
+        except Exception as e:
+            print(e)
 
 
     @app_commands.command(
