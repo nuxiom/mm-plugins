@@ -5,6 +5,7 @@ class EfficiencyFoodEq(AEquipment):
     """Boosts efficiency by 10% for 1 hour. Automatically equiped on use of an efficiency food Consumable."""
 
     ITEM_TYPE: ItemType = ItemType.EQUIPMENT
+    DISPLAY_NAME = "Effiency Food Buff"
 
     FOOD_BUFf_KEY = "food_eff_buff"
 

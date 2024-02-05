@@ -5,6 +5,7 @@ class MedicalInsuranceTEq(AEquipment):
     """Upon claim, covers all expenses related to critter bites for the equipped team. Single use."""
 
     ITEM_TYPE: ItemType = ItemType.TEAM_EQUIPMENT
+    DISPLAY_NAME = "Medical Insurance"
 
     def claim(self, gato):
         super().claim(gato)
