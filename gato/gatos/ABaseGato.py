@@ -155,6 +155,7 @@ class ABaseGato(ABaseItem):
 
         # Initialize objects to new objects (not shared by the class)
         self._events = []
+        self.equipments = []
         self.efficiency_boosts = {}
         self.damage_reductions = {}
         self.hunger_reductions = {}
