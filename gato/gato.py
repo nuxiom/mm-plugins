@@ -409,7 +409,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
-        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME) for itm in gatos.EQUIPEMENTS]
+        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME) for itm in gatos.EQUIPMENTS]
         choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.DISPLAY_NAME) for itm in gatos.TEAM_EQUIPMENTS]
         return choices
 
@@ -720,11 +720,11 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         cls = discord.utils.find(lambda eq: eq.DISPLAY_NAME.lower() == item.lower(), gatos.EQUIPMENTS + gatos.TEAM_EQUIPMENTS)
         item: gatos.Equipment = cls()
 
-        if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPEMENT):
+        if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
             idx = critter - 1
             gato = player.nursery[idx]
             gato.equipments.append(item)
-        elif str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPEMENT):
+        elif str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPMENT):
             if player.deployed_team is None or player.deployed_team.deployed_at is None:
                 embed = discord.Embed(
                     title=f"Using team equipment",

@@ -80,7 +80,7 @@ importlib.reload(EfficiencyFoodEq)
 
 EfficiencyFoodEq = EfficiencyFoodEq.EfficiencyFoodEq
 
-EQUIPEMENTS = [EfficiencyFoodEq]
+EQUIPMENTS = [EfficiencyFoodEq]
 
 # Team equipments
 

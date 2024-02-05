@@ -5,8 +5,9 @@ from random import random
 
 class ItemType(Enum):
     CONSUMABLE = 1
-    EQUIPEMENT = 2
-    GATO = 3
+    EQUIPMENT = 2
+    TEAM_EQUIPMENT = 3
+    GATO = 4
 
 
 class ABaseItem(ABC):

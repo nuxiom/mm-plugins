@@ -9,8 +9,8 @@ from ABaseItem import ABaseItem, ItemType
 class AEquipment(ABaseItem):
     """**Abstract class** to implement for every equipment."""
 
-    ITEM_TYPE: ItemType = ItemType.EQUIPEMENT
-    """This is just because AConsumable extends ABaseItem. **You can override it to `TEAM_EQUIPEMENT`**"""
+    ITEM_TYPE: ItemType = ItemType.EQUIPMENT
+    """This is just because AConsumable extends ABaseItem. **You can override it to `TEAM_EQUIPMENT`**"""
 
 
     used_up: bool = False
