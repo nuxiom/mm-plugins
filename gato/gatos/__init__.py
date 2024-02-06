@@ -68,3 +68,26 @@ TrashConsumable = TrashConsumable.TrashConsumable
 MedkitConsumable = MedkitConsumable.MedkitConsumable
 
 CONSUMABLES = [RedPacketConsumable, TrashConsumable, MedkitConsumable]
+
+# Equipments
+
+import AEquipment
+importlib.reload(AEquipment)
+
+import EfficiencyFoodEq
+
+importlib.reload(EfficiencyFoodEq)
+
+EfficiencyFoodEq = EfficiencyFoodEq.EfficiencyFoodEq
+
+EQUIPMENTS = [EfficiencyFoodEq]
+
+# Team equipments
+
+import MedicalInsuranceTEq
+
+importlib.reload(MedicalInsuranceTEq)
+
+MedicalInsuranceTEq = MedicalInsuranceTEq.MedicalInsuranceTEq
+
+TEAM_EQUIPMENTS = [MedicalInsuranceTEq]

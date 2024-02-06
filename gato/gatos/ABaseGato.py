@@ -14,6 +14,19 @@ def require_alive(function):
 
     return new_function
 
+def check_used_equip(function):
+    """Decorator that removes used up equipment from the gato."""
+    @wraps(function)
+    def new_function(gato: "ABaseGato", *args, **kwargs):
+        uu = []
+        for i, eq in enumerate(gato.equipments):
+            if eq.used_up:
+                uu.append(i)
+        if len(uu) > 0:
+            gato.equipments.pop(*uu)
+        return function(gato, *args, **kwargs)
+
+    return new_function
 
 
 class ABaseGato(ABaseItem):
@@ -139,6 +152,9 @@ class ABaseGato(ABaseItem):
     eidolon: int
     """Eidolon level of the gato. Starts at 0, max 6."""
 
+    equipments: list[ABaseItem]
+    """List of equipments on this gato"""
+
 
     def __init__(self, **kwargs):
         self.mood = self.max_mood
@@ -152,6 +168,7 @@ class ABaseGato(ABaseItem):
 
         # Initialize objects to new objects (not shared by the class)
         self._events = []
+        self.equipments = []
         self.efficiency_boosts = {}
         self.damage_reductions = {}
         self.hunger_reductions = {}
@@ -172,7 +189,8 @@ class ABaseGato(ABaseItem):
         """
         return {
             "type": self.__class__.__name__,
-            "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE)
+            "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE),
+            "equipments": [eq.to_json() for eq in self.equipments]
         }
 
     @classmethod
@@ -188,6 +206,7 @@ class ABaseGato(ABaseItem):
         return cls(**json["values"])
 
 
+    @check_used_equip
     def deploy(self, team: list["ABaseGato"]):
         """Called when a gato is deployed."""
 
@@ -201,6 +220,10 @@ class ABaseGato(ABaseItem):
         if self.health > 0:
             self._fainted = False
 
+        for eq in self.equipments:
+                eq.deploy(self)
+
+    @check_used_equip
     def claim(self):
         """Called everytime the owner claims the rewards of this gato."""
         self._events = []
@@ -209,6 +232,9 @@ class ABaseGato(ABaseItem):
             self.friendship += 0.1
 
         self.claimed_today += 1
+
+        for eq in self.equipments:
+                eq.claim(self)
 
 
     def get_args_for_event(self, event_name: str, values: list) -> dict:
@@ -306,6 +332,7 @@ class ABaseGato(ABaseItem):
 
 
     @abstractmethod
+    @check_used_equip
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         """Runs a simulation of the gato.
         **Called pretty much every seconds.**
@@ -328,6 +355,9 @@ class ABaseGato(ABaseItem):
             currency = self.compute_currency(seconds)
 
             objects = self.random_object(seconds)
+
+            for eq in self.equipments:
+                eq.simulate(self, seconds)
 
             return currency, objects
         else:

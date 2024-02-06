@@ -214,7 +214,7 @@ class BannersView(discord.ui.View):
         self.stop()
         embed = discord.Embed(
             title="Gacha banners",
-            description="This view has expired. Use `?critter banners` to show one again!"
+            description="This view has expired. Use `/critter pull` to show one again!"
         )
         await self.message.edit(embed=embed, view=None)
 
@@ -401,6 +401,19 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME) for itm in gatos.CONSUMABLES]
 
 
+    @init_nursery
+    async def equipments_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        choices = []
+
+        player = self.players[interaction.user.id]
+        
+        # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
+
+        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME) for itm in gatos.EQUIPMENTS]
+        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.DISPLAY_NAME) for itm in gatos.TEAM_EQUIPMENTS]
+        return choices
+
+
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
     async def critter(self, ctx: commands.Context):
         """
@@ -477,9 +490,9 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         description="Show your critter nursery",
         auto_locale_strings=False
     )
-    @app_commands.autocomplete(gato=nursery_autocomplete)
+    @app_commands.autocomplete(critter=nursery_autocomplete)
     @init_nursery
-    async def info(self, interaction: discord.Interaction, gato: int):
+    async def info(self, interaction: discord.Interaction, critter: int):
         """ Show info about a critter from your nursery. """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
@@ -490,7 +503,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         if gato < 0 or gato >= len(nursery):
             embed = discord.Embed(
                 title=f"Error",
-                description=f"Critter number {gato + 1} not found. Use `?critter nursery`",
+                description=f"Critter number {gato + 1} not found. Use `/critter nursery`",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
@@ -522,30 +535,28 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         auto_locale_strings=False
     )
     @app_commands.autocomplete(
-        gato1=nursery_autocomplete,
-        gato2=nursery_autocomplete,
-        gato3=nursery_autocomplete,
-        gato4=nursery_autocomplete
+        critter1=nursery_autocomplete,
+        critter2=nursery_autocomplete,
+        critter3=nursery_autocomplete,
+        critter4=nursery_autocomplete
     )
     @init_nursery
-    async def deploy(self, interaction: discord.Interaction, gato1: int = None, gato2: int = None, gato3: int = None, gato4: int = None):
+    async def deploy(self, interaction: discord.Interaction, critter1: int = None, critter2: int = None, critter3: int = None, critter4: int = None):
         """ (Re)deploy a team of critters. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
         player = self.players[ctx.author.id]
         nursery = player.nursery
-        gatos = [gato1, gato2, gato3, gato4]
-        print(gatos)
+        gatos = [critter1, critter2, critter3, critter4]
 
         if all([gato is None for gato in gatos]):
-            print("No gatos")
             if player.deployed_team is not None:
                 tm = player.deployed_team
                 if tm.deployed_at is not None:
                     embed = discord.Embed(
                         title=f"Deploy team",
-                        description="A team is already deployed! Use `?critter claim` to see what they fetched for you!",
+                        description="A team is already deployed! Use `/critter claim` to see what they fetched for you!",
                         colour=discord.Colour.red()
                     )
                     await ctx.send(embed=embed)
@@ -556,23 +567,22 @@ class GatoGame(commands.GroupCog, group_name="critter"):
                     gato_names = "**, **".join([gato.name for gato in tm.gatos])
                     embed = discord.Embed(
                         title=f"Deploy team",
-                        description=f"A team with **{gato_names}** has been deployed! Check back in a while with `?critter claim` to see what they fetched for you!",
+                        description=f"A team with **{gato_names}** has been deployed! Check back in a while with `/critter claim` to see what they fetched for you!",
                         colour=discord.Colour.teal()
                     )
                     await ctx.send(embed=embed)
             else:
                 embed = discord.Embed(
                     title=f"Deploy team",
-                    description="No team was previously deployed! Example use `?critter deploy 1 2 3 4` (check critter numbers with `?critter nursery`)",
+                    description="No team was previously deployed! Example use `/critter deploy 1 2 3 4` (check critter numbers with `/critter nursery`)",
                     colour=discord.Colour.red()
                 )
                 await ctx.send(embed=embed)
         else:
-            print("Gatos")
             if player.deployed_team is not None and player.deployed_team.deployed_at is not None:
                 embed = discord.Embed(
                     title=f"Deploy team",
-                    description="A team is already deployed! Use `?critter claim` to see what they fetched for you!",
+                    description="A team is already deployed! Use `/critter claim` to see what they fetched for you!",
                     colour=discord.Colour.red()
                 )
                 await ctx.send(embed=embed)
@@ -588,12 +598,11 @@ class GatoGame(commands.GroupCog, group_name="critter"):
                 else:
                     embed = discord.Embed(
                         title=f"Deploy team",
-                        description=f"Critter number {i} not found in your nursery! Check critter numbers with `?critter nursery`!",
+                        description=f"Critter number {i} not found in your nursery! Check critter numbers with `/critter nursery`!",
                         colour=discord.Colour.red()
                     )
                     await ctx.send(embed=embed)
                     return
-            print(legatos)
 
             tm = team.Team(legatos)
             player.deployed_team = tm
@@ -603,7 +612,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             gato_names = "**, **".join([gato.name for gato in legatos])
             embed = discord.Embed(
                 title=f"Deploy team",
-                description=f"A team with **{gato_names}** has been deployed! Check back in a while with `?critter claim` to see what they fetched for you!",
+                description=f"A team with **{gato_names}** has been deployed! Check back in a while with `/critter claim` to see what they fetched for you!",
                 colour=discord.Colour.teal()
             )
             await ctx.send(embed=embed)
@@ -618,56 +627,59 @@ class GatoGame(commands.GroupCog, group_name="critter"):
     @init_nursery
     async def claim(self, interaction: discord.Interaction):
         """ Claim what the deployed team has gathered. """
-        await interaction.response.defer()
-        ctx = await commands.Context.from_interaction(interaction)
+        try:
+            await interaction.response.defer()
+            ctx = await commands.Context.from_interaction(interaction)
 
-        player = self.players[ctx.author.id]
-        if player.deployed_team is None or player.deployed_team.deployed_at is None:
-            embed = discord.Embed(
-                title=f"Claim rewards",
-                description="No team has been deployed! Check `?critter deploy` to deploy one first!",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
+            player = self.players[ctx.author.id]
+            if player.deployed_team is None or player.deployed_team.deployed_at is None:
+                embed = discord.Embed(
+                    title=f"Claim rewards",
+                    description="No team has been deployed! Check `/critter deploy` to deploy one first!",
+                    colour=discord.Colour.red()
+                )
+                await ctx.send(embed=embed)
+                return
 
-        tm = player.deployed_team
-        now = datetime.now()
-        delta = int((now - tm.deployed_at).total_seconds())
-        tm.deployed_at = None
+            tm = player.deployed_team
+            now = datetime.now()
+            delta = int((now - tm.deployed_at).total_seconds())
+            tm.deployed_at = None
 
-        TIME_STEP = 1
-        currency = 0
-        objects = []
-        for _ in range(0, delta, TIME_STEP):
-            if all(gato._fainted for gato in tm.gatos):
-                break
+            TIME_STEP = 1
+            currency = 0
+            objects = []
+            for _ in range(0, delta, TIME_STEP):
+                if all(gato._fainted for gato in tm.gatos):
+                    break
+
+                for gato in tm.gatos:
+                    c, o = gato.simulate(tm.gatos, TIME_STEP)
+                    currency += c
+                    objects += o
+
+            player.transactions.currency += currency
+            player.transactions.add_items += objects
+
+            events = self.handle_events(player, tm.gatos)
+            if len(events) == 0:
+                events = "*Nothing specific happened.*"
+            if len(objects) > 0:
+                obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
+            else:
+                obj = "*no objects*"
 
             for gato in tm.gatos:
-                c, o = gato.simulate(tm.gatos, TIME_STEP)
-                currency += c
-                objects += o
+                gato.claim()
 
-        player.transactions.currency += currency
-        player.transactions.add_items += objects
-
-        events = self.handle_events(player, tm.gatos)
-        if len(events) == 0:
-            events = "*Nothing specific happened.*"
-        if len(objects) > 0:
-            obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
-        else:
-            obj = "*no objects*"
-
-        for gato in tm.gatos:
-            gato.claim()
-
-        embed = discord.Embed(
-            title=f"Claim rewards",
-            description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
-            colour=discord.Colour.teal()
-        )
-        await ctx.send(embed=embed)
+            embed = discord.Embed(
+                title=f"Claim rewards",
+                description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
+                colour=discord.Colour.teal()
+            )
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
 
 
     @app_commands.command(
@@ -687,6 +699,67 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         item: gatos.Consumable = cls()
 
         await item.consume(ctx, self)
+
+
+    @app_commands.command(
+        name="equip",
+        description="Equip an item",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(item=equipments_autocomplete, critter=nursery_autocomplete)
+    @init_nursery
+    async def equip(self, interaction: discord.Interaction, item: str, critter: int = None):
+        """ Equip an item """
+        try:
+            await interaction.response.defer()
+            ctx = await commands.Context.from_interaction(interaction)
+
+            player = self.players[ctx.author.id]
+
+            # TODO: Check if the equipment is in inventory or in transactions.add_item, and remove one if yes
+            cls = discord.utils.find(lambda eq: eq.DISPLAY_NAME.lower() == item.lower(), gatos.EQUIPMENTS + gatos.TEAM_EQUIPMENTS)
+            item: gatos.Equipment = cls()
+
+            if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
+                if critter is None:
+                    embed = discord.Embed(
+                        title=f"Using equipment",
+                        description="You need to specify a critter to equip this item on!",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return
+
+                idx = critter - 1
+                gato = player.nursery[idx]
+                gato.equipments.append(item)
+                embed = discord.Embed(
+                    title="Equipment",
+                    description=f"**{item.DISPLAY_NAME}** was sucessfully equiped to **{gato.name}**!",
+                    colour=discord.Colour.teal()
+                )
+                await ctx.send(embed=embed)
+            elif str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPMENT):
+                if player.deployed_team is None or player.deployed_team.deployed_at is None:
+                    embed = discord.Embed(
+                        title=f"Using team equipment",
+                        description="No team has been deployed! Check `/critter deploy` to deploy one first!",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return
+
+                tm = player.deployed_team
+                for g in tm.gatos:
+                    g.equipments.append(item)
+                embed = discord.Embed(
+                    title="Team equipment",
+                    description=f"**{item.DISPLAY_NAME}** was sucessfully equiped to deployed team!",
+                    colour=discord.Colour.teal()
+                )
+                await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
 
 
     @app_commands.command(
@@ -727,7 +800,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         if player.deployed_team is None or player.deployed_team.deployed_at is None:
             embed = discord.Embed(
                 title=f"Claim rewards",
-                description="No team has been deployed! Check `?critter deploy` to deploy one first!",
+                description="No team has been deployed! Check `/critter deploy` to deploy one first!",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)

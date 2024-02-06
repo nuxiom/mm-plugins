@@ -9,19 +9,26 @@ from ABaseItem import ABaseItem, ItemType
 class AEquipment(ABaseItem):
     """**Abstract class** to implement for every equipment."""
 
-    ITEM_TYPE: ItemType = ItemType.EQUIPEMENT
-    """This is just because AConsumable extends ABaseItem. **You can override it to `TEAM_EQUIPEMENT`**"""
+    ITEM_TYPE: ItemType = ItemType.EQUIPMENT
+    """This is just because AConsumable extends ABaseItem. **You can override it to `TEAM_EQUIPMENT`**"""
 
 
     used_up: bool = False
     """Setting it to `True` will remove it from the equipped gato's `equipment`"""
 
+    def __init__(self):
+        pass
+
+    def to_json(self):
+        return {
+            "type": self.__class__.__name__
+        }
 
     def deploy(self, gato):
         """Called when the equipped gato is deployed."""
         pass
 
-    def claim(self):
+    def claim(self, gato):
         """Called everytime the owner claims the rewards of the equipped gato."""
         pass
 
@@ -39,4 +46,4 @@ class AEquipment(ABaseItem):
         :return: The amount of currency and the list of objects gathered by the gato.
         :rtype: tuple[float, list[str]]
         """
-
+        pass
