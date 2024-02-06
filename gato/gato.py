@@ -631,56 +631,59 @@ class GatoGame(commands.GroupCog, group_name="critter"):
     @init_nursery
     async def claim(self, interaction: discord.Interaction):
         """ Claim what the deployed team has gathered. """
-        await interaction.response.defer()
-        ctx = await commands.Context.from_interaction(interaction)
+        try:
+            await interaction.response.defer()
+            ctx = await commands.Context.from_interaction(interaction)
 
-        player = self.players[ctx.author.id]
-        if player.deployed_team is None or player.deployed_team.deployed_at is None:
-            embed = discord.Embed(
-                title=f"Claim rewards",
-                description="No team has been deployed! Check `?critter deploy` to deploy one first!",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
+            player = self.players[ctx.author.id]
+            if player.deployed_team is None or player.deployed_team.deployed_at is None:
+                embed = discord.Embed(
+                    title=f"Claim rewards",
+                    description="No team has been deployed! Check `?critter deploy` to deploy one first!",
+                    colour=discord.Colour.red()
+                )
+                await ctx.send(embed=embed)
+                return
 
-        tm = player.deployed_team
-        now = datetime.now()
-        delta = int((now - tm.deployed_at).total_seconds())
-        tm.deployed_at = None
+            tm = player.deployed_team
+            now = datetime.now()
+            delta = int((now - tm.deployed_at).total_seconds())
+            tm.deployed_at = None
 
-        TIME_STEP = 1
-        currency = 0
-        objects = []
-        for _ in range(0, delta, TIME_STEP):
-            if all(gato._fainted for gato in tm.gatos):
-                break
+            TIME_STEP = 1
+            currency = 0
+            objects = []
+            for _ in range(0, delta, TIME_STEP):
+                if all(gato._fainted for gato in tm.gatos):
+                    break
+
+                for gato in tm.gatos:
+                    c, o = gato.simulate(tm.gatos, TIME_STEP)
+                    currency += c
+                    objects += o
+
+            player.transactions.currency += currency
+            player.transactions.add_items += objects
+
+            events = self.handle_events(player, tm.gatos)
+            if len(events) == 0:
+                events = "*Nothing specific happened.*"
+            if len(objects) > 0:
+                obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
+            else:
+                obj = "*no objects*"
 
             for gato in tm.gatos:
-                c, o = gato.simulate(tm.gatos, TIME_STEP)
-                currency += c
-                objects += o
+                gato.claim()
 
-        player.transactions.currency += currency
-        player.transactions.add_items += objects
-
-        events = self.handle_events(player, tm.gatos)
-        if len(events) == 0:
-            events = "*Nothing specific happened.*"
-        if len(objects) > 0:
-            obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
-        else:
-            obj = "*no objects*"
-
-        for gato in tm.gatos:
-            gato.claim()
-
-        embed = discord.Embed(
-            title=f"Claim rewards",
-            description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
-            colour=discord.Colour.teal()
-        )
-        await ctx.send(embed=embed)
+            embed = discord.Embed(
+                title=f"Claim rewards",
+                description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
+                colour=discord.Colour.teal()
+            )
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
 
 
     @app_commands.command(
