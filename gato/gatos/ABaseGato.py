@@ -22,8 +22,6 @@ def check_used_equip(function):
         for i, eq in enumerate(gato.equipments):
             if eq.used_up:
                 uu.append(i)
-                print(eq, eq.used_up)
-        print(uu)
         if len(uu) > 0:
             gato.equipments.pop(*uu)
         return function(gato, *args, **kwargs)

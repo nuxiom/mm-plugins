@@ -708,7 +708,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
     )
     @app_commands.autocomplete(item=equipments_autocomplete, critter=nursery_autocomplete)
     @init_nursery
-    async def equip(self, interaction: discord.Interaction, item: str, critter: int):
+    async def equip(self, interaction: discord.Interaction, item: str, critter: int = None):
         """ Equip an item """
         try:
             await interaction.response.defer()
@@ -721,6 +721,15 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             item: gatos.Equipment = cls()
 
             if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
+                if critter is None:
+                    embed = discord.Embed(
+                        title=f"Using equipment",
+                        description="You need to specify a critter to equip this item on!",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return
+
                 idx = critter - 1
                 gato = player.nursery[idx]
                 gato.equipments.append(item)

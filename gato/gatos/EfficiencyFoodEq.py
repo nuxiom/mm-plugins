@@ -7,7 +7,7 @@ class EfficiencyFoodEq(AEquipment):
     ITEM_TYPE: ItemType = ItemType.EQUIPMENT
     DISPLAY_NAME = "Effiency Food Buff"
 
-    FOOD_BUFf_KEY = "food_eff_buff"
+    FOOD_BUFF_KEY = "food_eff_buff"
 
     buff_duration: int
 
@@ -18,11 +18,12 @@ class EfficiencyFoodEq(AEquipment):
     def simulate(self, gato, seconds: int = 1):
         super().simulate(gato, seconds)
 
-        if self.FOOD_BUFf_KEY not in gato.efficiency_boosts:
-            gato.efficiency_boosts[self.FOOD_BUFf_KEY] = 0.1
+        if self.FOOD_BUFF_KEY not in gato.efficiency_boosts:
+            gato.efficiency_boosts[self.FOOD_BUFF_KEY] = 0.1
+            self.buff_duration = 3600
         else:
             if self.buff_duration > 0:
                 self.buff_duration -= seconds
             else:
-                gato.efficiency_boosts.pop(self.FOOD_BUFf_KEY)
+                gato.efficiency_boosts.pop(self.FOOD_BUFF_KEY)
                 self.used_up = True
