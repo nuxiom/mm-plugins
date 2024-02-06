@@ -15,6 +15,8 @@ class MedicalInsuranceTEq(AEquipment):
     def simulate(self, gato, seconds: int = 1):
         super().simulate(gato, seconds)
 
+        print("Before:", gato._events)
         for evt in gato._events:
             k = list(evt.keys())[0]
             evt[k] = 0
+        print("After:", gato._events)

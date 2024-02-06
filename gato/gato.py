@@ -549,10 +549,8 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         player = self.players[ctx.author.id]
         nursery = player.nursery
         gatos = [gato1, gato2, gato3, gato4]
-        print(gatos)
 
         if all([gato is None for gato in gatos]):
-            print("No gatos")
             if player.deployed_team is not None:
                 tm = player.deployed_team
                 if tm.deployed_at is not None:
@@ -581,7 +579,6 @@ class GatoGame(commands.GroupCog, group_name="critter"):
                 )
                 await ctx.send(embed=embed)
         else:
-            print("Gatos")
             if player.deployed_team is not None and player.deployed_team.deployed_at is not None:
                 embed = discord.Embed(
                     title=f"Deploy team",
@@ -606,7 +603,6 @@ class GatoGame(commands.GroupCog, group_name="critter"):
                     )
                     await ctx.send(embed=embed)
                     return
-            print(legatos)
 
             tm = team.Team(legatos)
             player.deployed_team = tm
@@ -723,7 +719,6 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             # TODO: Check if the equipment is in inventory or in transactions.add_item, and remove one if yes
             cls = discord.utils.find(lambda eq: eq.DISPLAY_NAME.lower() == item.lower(), gatos.EQUIPMENTS + gatos.TEAM_EQUIPMENTS)
             item: gatos.Equipment = cls()
-            print(str(item.ITEM_TYPE), str(gatos.ABaseItem.ItemType.EQUIPMENT))
 
             if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
                 idx = critter - 1
