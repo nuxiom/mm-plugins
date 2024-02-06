@@ -647,19 +647,12 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             tm.deployed_at = None
 
             TIME_STEP = 1
-            currency = 0
-            objects = []
             for _ in range(0, delta, TIME_STEP):
                 if all(gato._fainted for gato in tm.gatos):
                     break
 
                 for gato in tm.gatos:
-                    c, o = gato.simulate(tm.gatos, TIME_STEP)
-                    currency += c
-                    objects += o
-
-            player.transactions.currency += currency
-            player.transactions.add_items += objects
+                    gato.simulate(tm.gatos, TIME_STEP)
 
             events = self.handle_events(player, tm.gatos)
             if len(events) == 0:
@@ -669,8 +662,15 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             else:
                 obj = "*no objects*"
 
+            currency = 0
+            objects = []
             for gato in tm.gatos:
-                gato.claim()
+                c, o = gato.claim()
+                currency += c
+                objects += o
+
+            player.transactions.currency += currency
+            player.transactions.add_items += objects
 
             embed = discord.Embed(
                 title=f"Claim rewards",

@@ -57,14 +57,15 @@ class SeeleGato(ABaseGato):
             self.efficiency_boosts.pop(self.SEELE_BUFF_KEY)
 
 
+    def compute_currency(self, seconds):
+        currency = super().compute_currency()
+        self.currency_fetched += currency
+        return currency
+
+
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         # We calculate its efficiency boost before its actions
         self.efficiency_buff(seconds)
 
         # Then call the parent simulation (VERY IMPORTANT)
-        currency, objects = super().simulate(seconds)
-
-        self.currency_fetched += currency
-
-        # Return gathered currency and objects
-        return currency, objects
+        super().simulate(seconds)

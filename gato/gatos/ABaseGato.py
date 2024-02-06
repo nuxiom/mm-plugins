@@ -153,7 +153,13 @@ class ABaseGato(ABaseItem):
     """Eidolon level of the gato. Starts at 0, max 6."""
 
     equipments: list[ABaseItem]
-    """List of equipments on this gato"""
+    """List of equipments on this gato."""
+
+    fetched_currency: float
+    """Amount of currency fetched since last claim."""
+
+    fetched_objects: list[str]
+    """Objects fetched since last claim."""
 
 
     def __init__(self, **kwargs):
@@ -165,10 +171,12 @@ class ABaseGato(ABaseItem):
 
         self.name = self.DISPLAY_NAME
         self.eidolon = 0
+        self.fetched_currency = 0
 
         # Initialize objects to new objects (not shared by the class)
         self._events = []
         self.equipments = []
+        self.fetched_objects = []
         self.efficiency_boosts = {}
         self.damage_reductions = {}
         self.hunger_reductions = {}
@@ -235,6 +243,14 @@ class ABaseGato(ABaseItem):
 
         for eq in self.equipments:
                 eq.claim(self)
+        
+        objects = self.fetched_objects[:]
+        currency = self.fetched_currency
+
+        self.fetched_objects.clear()
+        self.fetched_currency = 0
+
+        return currency, objects
 
 
     def get_args_for_event(self, event_name: str, values: list) -> dict:
@@ -333,6 +349,7 @@ class ABaseGato(ABaseItem):
 
     @abstractmethod
     @check_used_equip
+    @require_alive
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         """Runs a simulation of the gato.
         **Called pretty much every seconds.**
@@ -347,21 +364,19 @@ class ABaseGato(ABaseItem):
         :rtype: tuple[float, list[str]]
         """
 
-        if not self._fainted:
-            self._time_deployed += seconds
+        self._time_deployed += seconds
 
-            self.lose_stats_over_time(seconds)
+        self.lose_stats_over_time(seconds)
 
-            currency = self.compute_currency(seconds)
+        currency = self.compute_currency(seconds)
 
-            objects = self.random_object(seconds)
+        objects = self.random_object(seconds)
 
-            for eq in self.equipments:
-                eq.simulate(self, seconds)
+        for eq in self.equipments:
+            eq.simulate(self, seconds)
 
-            return currency, objects
-        else:
-            return 0.0, []
+        self.fetched_currency += currency
+        self.fetched_objects += objects
 
 
     @require_alive

@@ -63,7 +63,7 @@ class FuxuanGato(ABaseGato):
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         # Run base class game tick to apply stats loss first
-        currency, objects = super().simulate(team, seconds)
+        super().simulate(team, seconds)
 
         # Apply damage reduction to the team if we haven't
         dmg_reduction_amount = 0.2 + 0.02 * min(self.eidolon, 5)
@@ -74,5 +74,3 @@ class FuxuanGato(ABaseGato):
 
         # Apply self heal if applicable
         self.maybe_apply_heal(seconds)
-
-        return currency, objects

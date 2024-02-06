@@ -41,7 +41,4 @@ class LNYGato(ABaseGato):
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         # Then call the parent simulation (VERY IMPORTANT)
-        currency, objects = super().simulate(seconds)
-
-        # Return gathered currency and objects
-        return currency, objects
+        super().simulate(seconds)

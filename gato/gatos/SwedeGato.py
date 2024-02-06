@@ -14,4 +14,4 @@ class SwedeGato(ABaseGato):
 
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
-        return super().simulate(team, seconds)
+        super().simulate(team, seconds)

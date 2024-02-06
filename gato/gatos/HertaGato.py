@@ -61,4 +61,4 @@ class HertaGato(ABaseGato):
         self.efficiency_buff(seconds)
 
         # Then call the parent simulation
-        return super().simulate(team, seconds)
+        super().simulate(team, seconds)

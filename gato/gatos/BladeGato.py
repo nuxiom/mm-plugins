@@ -56,4 +56,4 @@ class BladeGato(ABaseGato):
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         """Delegates to base method"""
 
-        return super().simulate(team, seconds)
+        super().simulate(team, seconds)

@@ -94,4 +94,4 @@ class GuinaifenGato(ABaseGato):
                 g.mood_loss_reductions[self.GUINAIFEN_MOOD_LOSS_REDUCTION_KEY] = reduction_amount
                 self._events.append(
                     {self.GUINAIFEN_STATS_LOSS_DOWN_EVENT_TYPE: None})
-        return super().simulate(team, seconds)
+        super().simulate(team, seconds)
