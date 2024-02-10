@@ -195,14 +195,12 @@ class ABaseGato(ABaseItem):
         :return: A dict containing the gato's class name, and all the values specified in :py:attr:`VALUES_TO_SAVE`.
         :rtype: dict
         """
-        return {
-            "type": self.__class__.__name__,
-            "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE),
-            "equipments": [eq.to_json() for eq in self.equipments]
-        }
+        dct = super().to_json()
+        dct["equipments"] = [eq.to_json() for eq in self.equipments]
+        return dct
 
     @classmethod
-    def from_json(cls, json: dict):
+    def from_json(cls, json: dict, items_helper = {}):
         """Class method to import a gato from JSON.
 
         :classmethod:
@@ -211,7 +209,11 @@ class ABaseGato(ABaseItem):
         :return: The imported gato
         :rtype: :py:class:`ABaseGato`
         """
-        return cls(**json["values"])
+        gato = cls(**json["values"])
+        for itm in json["equipments"]:
+            eq = items_helper[itm["type"]].from_json(itm)
+            gato.equipments.append(eq)
+        return gato
 
 
     @check_used_equip

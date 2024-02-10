@@ -12,17 +12,13 @@ class AEquipment(ABaseItem):
     ITEM_TYPE: ItemType = ItemType.EQUIPMENT
     """This is just because AConsumable extends ABaseItem. **You can override it to `TEAM_EQUIPMENT`**"""
 
+    VALUES_TO_SAVE = [
+        "used_up"
+    ]
+    """Attributes that will be saved when exporting the gato to JSON. *Can be completed with custom attributes.*"""
 
     used_up: bool = False
     """Setting it to `True` will remove it from the equipped gato's `equipment`"""
-
-    def __init__(self):
-        pass
-
-    def to_json(self):
-        return {
-            "type": self.__class__.__name__
-        }
 
     def deploy(self, gato):
         """Called when the equipped gato is deployed."""

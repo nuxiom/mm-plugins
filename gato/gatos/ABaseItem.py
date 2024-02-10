@@ -31,3 +31,32 @@ class ABaseItem(ABC):
     ITEM_TYPE: ItemType = ItemType.CONSUMABLE
     """Type of the item. **OVERRIDE IT!**"""
 
+    VALUES_TO_SAVE = []
+    """Attributes that will be saved when exporting the gato to JSON. *Can be completed with custom attributes.*"""
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def to_json(self):
+        """Exports an item to JSON.
+
+        :return: A dict containing the item's class name, and all the values specified in :py:attr:`VALUES_TO_SAVE`.
+        :rtype: dict
+        """
+        return {
+            "type": self.__class__.__name__,
+            "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE)
+        }
+
+    @classmethod
+    def from_json(cls, json: dict):
+        """Class method to import an item from JSON.
+
+        :classmethod:
+        :param json: A dict exported by :py:meth:`to_json`.
+        :type json: dict
+        :return: The imported item
+        :rtype: :py:class:`ABaseItem`
+        """
+        return cls(**json["values"])
