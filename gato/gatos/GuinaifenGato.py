@@ -17,7 +17,6 @@ class GuinaifenGato(ABaseGato):
     DISPLAY_NAME: str = "Guinaifen Gato"
     RARITY: int = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
-        "max_stats_buffs",
         "recent_stats_buff_ts"
     ]
 
@@ -30,16 +29,14 @@ class GuinaifenGato(ABaseGato):
     GUINAIFEN_ENERGY_LOSS_REDUCTION_KEY: str = "guinaifen_energy_loss_reduction"
     GUINAIFEN_MOOD_LOSS_REDUCTION_KEY: str = "guinaifen_mood_loss_reduction"
 
-    # Keep track of allies that received max energy and max mood buff at deploy time
-    # [(gato, max_energy_buff, max_mood_buff)]
-    max_stats_buffs: list[tuple["ABaseGato", int, int]] = []
+    # Mutable state variables used for this gato
+    # Timestamps of recent deploy time buffs
     recent_stats_buff_ts: list[datetime] = []
 
     def deploy(self, team: list["ABaseGato"]):
         """Increase mood and energy for the team on deploy"""
 
         super().deploy(team)
-        self.clear_max_stats_buffs()
 
         # Check if we've already buffed allies twice today (utc), skip if so
         now = datetime.now(timezone.utc)
@@ -51,36 +48,13 @@ class GuinaifenGato(ABaseGato):
         # Otherwise, apply buff
         buff_amount = 20 if self.eidolon < 6 else 25
         for g in team:
-            # incrase max energy and max mood as needed
-            max_energy_buff = max(g.energy + buff_amount - g.max_energy, 0)
-            max_mood_buff = max(g.mood + buff_amount - g.max_mood, 0)
-            g.max_energy += max_energy_buff
-            g.max_mood += max_mood_buff
-
-            # record max stats increases so that we can reset them at claim time
-            self.max_stats_buffs.append((g, max_energy_buff, max_mood_buff))
-
             # increase energy and mood
-            g.add_energy(buff_amount)
-            g.add_mood(buff_amount)
+            g.add_energy(buff_amount, allow_overflow=True)
+            g.add_mood(buff_amount, allow_overflow=True)
+        self.recent_stats_buff_ts.append(now)
 
         # event
         self._events.append({self.GUINAIFEN_STATS_UP_EVENT_TYPE: None})
-
-    def clear_max_stats_buffs(self):
-        """Reset max mood and max energy from allies"""
-
-        for (g, max_energy_buff, max_mood_buff) in self.max_stats_buffs:
-            g.max_energy -= max_energy_buff
-            g.max_mood -= max_mood_buff
-            g.energy = min(g.energy, g.max_energy)
-            g.mood = min(g.mood, g.max_mood)
-        self.max_stats_buffs = []
-
-    def claim(self):
-        currency, objects = super().claim()
-        self.clear_max_stats_buffs()
-        return currency, objects
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         """Delegates to base method"""

@@ -414,7 +414,7 @@ class ABaseGato(ABaseItem):
 
 
     @require_alive
-    def add_health(self, amount: float):
+    def add_health(self, amount: float, allow_overflow: bool = False):
         """Affect a gato's health within its limits.
         Amount can be negative.
         Use this rather than modifying :py:attr:`health` directly.
@@ -431,7 +431,7 @@ class ABaseGato(ABaseItem):
 
         self.health += amount
 
-        if self.health > self.max_health:
+        if self.health > self.max_health and not allow_overflow:
             self.health = self.max_health
         elif self.health <= 0.0:
             self.health = 0.0
@@ -440,7 +440,7 @@ class ABaseGato(ABaseItem):
 
 
     @require_alive
-    def add_mood(self, amount: float):
+    def add_mood(self, amount: float, allow_overflow: bool = False):
         """Affect a gato's mood within its limits.
         Amount can be negative.
         Use this rather than modifying :py:attr:`mood` directly.
@@ -456,14 +456,14 @@ class ABaseGato(ABaseItem):
 
         self.mood += amount
 
-        if self.mood > self.max_mood:
+        if self.mood > self.max_mood and not allow_overflow:
             self.mood = self.max_mood
         elif self.mood <= 0.0:
             self.mood = 0.0
 
 
     @require_alive
-    def add_hunger(self, amount: float):
+    def add_hunger(self, amount: float, allow_overflow: bool = False):
         """Affect a gato's hunger within its limits.
         Amount can be negative.
         Use this rather than modifying :py:attr:`hunger` directly.
@@ -479,14 +479,14 @@ class ABaseGato(ABaseItem):
 
         self.hunger += amount
 
-        if self.hunger > self.max_hunger:
+        if self.hunger > self.max_hunger and not allow_overflow:
             self.hunger = self.max_hunger
         elif self.hunger <= 0.0:
             self.hunger = 0.0
 
 
     @require_alive
-    def add_energy(self, amount: float):
+    def add_energy(self, amount: float, allow_overflow: bool = False):
         """Affect a gato's energy within its limits.
         Amount can be negative.
         Use this rather than modifying :py:attr:`energy` directly.
@@ -502,7 +502,7 @@ class ABaseGato(ABaseItem):
 
         self.energy += amount
 
-        if self.energy > self.max_energy:
+        if self.energy > self.max_energy and not allow_overflow:
             self.energy = self.max_energy
         elif self.energy <= 0.0:
             self.energy = 0.0
