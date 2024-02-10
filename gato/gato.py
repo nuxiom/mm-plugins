@@ -644,7 +644,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             tm = player.deployed_team
             now = datetime.now()
             delta = int((now - tm.deployed_at).total_seconds())
-            tm.deployed_at = None
+            tm.deployed_at = now
 
             TIME_STEP = 1
             for _ in range(0, delta, TIME_STEP):
@@ -680,6 +680,25 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             await ctx.send(embed=embed)
         except Exception as e:
             print(e)
+
+
+    @app_commands.command(
+        name="recall",
+        description="Stops the ongoing expedition and claims the leftover rewards",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def recall(self, interaction: discord.Interaction):
+        await self.claim(interaction)
+        player = self.players[interaction.user.id]
+        if player.deployed_team is not None:
+            player.deployed_team.deployed_at = None
+            embed = discord.Embed(
+                title="Recall",
+                description="Team recalled successfully.",
+                colour=discord.Colour.teal()
+            )
+            await interaction.channel.send(embed=embed)
 
 
     @app_commands.command(
