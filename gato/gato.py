@@ -655,19 +655,19 @@ class GatoGame(commands.GroupCog, group_name="critter"):
                     gato.simulate(tm.gatos, TIME_STEP)
 
             events = self.handle_events(player, tm.gatos)
-            if len(events) == 0:
-                events = "*Nothing specific happened.*"
-            if len(objects) > 0:
-                obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
-            else:
-                obj = "*no objects*"
-
             currency = 0
             objects = []
             for gato in tm.gatos:
                 c, o = gato.claim()
                 currency += c
                 objects += o
+
+            if len(events) == 0:
+                events = "*Nothing specific happened.*"
+            if len(objects) > 0:
+                obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
+            else:
+                obj = "*no objects*"
 
             player.transactions.currency += currency
             player.transactions.add_items += objects

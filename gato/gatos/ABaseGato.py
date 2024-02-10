@@ -245,7 +245,6 @@ class ABaseGato(ABaseItem):
                 eq.claim(self)
         
         objects = self.fetched_objects[:]
-        print(self.fetched_objects, objects)
         currency = self.fetched_currency
 
         self.fetched_objects.clear()
@@ -378,8 +377,6 @@ class ABaseGato(ABaseItem):
 
         self.fetched_currency += currency
         self.fetched_objects += objects
-
-        print(objects)
 
 
     @require_alive
