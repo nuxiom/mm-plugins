@@ -690,7 +690,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
     @init_nursery
     async def recall(self, interaction: discord.Interaction):
         try:
-            await self.claim(interaction)
+            await self.claim.callback(self, interaction)
             player = self.players[interaction.user.id]
             if player.deployed_team is not None:
                 player.deployed_team.deployed_at = None
