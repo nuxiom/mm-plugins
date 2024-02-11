@@ -1,4 +1,4 @@
-from random import randint
+from random import sample
 
 import discord
 from discord.ext import commands
@@ -19,6 +19,7 @@ class RedPacketView(View):
     claimed: dict[int, str]
     left: int
     owner: str
+    amounts: list[int]
 
     TOTAL: int = 1000
     MAX_CLAIMS: int = 10
@@ -30,6 +31,11 @@ class RedPacketView(View):
         self.count = 0
         self.left = self.TOTAL
         self.claimed = {}
+
+        dist = self.TOTAL / self.MAX_CLAIMS
+        separators = [0] + sorted(sample(range(1, self.TOTAL), self.MAX_CLAIMS - 1)) + [self.TOTAL]
+        self.amounts = [separators[i] - separators[i-1] for i in range(1, len(separators))]
+        print(self.amounts)
 
     async def start(self, ctx: Context):
         self.owner = ctx.author.display_name
@@ -60,11 +66,8 @@ class RedPacketView(View):
         else:
             await interaction.response.defer()
 
+            amt = self.amounts[self.count]
             self.count += 1
-            if self.count < self.MAX_CLAIMS:
-                amt = randint(1, self.left + self.count - self.MAX_CLAIMS)
-            else:
-                amt = self.left
 
             self.left -= amt
 
