@@ -26,7 +26,7 @@ class MedkitConsumable(AConsumable):
                 colour = discord.Colour.red()
             )
             await ctx.send(embed=embed)
-            return
+            return False
 
         gato.add_health(50)
 
@@ -36,3 +36,4 @@ class MedkitConsumable(AConsumable):
             colour = discord.Colour.teal()
         )
         await ctx.send(embed=embed)
+        return True

@@ -736,7 +736,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         else:
             gato = None
 
-        await item.consume(ctx, self, gato)
+        status = await item.consume(ctx, self, gato)
 
 
     @app_commands.command(

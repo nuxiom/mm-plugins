@@ -30,3 +30,4 @@ class TrashConsumable(AConsumable):
             gato.energy = 1
 
         await ctx.send("Your critters lost all their stats! ✅")
+        return True

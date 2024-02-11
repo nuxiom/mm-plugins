@@ -20,4 +20,4 @@ class AConsumable(ABaseItem):
         :param ctx: Discord context from the ?consume command, used to send back interactions and messages to the user.
         :type ctx: commands.Context
         """
-        pass
+        return True

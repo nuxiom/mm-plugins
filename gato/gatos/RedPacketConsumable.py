@@ -98,3 +98,4 @@ class RedPacketConsumable(AConsumable):
 
         red_packet_view = RedPacketView(gatogame)
         await red_packet_view.start(ctx)
+        return True
