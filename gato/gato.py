@@ -504,6 +504,32 @@ class GatoGame(commands.GroupCog, group_name="critter"):
 
 
     @app_commands.command(
+        name="team",
+        description="Show your deployed team",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def team(self, interaction: discord.Interaction):
+        """ Show your deployed team """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        player = self.players[ctx.author.id]
+        if player.deployed_team is None or player.deployed_team.deployed_at is None:
+            embed = discord.Embed(
+                title=f"Claim rewards",
+                description="No team has been deployed! Check `/critter deploy` to deploy one first!",
+                colour=discord.Colour.red()
+            )
+            await ctx.send(embed=embed)
+            return
+
+        embeds = [self.get_gato_embed(g) for g in player.deployed_team.gatos]
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        await paginator.run()
+
+
+    @app_commands.command(
         name="info",
         description="Show your critter nursery",
         auto_locale_strings=False
