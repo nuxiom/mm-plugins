@@ -455,13 +455,15 @@ class GatoGame(commands.GroupCog, group_name="critter"):
 
         for eq in gato.equipments:
             description += f"- {eq.DISPLAY_NAME}\n"
+        if len(gato.equipments) == 0:
+            description += "*No equipment*"
 
         embed = discord.Embed(
             title=gato.name,
             description=description,
             colour=discord.Colour.teal()
         )
-        embed.set_image(url=gato.IMAGE)
+        embed.set_thumbnail(url=gato.IMAGE)
         return embed
 
 
