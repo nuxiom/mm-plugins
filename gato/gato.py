@@ -13,6 +13,7 @@ from discord import app_commands
 
 from core import checks
 from core.models import PermissionLevel
+from core.paginator import EmbedPaginatorSession
 
 sys.path.append(os.path.dirname(__file__))
 import player
@@ -441,6 +442,29 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             self.players[player_id] = p
 
 
+    def get_gato_embed(self, gato: gatos.Gato):
+        description = f"# {gato.name}\n"
+        description += f"## {gato.DISPLAY_NAME}\n"
+        description += f"{gato.__doc__.format(gato.eidolon)}\n" + \
+            f"**Health:** {round(gato.health)} / {round(gato.max_health)}\n" + \
+            f"**Hunger:** {round(gato.hunger)} / {round(gato.max_hunger)}\n" + \
+            f"**Mood:** {round(gato.mood)} / {round(gato.max_mood)}\n" + \
+            f"**Energy:** {round(gato.energy)} / {round(gato.max_energy)}\n" + \
+            f"**Friendship:** {int(gato.friendship)}/10\n" + \
+            f"\n✨ **Eidolon {gato.eidolon}**\n\nEquipments:\n"
+
+        for eq in gato.equipments:
+            description += f"- {eq.DISPLAY_NAME}\n"
+
+        embed = discord.Embed(
+            title=gato.name,
+            description=description,
+            colour=discord.Colour.teal()
+        )
+        embed.set_image(url=gato.IMAGE)
+        return embed
+
+
     @app_commands.command(
         name="pull",
         description="List banners and allow to pull on them",
@@ -470,19 +494,11 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
-        description = ""
-        colour = discord.Colour.teal()
         player = self.players[ctx.author.id]
 
-        for i, gato in enumerate(player.nursery):
-            description += f"{i+1}. **{gato.name}**: {gato.DISPLAY_NAME} *(✨ E{gato.eidolon})*\n"
-
-        embed = discord.Embed(
-            title=f"{ctx.author.display_name}'s nursery",
-            description=description,
-            colour=colour
-        )
-        await ctx.send(embed=embed)
+        embeds = [self.get_gato_embed(g) for g in player.nursery]
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        await paginator.run()
 
 
     @app_commands.command(
