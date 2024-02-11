@@ -498,7 +498,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         ctx = await commands.Context.from_interaction(interaction)
 
         nursery = self.players[ctx.author.id].nursery
-        gato -= 1
+        gato = critter - 1
 
         if gato < 0 or gato >= len(nursery):
             embed = discord.Embed(
@@ -709,9 +709,9 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         description="Use a consumable",
         auto_locale_strings=False
     )
-    @app_commands.autocomplete(item=consumables_autocomplete)
+    @app_commands.autocomplete(item=consumables_autocomplete, critter=nursery_autocomplete)
     @init_nursery
-    async def use(self, interaction: discord.Interaction, item: str):
+    async def use(self, interaction: discord.Interaction, item: str, critter: int = None):
         """ Use a consumable """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
@@ -720,7 +720,23 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         cls = discord.utils.find(lambda cs: cs.DISPLAY_NAME.lower() == item.lower(), gatos.CONSUMABLES)
         item: gatos.Consumable = cls()
 
-        await item.consume(ctx, self)
+        if critter is not None:
+            gato = critter - 1
+            player = self.players[ctx.author.id]
+            nursery = player.nursery
+            if gato < 0 or gato >= len(nursery):
+                embed = discord.Embed(
+                    title=f"Error",
+                    description=f"Critter number {gato + 1} not found. Use `/critter nursery`",
+                    colour=discord.Colour.red()
+                )
+                await ctx.send(embed=embed)
+
+            gato = nursery[gato]
+        else:
+            gato = None
+
+        await item.consume(ctx, self, gato)
 
 
     @app_commands.command(

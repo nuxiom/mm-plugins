@@ -14,7 +14,7 @@ class AConsumable(ABaseItem):
 
 
     @abstractmethod
-    async def consume(self, ctx: commands.Context, gatogame):
+    async def consume(self, ctx: commands.Context, gatogame, gato = None):
         """**Abstract method** to implement for all consumables.
 
         :param ctx: Discord context from the ?consume command, used to send back interactions and messages to the user.

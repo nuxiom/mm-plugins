@@ -16,17 +16,23 @@ class MedkitConsumable(AConsumable):
     DISPLAY_NAME: str = "Medkit"
     RARITY: int = 3
 
-    async def consume(self, ctx: Context, gatogame):
-        await super().consume(ctx, gatogame)
+    async def consume(self, ctx: Context, gatogame, gato = None):
+        await super().consume(ctx, gatogame, gato)
 
-        # Later make a modal or something, to select the gato to use it on
+        if gato is None:
+            embed = discord.Embed(
+                title = "Medkit",
+                description = "You need to specify a critter to use this on",
+                colour = discord.Colour.red()
+            )
+            await ctx.send(embed=embed)
+            return
 
-        player = gatogame.players[ctx.author.id]
+        gato.add_health(50)
 
-        for gato in player.nursery:
-            gato.health = gato.max_health
-            gato.mood = gato.max_mood
-            gato.hunger = gato.max_hunger
-            gato.energy = gato.max_energy
-
-        await ctx.send("Your critters were fully restored! ✅")
+        embed = discord.Embed(
+            title = "Medkit",
+            description = f"**50 HP** were restored to **{gato.name}**",
+            colour = discord.Colour.teal()
+        )
+        await ctx.send(embed=embed)

@@ -16,7 +16,7 @@ class TrashConsumable(AConsumable):
     DISPLAY_NAME: str = "Trash"
     RARITY: int = 3
 
-    async def consume(self, ctx: Context, gatogame):
+    async def consume(self, ctx: Context, gatogame, gato = None):
         await super().consume(ctx, gatogame)
 
         # Later make a modal or something, to select the gato to use it on
