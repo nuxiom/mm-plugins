@@ -689,16 +689,19 @@ class GatoGame(commands.GroupCog, group_name="critter"):
     )
     @init_nursery
     async def recall(self, interaction: discord.Interaction):
-        await self.claim(interaction)
-        player = self.players[interaction.user.id]
-        if player.deployed_team is not None:
-            player.deployed_team.deployed_at = None
-            embed = discord.Embed(
-                title="Recall",
-                description="Team recalled successfully.",
-                colour=discord.Colour.teal()
-            )
-            await interaction.channel.send(embed=embed)
+        try:
+            await self.claim(interaction)
+            player = self.players[interaction.user.id]
+            if player.deployed_team is not None:
+                player.deployed_team.deployed_at = None
+                embed = discord.Embed(
+                    title="Recall",
+                    description="Team recalled successfully.",
+                    colour=discord.Colour.teal()
+                )
+                await interaction.channel.send(embed=embed)
+        except Exception as e:
+            print(e)
 
 
     @app_commands.command(
