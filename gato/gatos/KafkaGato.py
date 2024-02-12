@@ -59,4 +59,4 @@ class KafkaGato(ABaseGato):
         # Check and apply efficiency boost if applicable
         self.maybe_apply_eff_boost(team, seconds)
 
-        return super().simulate(team, seconds)
+        super().simulate(team, seconds)
