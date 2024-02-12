@@ -58,7 +58,7 @@ class SeeleGato(ABaseGato):
 
 
     def compute_currency(self, seconds):
-        currency = super().compute_currency()
+        currency = super().compute_currency(seconds)
         self.currency_fetched += currency
         return currency
 
