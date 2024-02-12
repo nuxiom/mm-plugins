@@ -1,7 +1,3 @@
-from collections import Counter
-from enum import Enum
-import random
-
 from ABaseGato import ABaseGato, require_alive
 
 
@@ -20,7 +16,6 @@ class HertaGato(ABaseGato):
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
         "buff_duration",
         "buff_cooldown",
-        "has_buff",
     ]
 
     HERTA_EVENT_TYPE_KURU_KURU = "herta_kuru_kuru"
@@ -36,25 +31,28 @@ class HertaGato(ABaseGato):
     @require_alive
     def efficiency_buff(self, seconds):
         # Update buff duration and cooldown
-        self.buff_duration -= seconds
-        self.buff_cooldown -= seconds
+        if self.buff_duration > 0:
+            self.buff_duration = max(self.buff_duration - seconds, 0)
+        if self.buff_cooldown > 0:
+            self.buff_cooldown = max(self.buff_cooldown - seconds, 0)
 
-        # Apply buff if cooldown is over
-        if self.buff_cooldown <= 0 or self.buff_duration > 0:
-            # Apply efficiency boost
-            eidolon_buff_increase = 0.02 * min(self.eidolon, 5)
-            self.efficiency_boosts[self.BUFF_KEY] = 0.2 + eidolon_buff_increase
+        # Remove boost and return if duration ran out and still in cooldown
+        if self.buff_duration <= 0 and self.buff_cooldown > 0:
+            self.efficiency_boosts.pop(self.BUFF_KEY, None)
+            return
 
+        # Activate the buff if cd is clear
+        if self.buff_cooldown <= 0:
             # Set base cooldown and duration
-            self.buff_duration += 20*60 if self.eidolon < 6 else 30*60
-            self.buff_cooldown += 60*60
+            self.buff_duration = 1200 if self.eidolon < 6 else 1800
+            self.buff_cooldown = 3600
 
             # Fire event
             self._events.append({self.HERTA_EVENT_TYPE_KURU_KURU: None})
 
-        # Remove buff if duration is over
-        if self.buff_duration <= 0 and self.has_buff:
-            self.efficiency_boosts.pop(self.BUFF_KEY)
+        # Apply efficiency boost
+        eidolon_buff_increase = 0.02 * min(self.eidolon, 5)
+        self.efficiency_boosts[self.BUFF_KEY] = 0.2 + eidolon_buff_increase
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         # We calculate its efficiency boost before its actions
