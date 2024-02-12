@@ -422,10 +422,13 @@ class GatoGame(commands.GroupCog, group_name="critter"):
 
 
     async def anything_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
-        all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
-        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=i)
-                for i, itm in enumerate(all_items)
-                if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
+        try:
+            all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
+            return [app_commands.Choice(name=itm.DISPLAY_NAME, value=i)
+                    for i, itm in enumerate(all_items)
+                    if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
+        except Exception as e:
+            print(e)
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])

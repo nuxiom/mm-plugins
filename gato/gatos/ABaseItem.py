@@ -51,16 +51,17 @@ class ABaseItem(ABC):
             "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE)
         }
 
-    def get_embed(self):
-        description += f"# {self.DISPLAY_NAME}\n"
-        description += f"{self.__doc__}"
+    @classmethod
+    def get_embed(cls):
+        description += f"# {cls.DISPLAY_NAME}\n"
+        description += f"{cls.__doc__}"
 
         embed = discord.Embed(
-            title=self.DISPLAY_NAME,
+            title=cls.DISPLAY_NAME,
             description=description,
             colour=discord.Colour.teal()
         )
-        embed.set_image(url=self.IMAGE)
+        embed.set_image(url=cls.IMAGE)
         return embed
 
     @classmethod
