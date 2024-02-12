@@ -4,6 +4,7 @@ import json
 import os
 import random
 import sys
+import uuid
 from datetime import datetime, timedelta
 from functools import reduce, wraps
 
@@ -26,6 +27,7 @@ import data
 importlib.reload(data)
 
 
+COG_NAME = "GatoGame"
 DIR = os.path.dirname(__file__)
 SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 CURRENCY_NAME = "Plum Blossom"
@@ -370,12 +372,15 @@ def init_nursery(function):
     311149232402726912,
     1106785082028597258
 )
-class GatoGame(commands.GroupCog, group_name="critter"):
+class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     """Critter gacha game plugin"""
 
     def __init__(self, bot):
         self.bot = bot
+        self.cog_id = uuid.uuid4()
         self.footer = ""  # TODO: REPLACE ME
+
+        self.bot.loop.create_task(self.schedule_simulation())
 
         self.players: dict[int, player.Player] = {}
 
@@ -456,6 +461,30 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             gato3s = gatos.NormalGato()
             p.nursery.append(gato3s)
             self.players[player_id] = p
+
+
+    async def schedule_simulation(self):
+        while True:
+            cog: Currency = self.bot.get_cog(COG_NAME)
+            if cog is None or cog.cog_id != self.cog_id:
+                # We are in an old cog after update and don't have to send QOTD anymore
+                break
+            sleep = 10
+            await asyncio.sleep(sleep)
+
+            for p in self.players.values():
+                if p.deployed_team is None or p.deployed_team.deployed_at is None:
+                    continue
+                tm = p.deployed_team
+                TIME_STEP = 1
+                for _ in range(0, sleep, TIME_STEP):
+                    if all(gato._fainted for gato in tm.gatos):
+                        break
+
+                    for gato in tm.gatos:
+                        gato.simulate(tm.gatos, TIME_STEP)
+
+                tm.deployed_at = datetime.now()
 
 
     @app_commands.command(
