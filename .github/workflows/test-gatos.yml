@@ -4,6 +4,10 @@ run-name: ${{ github.actor }} testing gatos 🚀
 on:   
   pull_request:
     types: [ labeled ]
+  push:
+    branches:
+      - dev
+      - main
 
 jobs:
   test:
