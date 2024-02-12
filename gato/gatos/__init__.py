@@ -18,6 +18,9 @@ import FuxuanGato
 import ClaraGato
 import BladeGato
 import GuinaifenGato
+import KafkaGato
+import HimekoGato
+import ArgentiGato
 import NormalGato
 
 importlib.reload(SwedeGato)
@@ -30,6 +33,9 @@ importlib.reload(FuxuanGato)
 importlib.reload(ClaraGato)
 importlib.reload(BladeGato)
 importlib.reload(GuinaifenGato)
+importlib.reload(KafkaGato)
+importlib.reload(HimekoGato)
+importlib.reload(ArgentiGato)
 importlib.reload(NormalGato)
 
 Gato = ABaseGato.ABaseGato
@@ -43,6 +49,9 @@ FuxuanGato = FuxuanGato.FuxuanGato
 ClaraGato = ClaraGato.ClaraGato
 BladeGato = BladeGato.BladeGato
 GuinaifenGato = GuinaifenGato.GuinaifenGato
+KafkaGato = KafkaGato.KafkaGato
+HimekoGato = HimekoGato.HimekoGato
+ArgentiGato = ArgentiGato.ArgentiGato
 NormalGato = NormalGato.NormalGato
 
 GATOS = [
@@ -55,6 +64,9 @@ GATOS = [
     ClaraGato,
     BladeGato,
     GuinaifenGato,
+    KafkaGato,
+    HimekoGato,
+    ArgentiGato,
     NormalGato
 ]
 
