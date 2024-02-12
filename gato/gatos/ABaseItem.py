@@ -53,7 +53,7 @@ class ABaseItem(ABC):
 
     @classmethod
     def get_embed(cls):
-        description += f"# {cls.DISPLAY_NAME}\n"
+        description = f"# {cls.DISPLAY_NAME}\n"
         description += f"{cls.__doc__}"
 
         embed = discord.Embed(

@@ -2,7 +2,7 @@ from AEquipment import AEquipment
 from ABaseItem import ItemType
 
 class EfficiencyFoodEq(AEquipment):
-    """Boosts efficiency by 10% for 1 hour. Automatically equiped on use of an efficiency food Consumable."""
+    """> Boosts efficiency by 10% for 1 hour. Automatically equiped on use of an efficiency food Consumable."""
 
     ITEM_TYPE: ItemType = ItemType.EQUIPMENT
     DISPLAY_NAME = "Effiency Food Buff"
