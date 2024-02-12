@@ -84,7 +84,4 @@ class ExampleGato(ABaseGato):
         self.efficiency_buff(seconds)
 
         # Then call the parent simulation (VERY IMPORTANT)
-        currency, objects = super().simulate(seconds)
-
-        # Return gathered currency and objects
-        return currency, objects
+        super().simulate(seconds)
