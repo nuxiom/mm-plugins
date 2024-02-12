@@ -24,18 +24,3 @@ jobs:
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
       - run: poetry install --no-root
       - run: poetry run python -m unittest gato.tests.gatos.smoke_test
-      - name: remove label
-        if: always()
-        uses: actions-ecosystem/action-remove-labels@v1
-        with:
-          labels: test-gatos
-      - name: add success label
-        if: ${{ job.status == 'success' }}
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: gato-test-success
-      - name: add failure label
-        if: ${{ job.status != 'success' }}
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: gato-test-failure
