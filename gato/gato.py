@@ -399,7 +399,9 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
-        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME) for itm in gatos.CONSUMABLES]
+        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME)
+                for itm in gatos.CONSUMABLES
+                if current.lower() in itm.DISPLAY_NAME.lower()]
 
 
     @init_nursery
@@ -410,14 +412,20 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
-        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME) for itm in gatos.EQUIPMENTS]
-        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.DISPLAY_NAME) for itm in gatos.TEAM_EQUIPMENTS]
+        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME)
+                   for itm in gatos.EQUIPMENTS
+                   if current.lower() in itm.DISPLAY_NAME.lower()]
+        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.DISPLAY_NAME)
+                    for itm in gatos.TEAM_EQUIPMENTS
+                    if current.lower() in itm.DISPLAY_NAME.lower()]
         return choices
 
 
     async def anything_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
-        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=i) for i, itm in enumerate(all_items)]
+        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=i)
+                for i, itm in enumerate(all_items)
+                if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
@@ -521,9 +529,12 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
-        all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
-        embed = all_items[itm].get_embed()
-        await ctx.send(embed=embed)
+        try:
+            all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
+            embed = all_items[itm].get_embed()
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
 
 
     @app_commands.command(
