@@ -45,6 +45,19 @@ BladeGato = BladeGato.BladeGato
 GuinaifenGato = GuinaifenGato.GuinaifenGato
 NormalGato = NormalGato.NormalGato
 
+GATOS = [
+    SwedeGato,
+    LNYGato,
+    SeeleGato,
+    QingqueGato,
+    HertaGato,
+    FuxuanGato,
+    ClaraGato,
+    BladeGato,
+    GuinaifenGato,
+    NormalGato
+]
+
 ## Items
 
 import ABaseItem

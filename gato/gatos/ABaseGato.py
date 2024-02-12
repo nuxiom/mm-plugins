@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from functools import wraps
 from random import random, randint
 
+import discord
+
 from ABaseItem import ABaseItem, ItemType
 
 
@@ -214,6 +216,30 @@ class ABaseGato(ABaseItem):
             eq = items_helper[itm["type"]].from_json(itm)
             gato.equipments.append(eq)
         return gato
+
+    def get_gato_embed(self):
+        description = f"# {self.name}\n"
+        description += f"## {self.DISPLAY_NAME}\n"
+        description += f"{self.__doc__.format(self.eidolon)}\n" + \
+            f"**Health:** {round(self.health)} / {round(self.max_health)}\n" + \
+            f"**Hunger:** {round(self.hunger)} / {round(self.max_hunger)}\n" + \
+            f"**Mood:** {round(self.mood)} / {round(self.max_mood)}\n" + \
+            f"**Energy:** {round(self.energy)} / {round(self.max_energy)}\n" + \
+            f"**Friendship:** {int(self.friendship)}/10\n" + \
+            f"\n✨ **Eidolon {self.eidolon}**\n\nEquipments:\n"
+
+        for eq in self.equipments:
+            description += f"- {eq.DISPLAY_NAME}\n"
+        if len(self.equipments) == 0:
+            description += "*No equipment*"
+
+        embed = discord.Embed(
+            title=self.name,
+            description=description,
+            colour=discord.Colour.teal()
+        )
+        embed.set_thumbnail(url=self.IMAGE)
+        return embed
 
 
     @check_used_equip

@@ -415,6 +415,11 @@ class GatoGame(commands.GroupCog, group_name="critter"):
         return choices
 
 
+    async def anything_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
+        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=i) for i, itm in enumerate(all_items)]
+
+
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
     async def critter(self, ctx: commands.Context):
         """
@@ -440,31 +445,6 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             gato3s = gatos.NormalGato()
             p.nursery.append(gato3s)
             self.players[player_id] = p
-
-
-    def get_gato_embed(self, gato: gatos.Gato):
-        description = f"# {gato.name}\n"
-        description += f"## {gato.DISPLAY_NAME}\n"
-        description += f"{gato.__doc__.format(gato.eidolon)}\n" + \
-            f"**Health:** {round(gato.health)} / {round(gato.max_health)}\n" + \
-            f"**Hunger:** {round(gato.hunger)} / {round(gato.max_hunger)}\n" + \
-            f"**Mood:** {round(gato.mood)} / {round(gato.max_mood)}\n" + \
-            f"**Energy:** {round(gato.energy)} / {round(gato.max_energy)}\n" + \
-            f"**Friendship:** {int(gato.friendship)}/10\n" + \
-            f"\n✨ **Eidolon {gato.eidolon}**\n\nEquipments:\n"
-
-        for eq in gato.equipments:
-            description += f"- {eq.DISPLAY_NAME}\n"
-        if len(gato.equipments) == 0:
-            description += "*No equipment*"
-
-        embed = discord.Embed(
-            title=gato.name,
-            description=description,
-            colour=discord.Colour.teal()
-        )
-        embed.set_thumbnail(url=gato.IMAGE)
-        return embed
 
 
     @app_commands.command(
@@ -498,7 +478,7 @@ class GatoGame(commands.GroupCog, group_name="critter"):
 
         player = self.players[ctx.author.id]
 
-        embeds = [self.get_gato_embed(g) for g in player.nursery]
+        embeds = [g.get_gato_embed() for g in player.nursery]
         paginator = EmbedPaginatorSession(ctx, *embeds)
         await paginator.run()
 
@@ -524,53 +504,26 @@ class GatoGame(commands.GroupCog, group_name="critter"):
             await ctx.send(embed=embed)
             return
 
-        embeds = [self.get_gato_embed(g) for g in player.deployed_team.gatos]
+        embeds = [g.get_gato_embed() for g in player.deployed_team.gatos]
         paginator = EmbedPaginatorSession(ctx, *embeds)
         await paginator.run()
 
 
     @app_commands.command(
         name="info",
-        description="Show your critter nursery",
+        description="Show info about a critter or an item",
         auto_locale_strings=False
     )
-    @app_commands.autocomplete(critter=nursery_autocomplete)
+    @app_commands.autocomplete(itm=anything_autocomplete)
     @init_nursery
-    async def info(self, interaction: discord.Interaction, critter: int):
-        """ Show info about a critter from your nursery. """
+    async def info(self, interaction: discord.Interaction, itm: int):
+        """ Show info about a critter or an item """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
-        nursery = self.players[ctx.author.id].nursery
-        gato = critter - 1
-
-        if gato < 0 or gato >= len(nursery):
-            embed = discord.Embed(
-                title=f"Error",
-                description=f"Critter number {gato + 1} not found. Use `/critter nursery`",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-        else:
-            g = nursery[gato]
-            desc = g.__doc__.format(eidolon=g.eidolon)
-
-            description = f"{desc}\n" + \
-            f"**Health:** {round(g.health)} / {round(g.max_health)}\n" + \
-            f"**Hunger:** {round(g.hunger)} / {round(g.max_hunger)}\n" + \
-            f"**Mood:** {round(g.mood)} / {round(g.max_mood)}\n" + \
-            f"**Energy:** {round(g.energy)} / {round(g.max_energy)}\n" + \
-            f"**Friendship:** {int(g.friendship)}/10\n" + \
-            f"\n✨ **Eidolon {g.eidolon}**"
-
-            embed = discord.Embed(
-                title=g.name,
-                description=description,
-                colour=discord.Colour.teal()
-            )
-            embed.set_thumbnail(url=g.IMAGE)
-            embed.set_footer(text="For now, stats don't update in real time. Only when you claim rewards.")
-            await ctx.send(embed=embed)
+        all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
+        embed = all_items[itm].get_embed()
+        await ctx.send(embed=embed)
 
 
     @app_commands.command(

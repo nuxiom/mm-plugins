@@ -2,6 +2,8 @@ from abc import ABC
 from enum import Enum
 from random import random
 
+import discord
+
 
 class ItemType(Enum):
     CONSUMABLE = 1
@@ -48,6 +50,18 @@ class ABaseItem(ABC):
             "type": self.__class__.__name__,
             "values": dict((val, getattr(self, val)) for val in self.VALUES_TO_SAVE)
         }
+
+    def get_embed(self):
+        description += f"# {self.DISPLAY_NAME}\n"
+        description += f"{self.__doc__}"
+
+        embed = discord.Embed(
+            title=self.DISPLAY_NAME,
+            description=description,
+            colour=discord.Colour.teal()
+        )
+        embed.set_image(url=self.IMAGE)
+        return embed
 
     @classmethod
     def from_json(cls, json: dict):
