@@ -81,31 +81,57 @@ Item = ABaseItem.ABaseItem
 import AConsumable
 importlib.reload(AConsumable)
 
-import RedPacketConsumable, TrashConsumable, MedkitConsumable
+import RedPacketConsumable, TrashConsumable, MedkitConsumable, \
+    AvocadoToastConsumable, CatTreatsConsumable, SwedishFishConsumable, \
+    DefibrilatorConsumable, FeatherTeaserConsumable, SalmonConsumable
 
 importlib.reload(RedPacketConsumable)
 importlib.reload(TrashConsumable)
 importlib.reload(MedkitConsumable)
+importlib.reload(AvocadoToastConsumable)
+importlib.reload(CatTreatsConsumable)
+importlib.reload(SwedishFishConsumable)
+importlib.reload(DefibrilatorConsumable)
+importlib.reload(FeatherTeaserConsumable)
+importlib.reload(SalmonConsumable)
 
 Consumable = AConsumable.AConsumable
 RedPacketConsumable = RedPacketConsumable.RedPacketConsumable
 TrashConsumable = TrashConsumable.TrashConsumable
 MedkitConsumable = MedkitConsumable.MedkitConsumable
+AvocadoToastConsumable = AvocadoToastConsumable.AvocadoToastConsumable
+CatTreatsConsumable = CatTreatsConsumable.CatTreatsConsumable
+SwedishFishConsumable = SwedishFishConsumable.SwedishFishConsumable
+DefibrilatorConsumable = DefibrilatorConsumable.DefibrilatorConsumable
+FeatherTeaserConsumable = FeatherTeaserConsumable.FeatherTeaserConsumable
+SalmonConsumable = SalmonConsumable.SalmonConsumable
 
-CONSUMABLES = [RedPacketConsumable, TrashConsumable, MedkitConsumable]
+CONSUMABLES = [
+    RedPacketConsumable,
+    TrashConsumable,
+    MedkitConsumable,
+    AvocadoToastConsumable,
+    CatTreatsConsumable,
+    SwedishFishConsumable,
+    DefibrilatorConsumable,
+    FeatherTeaserConsumable,
+    SalmonConsumable
+]
 
 # Equipments
 
 import AEquipment
 importlib.reload(AEquipment)
 
-import EfficiencyFoodEq
+import EfficiencyFoodEq, FakeMouseEq
 
 importlib.reload(EfficiencyFoodEq)
+importlib.reload(FakeMouseEq)
 
 EfficiencyFoodEq = EfficiencyFoodEq.EfficiencyFoodEq
+FakeMouseEq = FakeMouseEq.FakeMouseEq
 
-EQUIPMENTS = [EfficiencyFoodEq]
+EQUIPMENTS = [FakeMouseEq]
 
 # Team equipments
 

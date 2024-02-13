@@ -9,12 +9,12 @@ from discord.ui import View
 from AConsumable import AConsumable
 
 
-class TrashConsumable(AConsumable):
-    """> Poison food. Reduces HP by 20, restores 50 hunger."""
+class SalmonConsumable(AConsumable):
+    """> Restores 50 hunger"""
 
-    IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
-    ANIMATIONS: str = "trash"
-    DISPLAY_NAME: str = "Trash"
+    # IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    # ANIMATIONS: str = "medkit"
+    DISPLAY_NAME: str = "Salmon"
     RARITY: int = 3
 
     async def consume(self, ctx: Context, gatogame, gato = None):
@@ -39,11 +39,10 @@ class TrashConsumable(AConsumable):
             return False
 
         gato.add_hunger(50)
-        gato.add_health(-20)
 
         embed = discord.Embed(
             title = self.DISPLAY_NAME,
-            description = f"**50 hunger** were restored to **{gato.name}** and it lost **20 HP**",
+            description = f"**50 hunger** were restored to **{gato.name}**",
             colour = discord.Colour.teal()
         )
         await ctx.send(embed=embed)
