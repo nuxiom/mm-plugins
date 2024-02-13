@@ -29,6 +29,15 @@ class MedkitConsumable(AConsumable):
             await ctx.send(embed=embed)
             return False
 
+        if gato._fainted:
+            embed = discord.Embed(
+                title = "Medkit",
+                description = "This critter has fainted, please revive it first",
+                colour = discord.Colour.red()
+            )
+            await ctx.send(embed=embed)
+            return False
+
         gato.add_health(50)
 
         embed = discord.Embed(
