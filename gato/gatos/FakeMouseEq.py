@@ -22,7 +22,7 @@ class FakeMouseEq(AEquipment):
         super().simulate(gato, seconds)
 
         if self.MOUSE_BUFF_KEY not in gato.efficiency_boosts:
-            gato.efficiency_boosts[self.MOUSE_BUFF_KEY] = 0.1
+            gato.efficiency_boosts[self.MOUSE_BUFF_KEY] = 0.15
             self.buff_duration = 3600
         else:
             if self.buff_duration > 0:

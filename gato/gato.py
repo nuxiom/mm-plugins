@@ -486,7 +486,9 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                     continue
                 tm = p.deployed_team
                 TIME_STEP = 1
-                for _ in range(0, sleep, TIME_STEP):
+                now = datetime.now()
+                delta = int((now - tm.deployed_at).total_seconds())
+                for _ in range(0, delta, TIME_STEP):
                     if all(gato._fainted for gato in tm.gatos):
                         break
 
