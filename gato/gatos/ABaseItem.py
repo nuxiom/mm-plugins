@@ -21,7 +21,7 @@ class ABaseItem(ABC):
     IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
     """Sprite of the item. **OVERRIDE IT!**"""
 
-    ANIMATIONS: str = "3star"
+    ANIMATIONS: str = "mooncakegato"
     """A reference to a key in `animations.json`. **OVERRIDE IT!**"""
 
     DISPLAY_NAME: str = "Base Item"

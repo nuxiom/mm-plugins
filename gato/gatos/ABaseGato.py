@@ -40,7 +40,7 @@ class ABaseGato(ABaseItem):
     IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
     """Sprite of the gato. **OVERRIDE IT!**"""
 
-    ANIMATIONS: str = "mooncake"
+    ANIMATIONS: str = "mooncakegato"
     """A reference to a key in `animations.json`. **OVERRIDE IT!**"""
 
     DISPLAY_NAME: str = "Base Gato"

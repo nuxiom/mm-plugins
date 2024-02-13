@@ -15,7 +15,7 @@ class FuxuanGato(ABaseGato):
 
     # TODO: name & animation
     IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1198174175936917504/fuxuangato.png"
-    ANIMATIONS = "fuxuangato"
+    # ANIMATIONS = "fuxuangato"
     DISPLAY_NAME = "Fuxuan Gato"
     RARITY = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [

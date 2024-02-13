@@ -14,7 +14,7 @@ class HimekoGato(ABaseGato):
 
     # Override constants
     IMAGE = "https://cdn.discordapp.com/attachments/1117346551644295239/1199465789372240072/himeko_gato1.png"
-    ANIMATIONS = "4star"
+    # ANIMATIONS = "4star"
     DISPLAY_NAME = "Rose Tiramisu"
     RARITY = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [

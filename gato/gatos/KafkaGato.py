@@ -11,7 +11,7 @@ class KafkaGato(ABaseGato):
 
     # TODO: image & animation
     IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1201435790845165658/nuxiom_gato.PNG"
-    ANIMATIONS = "kafkagato"
+    # ANIMATIONS = "kafkagato"
     DISPLAY_NAME = "Shader Cat"
     RARITY = 4
     VALUES_TO_SAVE: list[str] = ABaseGato.VALUES_TO_SAVE + [
