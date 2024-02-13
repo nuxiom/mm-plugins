@@ -253,7 +253,11 @@ class BannersView(discord.ui.View):
         anims_lists = []
         anims_lists = []
         bann = self.banners[self.current_banner]
-        pull_results = bann.get_pulls_results(pull_count, player)
+        try:
+            pull_results = bann.get_pulls_results(pull_count, player)
+        except Exception as e:
+            print(e)
+            return
         max_rarity = max(itm.RARITY for itm in pull_results)
 
         nursery = player.nursery
