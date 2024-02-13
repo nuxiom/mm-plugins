@@ -24,25 +24,36 @@ class Banner():
     """ Pull cost """
     pull_cost: int
 
+    fiftyfifty: bool
+    pities: dict[int, int]
+
     _cumulative_weights = []
     _items_by_rarity: dict[int, list[Item]] = {}
+    _offrates_by_rarity: dict[int, list[Item]] = {}
 
-    def __init__(self, name: str, img: str, colour: int, pull_cost: int, items: list[Gato], drop_weights: dict = {}):
+    def __init__(self, name: str, img: str, colour: int, pull_cost: int, items: list[Item], offrates: list[Item] = [], drop_weights: dict = {}, fiftyfifty: bool = False, pities: dict = {}):
         self.name = name
         self.img = img
         self.colour = colour
         self.pull_cost = pull_cost
         self.drop_weights = drop_weights
+        self.fiftyfifty = fiftyfifty
+        self.pities = pities
 
         self._cumulative_weights = [0]
         for w in self.drop_weights.values():
-            self._cumulative_weights.append(self._cumulative_weights[0] + w)
+            self._cumulative_weights.append(self._cumulative_weights[-1] + w)
         self._cumulative_weights.pop(0)
 
         self._items_by_rarity = {rarity: [] for rarity in drop_weights.keys()}
         for itm in items:
             if itm.RARITY in self._items_by_rarity:
                 self._items_by_rarity[itm.RARITY].append(itm)
+
+        self._offrates_by_rarity = {rarity: [] for rarity in drop_weights.keys()}
+        for itm in offrates:
+            if itm.RARITY in self._offrates_by_rarity:
+                self._offrates_by_rarity[itm.RARITY].append(itm)
 
     def get_pulls_results(self, pull_count: int):
         pull_results = []
@@ -59,11 +70,29 @@ class Banner():
     def get_rates_text(self):
         text = f"### Pulls cost: {self.pull_cost} {CURRENCY_EMOJI}\n"
 
-        text += "### Items\n"
+        text += "### Guarantees:\n"
+        if len(self.pities) > 0:
+            for rarity, pulls in self.pities.items():
+                text += f"- Guaranteed to get a **{rarity}⭐️ item** every **{pulls} pulls**\n"
+        else:
+            text += "*No guarantees*\n"
+
+        text += "### Uprate items\n"
 
         for r, i in self._items_by_rarity.items():
             itms = ", ".join([itm.DISPLAY_NAME for itm in i])
-            text += f"- {r}⭐ items: **{itms}**\n"
+            if len(itms) > 0:
+                text += f"- {r}⭐ items: **{itms}**\n"
+
+        if self.fiftyfifty:
+            text += "### Offrate items\n"
+
+            for r, i in self._offrates_by_rarity.items():
+                itms = ", ".join([itm.DISPLAY_NAME for itm in i])
+                if len(itms) > 0:
+                    text += f"- {r}⭐ items: **{itms}**\n"
+
+            text += "### 50/50\nEverytime you get a 4⭐️ or 5⭐️, there's a 50% chance to get an uprate item, and a 50% chance to get an offrate item.\n"
 
         text += "### Drop rates\n"
 
@@ -78,24 +107,31 @@ class Banner():
 
 class Data:
 
+    FOUR_STAR_GATOS = [g for g in GATOS if g.RARITY == 4]
+    SIX_STAR_GATOS = [g for g in GATOS if g.RARITY == 6]
+    PERMANENT_FIVE_STARS = [
+        ExampleGato
+    ]
+    ALL_ITEMS = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS
+    THREE_STARS = [i for i in ALL_ITEMS if i.RARITY == 3]
+
     banners = [
         Banner(
             name="Lunar New Year Banner",
-            img="https://media.discordapp.net/attachments/1106791361157541898/1193230143217479690/chloe_banner_6.png",
-            colour=0x669D96,
+            img="https://media.discordapp.net/attachments/1174877208377036884/1195010321820176525/critter_banner_mockups_2.png",
+            colour=0x8ac7a4,
             pull_cost=1000,
+            fiftyfifty=True,
+            pities={
+                4: 10,
+                5: 90
+            },
             items=[
-                SwedeGato,
                 LNYGato,
-                ExampleGato,
-                SeeleGato,
-                HertaGato,
-                QingqueGato,
-                NormalGato,
-                MedkitConsumable,
-                RedPacketConsumable,
-                TrashConsumable
-            ],
+                FuxuanGato,
+                QingqueGato
+            ]+SIX_STAR_GATOS+THREE_STARS,
+            offrates=FOUR_STAR_GATOS+PERMANENT_FIVE_STARS,
             drop_weights={
                 6: 1,
                 5: 12,
@@ -105,20 +141,10 @@ class Data:
         ),
         Banner(
             name="Permanent Banner",
-            img="https://media.discordapp.net/attachments/1106791361157541898/1193230143729188986/xiao_banner_2.png",
-            colour=0xA83319,
+            img="https://media.discordapp.net/attachments/1174877208377036884/1195380679664467988/critter_banner_mockups_4.png",
+            colour=0x6a9b98,
             pull_cost=1000,
-            items=[
-                SwedeGato,
-                ExampleGato,
-                SeeleGato,
-                HertaGato,
-                QingqueGato,
-                NormalGato,
-                MedkitConsumable,
-                RedPacketConsumable,
-                TrashConsumable
-            ],
+            items=SIX_STAR_GATOS+PERMANENT_FIVE_STARS+FOUR_STAR_GATOS+THREE_STARS,
             drop_weights={
                 6: 1,
                 5: 12,
