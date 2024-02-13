@@ -65,6 +65,7 @@ class Player:
     transactions: Transactions
     
     command_channel: int
+    user_id: int
 
     currency: float = 0
     inventory: list
@@ -92,7 +93,8 @@ class Player:
             "pulls_status": self.pulls_status.to_json(),
             "deployed_team": self.deployed_team.to_json(),
             "transactions": self.transactions,
-            "command_channel": self.command_channel
+            "command_channel": self.command_channel,
+            "user_id": self.user_id
         }
 
     @classmethod

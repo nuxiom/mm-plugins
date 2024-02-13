@@ -457,7 +457,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     def create_player(self, player_id):
 
         if player_id not in self.players:
-            p = player.Player()
+            p = player.Player(user_id=player_id)
             gato3s = gatos.NormalGato()
             p.nursery.append(gato3s)
             self.players[player_id] = p
@@ -488,9 +488,10 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                     channel = self.bot.get_channel(p.command_channel)
                     embed = discord.Embed(
                         title="Critter expedition",
-                        description="**One of your critter has low HP.**\n\nYou can check their status using `/critter team`.\nYou should probably heal them or recall the team using `/critter recall`."
+                        description="**One of your critter has low HP.**\n\nYou can check their status using `/critter team`.\nYou should probably heal them or recall the team using `/critter recall`.",
+                        colour=discord.Colour.red()
                     )
-                    await channel.send()
+                    await channel.send(content=f"<@{p.user_id}>", embed=embed)
                     tm.pinged_already = True
                 else:
                     tm.pinged_already = False
