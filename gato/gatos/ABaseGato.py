@@ -220,7 +220,7 @@ class ABaseGato(ABaseItem):
     def get_gato_embed(self):
         description = f"# {self.name}\n"
         description += f"## {self.DISPLAY_NAME}\n"
-        description += f"{self.__doc__.format(self.eidolon)}\n" + \
+        description += f"{self.__doc__.format(eidolon=self.eidolon)}\n" + \
             f"**Health:** {round(self.health)} / {round(self.max_health)}\n" + \
             f"**Hunger:** {round(self.hunger)} / {round(self.max_hunger)}\n" + \
             f"**Mood:** {round(self.mood)} / {round(self.max_mood)}\n" + \
