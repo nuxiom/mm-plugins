@@ -8,23 +8,34 @@ importlib.reload(team)
 
 class PullsStatus:
 
-    limited_5s_pity: int = 0
-    limited_4s_pity: int = 0
-    limited_5050: bool = True
-    permanent_5s_pity: int = 0
-    permanent_4s_pity: int = 0
+    pities: dict[str, dict[int, int]]
+    fiftyfifties: dict[str, dict[int, bool]]
 
     def __init__(self, **kwargs) -> None:
+        self.pities = {
+            "limited": {
+                5: 0,
+                4: 0
+            },
+            "permanent": {
+                5: 0,
+                4: 0
+            }
+        }
+        self.fiftyfifties = {
+            "limited": {
+                5: True,
+                4: True
+            }
+        }
+
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     def to_json(self):
         return {
-            "limited_5s_pity": self.limited_5s_pity,
-            "limited_4s_pity": self.limited_4s_pity,
-            "limited_5050": self.limited_5050,
-            "permanent_5s_pity": self.permanent_5s_pity,
-            "permanent_4s_pity": self.permanent_4s_pity
+            "pities": self.pities,
+            "fiftyfifties": self.fiftyfifties
         }
 
     @classmethod

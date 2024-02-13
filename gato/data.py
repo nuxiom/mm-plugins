@@ -26,13 +26,15 @@ class Banner():
 
     fiftyfifty: bool
     pities: dict[int, int]
+    tag: str
 
     _cumulative_weights = []
     _items_by_rarity: dict[int, list[Item]] = {}
     _offrates_by_rarity: dict[int, list[Item]] = {}
 
-    def __init__(self, name: str, img: str, colour: int, pull_cost: int, items: list[Item], offrates: list[Item] = [], drop_weights: dict = {}, fiftyfifty: bool = False, pities: dict = {}):
+    def __init__(self, name: str, tag: str, img: str, colour: int, pull_cost: int, items: list[Item], offrates: list[Item] = [], drop_weights: dict = {}, fiftyfifty: bool = False, pities: dict = {}):
         self.name = name
+        self.tag = tag
         self.img = img
         self.colour = colour
         self.pull_cost = pull_cost
@@ -55,14 +57,35 @@ class Banner():
             if itm.RARITY in self._offrates_by_rarity:
                 self._offrates_by_rarity[itm.RARITY].append(itm)
 
-    def get_pulls_results(self, pull_count: int):
+    def get_pulls_results(self, pull_count: int, player):
         pull_results = []
         for _ in range(pull_count):
             rnd = random.randint(0, self._cumulative_weights[-1] - 1)
             for i in range(len(self._cumulative_weights)):
                 if rnd < self._cumulative_weights[i]:
                     rarity = list(self.drop_weights.keys())[i]
-                    item = random.choice(self._items_by_rarity[rarity])
+                    for r in sorted(player.pulls_status.pities[self.tag].keys()):
+                        if player.pulls_status.pities[self.tag][r] == self.pities[r] - 1:
+                            rarity = r
+                    for r in player.pulls_status.pities[self.tag]:
+                        if rarity == r:
+                            player.pulls_status.pities[self.tag][r] = 0
+                        else:
+                            player.pulls_status.pities[self.tag][r] += 1
+
+                    if self.fiftyfifty and len(self._offrates_by_rarity[rarity]) > 0:
+                        if player.pulls_status.fiftyfifties[self.tag][rarity]:
+                            win = (random.random() > 0.5)
+                        else:
+                            win = True
+                        if win:
+                            item = random.choice(self._items_by_rarity[rarity])
+                            player.pulls_status.fiftyfifties[self.tag][rarity] = True
+                        else:
+                            item = random.choice(self._offrates_by_rarity[rarity])
+                            player.pulls_status.fiftyfifties[self.tag][rarity] = False
+                    else:
+                        item = random.choice(self._items_by_rarity[rarity])
                     pull_results.append(item)
                     break
         return pull_results
@@ -118,6 +141,7 @@ class Data:
     banners = [
         Banner(
             name="Lunar New Year Banner",
+            tag="limited",
             img="https://media.discordapp.net/attachments/1174877208377036884/1195010321820176525/critter_banner_mockups_2.png",
             colour=0x8ac7a4,
             pull_cost=1000,
@@ -141,6 +165,7 @@ class Data:
         ),
         Banner(
             name="Permanent Banner",
+            tag="permanent",
             img="https://media.discordapp.net/attachments/1174877208377036884/1195380679664467988/critter_banner_mockups_4.png",
             colour=0x6a9b98,
             pull_cost=1000,

@@ -237,6 +237,8 @@ class BannersView(discord.ui.View):
 
     async def start_pulls(self, interaction: discord.Interaction, pull_count: int):
         player_id = interaction.user.id
+        player = self.gato_game.players[player_id]
+
         ongoing_pulls = self.gato_game.players[player_id]._pull_view
         if ongoing_pulls is not None and ongoing_pulls.ongoing:
             description = f"You already have an ongoing pull, please be patient!"
@@ -251,10 +253,9 @@ class BannersView(discord.ui.View):
         anims_lists = []
         anims_lists = []
         bann = self.banners[self.current_banner]
-        pull_results = bann.get_pulls_results(pull_count)
+        pull_results = bann.get_pulls_results(pull_count, player)
         max_rarity = max(itm.RARITY for itm in pull_results)
 
-        player = self.gato_game.players[player_id]
         nursery = player.nursery
 
         player.transactions.currency -= pull_count * bann.pull_cost
@@ -952,6 +953,27 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             dct = player.transactions.to_json()
             dct["add_items"] = dct["add_items"][-20:]
             dct["rm_items"] = dct["rm_items"][-20:]
+            await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
+        else:
+            await ctx.send(content="❌ This player isn't in our records")
+
+
+    @app_commands.command(
+        name="pullstatus",
+        description="Debug command to see 50/50 and pities",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def pullstatus(self, interaction: discord.Interaction, member: discord.Member = None):
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        if member is None:
+            member = ctx.author
+
+        if member.id in self.players:
+            player = self.players[member.id]
+            dct = player.pulls_status.to_json()
             await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
         else:
             await ctx.send(content="❌ This player isn't in our records")
