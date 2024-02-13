@@ -484,6 +484,16 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                     for gato in tm.gatos:
                         gato.simulate(tm.gatos, TIME_STEP)
 
+                if any(gato.health < 10 for gato in tm.gatos) and not tm.pinged_already:
+                    channel = self.bot.get_channel(p.command_channel)
+                    embed = discord.Embed(
+                        title="Critter expedition",
+                        description="**One of your critter has low HP.**\n\nYou can check their status using `/critter team`.\nYou should probably heal them or recall the team using `/critter recall`."
+                    )
+                    await channel.send()
+                    tm.pinged_already = True
+                else:
+                    tm.pinged_already = False
                 tm.deployed_at = datetime.now()
 
 
@@ -590,6 +600,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         nursery = player.nursery
         gatos = [critter1, critter2, critter3, critter4]
 
+        player.command_channel = ctx.channel.id
+
         if all([gato is None for gato in gatos]):
             if player.deployed_team is not None:
                 tm = player.deployed_team
@@ -672,6 +684,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             ctx = await commands.Context.from_interaction(interaction)
 
             player = self.players[ctx.author.id]
+            player.command_channel = ctx.channel.id
+
             if player.deployed_team is None or player.deployed_team.deployed_at is None:
                 embed = discord.Embed(
                     title=f"Claim rewards",
