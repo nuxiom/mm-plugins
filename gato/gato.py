@@ -485,13 +485,14 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                         gato.simulate(tm.gatos, TIME_STEP)
 
                 if any(gato.health < 10 for gato in tm.gatos):
-                    if not tm.pinged_already:
+                    if not tm.pinged_already and p.ping:
                         channel = self.bot.get_channel(p.command_channel)
                         embed = discord.Embed(
                             title="Critter expedition",
                             description="**One of your critter has low HP.**\n\nYou can check their status using `/critter team`.\nYou should probably heal them or recall the team using `/critter recall`.",
                             colour=discord.Colour.red()
                         )
+                        embed.set_footer(text="If you want to opt out of these pings, use `/critter lifealert`")
                         await channel.send(content=f"<@{p.user_id}>", embed=embed)
                         tm.pinged_already = True
                 else:
@@ -877,6 +878,33 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             colour=discord.Colour.teal()
         )
         await ctx.send(embed=embed)
+
+
+    @app_commands.command(
+        name="lifealert",
+        description="Opt in/out of low HP pings",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def lifealert(self, interaction: discord.Interaction, enabled: bool):
+        """Opt in/out of low HP pings"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        player = self.players[ctx.author.id]
+        player.ping = enabled
+
+        if enabled:
+            description = "Ping on low HP have been enabled"
+        else:
+            description = "Ping on low HP have been disabled. You can always enable them back with `/critter lifealert`"
+
+        embed = discord.Embed(
+            title="Low HP pings",
+            description=description,
+            colour=discord.Colour.teal()
+        )
+        await ctx.send(embed=embed, ephemeral=True)
 
 
     @app_commands.command(

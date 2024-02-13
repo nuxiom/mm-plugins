@@ -65,6 +65,7 @@ class Player:
     transactions: Transactions
     
     command_channel: int
+    ping: bool
     user_id: int
 
     currency: float = 0
@@ -79,6 +80,7 @@ class Player:
         self.deployed_team = None
         self.transactions = Transactions()
         self.command_channel = None
+        self.ping = True
 
         self._pull_view = None
         self.inventory = []
@@ -94,7 +96,8 @@ class Player:
             "deployed_team": self.deployed_team.to_json(),
             "transactions": self.transactions,
             "command_channel": self.command_channel,
-            "user_id": self.user_id
+            "user_id": self.user_id,
+            "ping": self.ping
         }
 
     @classmethod
