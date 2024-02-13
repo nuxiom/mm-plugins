@@ -484,15 +484,16 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                     for gato in tm.gatos:
                         gato.simulate(tm.gatos, TIME_STEP)
 
-                if any(gato.health < 10 for gato in tm.gatos) and not tm.pinged_already:
-                    channel = self.bot.get_channel(p.command_channel)
-                    embed = discord.Embed(
-                        title="Critter expedition",
-                        description="**One of your critter has low HP.**\n\nYou can check their status using `/critter team`.\nYou should probably heal them or recall the team using `/critter recall`.",
-                        colour=discord.Colour.red()
-                    )
-                    await channel.send(content=f"<@{p.user_id}>", embed=embed)
-                    tm.pinged_already = True
+                if any(gato.health < 10 for gato in tm.gatos):
+                    if not tm.pinged_already:
+                        channel = self.bot.get_channel(p.command_channel)
+                        embed = discord.Embed(
+                            title="Critter expedition",
+                            description="**One of your critter has low HP.**\n\nYou can check their status using `/critter team`.\nYou should probably heal them or recall the team using `/critter recall`.",
+                            colour=discord.Colour.red()
+                        )
+                        await channel.send(content=f"<@{p.user_id}>", embed=embed)
+                        tm.pinged_already = True
                 else:
                     tm.pinged_already = False
                 tm.deployed_at = datetime.now()
