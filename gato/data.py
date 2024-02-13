@@ -169,6 +169,10 @@ class Data:
             img="https://media.discordapp.net/attachments/1174877208377036884/1195380679664467988/critter_banner_mockups_4.png",
             colour=0x6a9b98,
             pull_cost=1000,
+            pities={
+                4: 10,
+                5: 90
+            },
             items=SIX_STAR_GATOS+PERMANENT_FIVE_STARS+FOUR_STAR_GATOS+THREE_STARS,
             drop_weights={
                 6: 1,
