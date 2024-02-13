@@ -290,20 +290,24 @@ class BannersView(discord.ui.View):
                 player.transactions.add_items.append(f"gatos.{item.__name__}")
                 result_lines.append(f"- {item.DISPLAY_NAME}")
 
-        for i, gato in enumerate(pull_results):
-            anim_name: str
-            if i == 0:
-                anim_name = f"train{max_rarity}"
-            else:
-                anim_name = "solo"
-            
-            anims_lists.append({
-                "anim": data.Data.animations[gato.ANIMATIONS][anim_name]["url"],
-                "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
-                "static": data.Data.animations[gato.ANIMATIONS]["static"]["url"],
-                "duration": data.Data.animations[gato.ANIMATIONS][anim_name]["duration"],
-                "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
-            })
+        try:
+            for i, gato in enumerate(pull_results):
+                anim_name: str
+                if i == 0:
+                    anim_name = f"train{max_rarity}"
+                else:
+                    anim_name = "solo"
+                
+                anims_lists.append({
+                    "anim": data.Data.animations[gato.ANIMATIONS][anim_name]["url"],
+                    "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
+                    "static": data.Data.animations[gato.ANIMATIONS]["static"]["url"],
+                    "duration": data.Data.animations[gato.ANIMATIONS][anim_name]["duration"],
+                    "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
+                })
+        except Exception as e:
+            print(e)
+            return
 
         pv = PullView(self.ctx, interaction.user, anims_lists, pull_results, result_lines, bann, self.gato_game)
         player._pull_view = pv
