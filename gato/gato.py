@@ -4,391 +4,1000 @@ import json
 import os
 import random
 import sys
+import uuid
 from datetime import datetime, timedelta
-from functools import reduce
+from functools import reduce, wraps
 
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 from core import checks
 from core.models import PermissionLevel
+from core.paginator import EmbedPaginatorSession
 
 sys.path.append(os.path.dirname(__file__))
+import player
+importlib.reload(player)
 import gatos
 importlib.reload(gatos)
 import team
 importlib.reload(team)
+import data
+importlib.reload(data)
 
 
+COG_NAME = "GatoGame"
 DIR = os.path.dirname(__file__)
 SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 CURRENCY_NAME = "Plum Blossom"
 CURRENCY_EMOJI = "🌸"
 
 
-class GatoGame(commands.Cog):
-    """Gato gacha game plugin"""
+class PullView(discord.ui.View):
+
+    frames: list[dict] = []
+    current_frame: int = 0
+    title: str
+    results: list[gatos.Gato]
+    result_lines: list[str]
+    banner: data.Banner
+    gato_game: "GatoGame"
+
+    channel: discord.TextChannel
+    ctx: commands.Context
+    author: discord.User
+    message: discord.Message
+    ongoing: bool = True
+    skipped_yet: bool = False
+
+    def __init__(self, ctx: commands.Context, author: discord.User, anims: list[dict], results: list[gatos.Gato], result_lines: list[str], banner: data.Banner, gato_game: "GatoGame"):
+        super().__init__()
+        self.frames = anims
+        self.ctx = ctx
+        self.channel = ctx.channel
+        self.author = author
+        self.title = f"{self.author.display_name}'s pull"
+        self.results = results
+        self.result_lines = result_lines
+        self.banner = banner
+        self.gato_game = gato_game
+
+    async def handle_frame(self, frame: int, skipping=False):
+        if skipping:
+            self.skipped_yet = True
+
+        if frame == len(self.frames):
+            self.ongoing = False
+            self.stop()
+            description="\n".join(self.result_lines)
+            pull_again_view = PullAgainView(self.ctx, self.message, self.banner, self.gato_game)
+            await pull_again_view.refresh_buttons()
+            if len(self.frames) == 1:
+                embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
+                if skipping:
+                    embed.set_image(url=self.frames[0]["solo"])
+                    await self.message.edit(embed=embed, view=pull_again_view)
+                    await asyncio.sleep(self.frames[0]["solo_duration"] + 2)
+                    embed.description = description
+                    embed.set_image(url=self.frames[0]["static"])
+                    await self.message.edit(embed=embed)
+                else:
+                    embed.description = description
+                    embed.set_image(url=self.frames[0]["static"])
+                    await self.message.edit(embed=embed, view=pull_again_view)
+            else:
+                ls = "- " + "\n- ".join([itm.DISPLAY_NAME for itm in self.results])
+                embed = discord.Embed(title=self.title, colour=discord.Colour.teal(), description=description)
+                await self.message.edit(embed=embed, view=pull_again_view)
+        else:
+            embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
+            if skipping:
+                embed.set_image(url=self.frames[frame]["static"])
+                await self.message.edit(embed=embed, view=self)
+            else:
+                embed.set_image(url=self.frames[frame]["anim"])
+                await self.message.edit(embed=embed, view=self)
+                await asyncio.sleep(self.frames[frame]["duration"] + 3)
+                self.skipped_yet = True
+                if self.current_frame == frame:
+                    if len(self.frames) == 1:
+                        await self.handle_frame(1)
+                    else:
+                        embed.set_image(url=self.frames[frame]["static"])
+                        await self.message.edit(embed=embed, view=self)
+
+    async def first_frame(self):
+        self.message = await self.channel.send(self.author.mention)
+        await self.handle_frame(0, skipping=False)
+
+    async def on_timeout(self):
+        await self.handle_frame(len(self.frames))
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="▶️")
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Next item."""
+        if interaction.user.id != self.author.id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person pulling can interact.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        if not self.skipped_yet:
+            if len(self.frames) == 1:
+                self.current_frame += 1
+            await self.handle_frame(self.current_frame, skipping=True)
+        else:
+            self.current_frame += 1
+            await self.handle_frame(self.current_frame)
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, emoji="⏩")
+    async def skip(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Skip pulls to result."""
+        if interaction.user.id != self.author.id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person pulling can interact.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        self.current_frame = len(self.frames)
+        await self.handle_frame(self.current_frame, skipping=True)
+
+
+class PullAgainView(discord.ui.View):
+
+    banner: data.Banner
+
+    message: discord.Message
+    banners_view: "BannersView"
+
+    def __init__(self, ctx: commands.Context, message: discord.Message, banner: data.Banner, gato_game):
+        super().__init__()
+        self.banner = banner
+        self.banners_view = BannersView(ctx, [banner], None, gato_game)
+        self.message = message
+
+    async def on_timeout(self) -> None:
+        self.stop()
+        await self.message.edit(view=None)
+
+    async def refresh_buttons(self):
+        pull_cost = self.banner.pull_cost
+        btn: discord.ui.Button
+        for btn in self.children:
+            if btn.custom_id == "1pull":
+                btn.label = f"{pull_cost} - Pull 1"
+            elif btn.custom_id == "10pull":
+                btn.label = f"{pull_cost*10} - Pull 10"
+        await self.message.edit(view=self)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="1pull", label="... - Pull 1", emoji="🌸")
+    async def single(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        await self.banners_view.start_pulls(interaction, 1)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="10pull", label="... - Pull 10", emoji="🌸")
+    async def multi(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        await self.banners_view.start_pulls(interaction, 10)
+
+
+class BannersView(discord.ui.View):
+
+    banners: list[data.Banner]
+    current_banner: int
+    gato_game: "GatoGame"
+    
+    author_id: int
+    ctx: commands.Context
+    message: discord.Message
+
+    def __init__(self, ctx: commands.Context, banners: list[data.Banner], message: discord.Message, gato_game: "GatoGame"):
+        super().__init__()
+        self.banners = banners
+        self.current_banner = 0
+        self.message = message
+        self.ctx = ctx
+        self.author_id = ctx.author.id
+        self.gato_game = gato_game
+
+    async def refresh_embed(self):
+        desc = " | ".join([
+            bann.name if i != self.current_banner else f"**{bann.name}**" for i, bann in enumerate(self.banners)
+        ])
+        embed = discord.Embed(
+            title="Gacha banners",
+            description=desc,
+            colour=self.banners[self.current_banner].colour
+        )
+        embed.set_image(url=self.banners[self.current_banner].img)
+        await self.message.edit(content="", embed=embed)
+
+    async def on_timeout(self) -> None:
+        self.stop()
+        embed = discord.Embed(
+            title="Gacha banners",
+            description="This view has expired. Use `/critter pull` to show one again!"
+        )
+        await self.message.edit(embed=embed, view=None)
+
+    async def refresh_buttons(self):
+        pull_cost = self.banners[self.current_banner].pull_cost
+        btn: discord.ui.Button
+        for btn in self.children:
+            if btn.custom_id == "1pull":
+                btn.label = f"{pull_cost} - Pull 1"
+            elif btn.custom_id == "10pull":
+                btn.label = f"{pull_cost*10} - Pull 10"
+            elif btn.custom_id == "left":
+                btn.disabled = True if self.current_banner == 0 else False
+            elif btn.custom_id == "right":
+                btn.disabled = True if self.current_banner+1 == len(self.banners) else False
+        await self.message.edit(view=self)
+
+    async def start_pulls(self, interaction: discord.Interaction, pull_count: int):
+        player_id = interaction.user.id
+        player = self.gato_game.players[player_id]
+
+        ongoing_pulls = self.gato_game.players[player_id]._pull_view
+        if ongoing_pulls is not None and ongoing_pulls.ongoing:
+            description = f"You already have an ongoing pull, please be patient!"
+            embed = discord.Embed(
+                title="Error",
+                description=description.strip(),
+                colour=discord.Colour.red()
+            )
+            await self.ctx.send(embed=embed)
+            return
+
+        anims_lists = []
+        anims_lists = []
+        bann = self.banners[self.current_banner]
+        try:
+            pull_results = bann.get_pulls_results(pull_count, player)
+        except Exception as e:
+            print(e)
+            return
+        max_rarity = max(itm.RARITY for itm in pull_results)
+
+        nursery = player.nursery
+
+        player.transactions.currency -= pull_count * bann.pull_cost
+
+        result_lines = []
+        item: gatos.Item
+        for item in pull_results:
+            if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.GATO):
+                gato: gatos.Gato = item
+                thegato: gatos.Gato = None
+                for g in nursery:
+                    if isinstance(g, gato):
+                        thegato = g
+                if thegato is None:
+                    thegato = gato(name=f"{interaction.user.name}'s {gato.DISPLAY_NAME}")
+                    nursery.append(thegato)
+                    result_lines.append(f"- **{gato.DISPLAY_NAME}** obtained!")
+                elif thegato.eidolon < 6:
+                    thegato.set_eidolon(thegato.eidolon + 1)
+                    result_lines.append(f"- **{thegato.name}**'s eidolon level increased to **E{thegato.eidolon}**!")
+                else:
+                    cpr = {
+                        6: 10*bann.pull_cost,
+                        5: 5*bann.pull_cost,
+                        4: 1*bann.pull_cost,
+                        3: bann.pull_cost//2
+                    }
+                    money = cpr[thegato.RARITY]
+                    player.transactions.currency += money
+                    result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
+            else:
+                player.transactions.add_items.append(f"gatos.{item.__name__}")
+                result_lines.append(f"- {item.DISPLAY_NAME}")
+
+        try:
+            for i, gato in enumerate(pull_results):
+                anim_name: str
+                if i == 0:
+                    anim_name = f"train{max_rarity}"
+                else:
+                    anim_name = "solo"
+                
+                anims_lists.append({
+                    "anim": data.Data.animations[gato.ANIMATIONS][anim_name]["url"],
+                    "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
+                    "static": data.Data.animations[gato.ANIMATIONS]["static"]["url"],
+                    "duration": data.Data.animations[gato.ANIMATIONS][anim_name]["duration"],
+                    "solo_duration": data.Data.animations[gato.ANIMATIONS]["solo"]["duration"],
+                })
+        except Exception as e:
+            print(e)
+            return
+
+        pv = PullView(self.ctx, interaction.user, anims_lists, pull_results, result_lines, bann, self.gato_game)
+        player._pull_view = pv
+        await pv.first_frame()
+
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, custom_id="left", emoji="⬅️")
+    async def left(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author_id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person who did the command can interact with this.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        self.current_banner -= 1
+        if self.current_banner < 0:
+            self.current_banner = 0
+        await self.refresh_buttons()
+        await self.refresh_embed()
+
+    @discord.ui.button(style=discord.ButtonStyle.gray, label="Details", emoji="📄")
+    async def details(self, interaction: discord.Interaction, button: discord.ui.Button):
+        bann = self.banners[self.current_banner]
+        embed = discord.Embed(
+            title=f"{bann.name} - Details",
+            description=bann.get_rates_text(),
+            colour=bann.colour
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="1pull", label="... - Pull 1", emoji="🌸")
+    async def single(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        await self.start_pulls(interaction, 1)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, custom_id="10pull", label="... - Pull 10", emoji="🌸")
+    async def multi(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer()
+        await self.start_pulls(interaction, 10)
+
+    @discord.ui.button(style=discord.ButtonStyle.blurple, custom_id="right", emoji="➡️")
+    async def right(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author_id:
+            embed = discord.Embed(colour=discord.Colour.red(), description="Only the person who did the command can interact with this.")
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        self.current_banner += 1
+        if self.current_banner >= len(self.banners):
+            self.current_banner = len(self.banners) - 1
+        await self.refresh_buttons()
+        await self.refresh_embed()
+
+
+def init_nursery(function):
+    """Decorator that creates a nursery for the player if they don't already have one, with a 3-star gato in it."""
+    @wraps(function)
+    async def new_function(self: "GatoGame", interaction: discord.Interaction, *args, **kwargs):
+        self.create_player(interaction.user.id)
+        return await function(self, interaction, *args, **kwargs)
+
+    return new_function
+
+
+@app_commands.guilds(
+    311149232402726912,
+    1106785082028597258
+)
+class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
+    """Critter gacha game plugin"""
 
     def __init__(self, bot):
         self.bot = bot
+        self.cog_id = uuid.uuid4()
         self.footer = ""  # TODO: REPLACE ME
 
-        self.nurseries: dict[int, list[gatos.Gato]] = {
-            200282032771694593: [gatos.ExampleGato(name="Cyxo's critter")]
-        }
+        self.bot.loop.create_task(self.schedule_simulation())
 
-        self.teams: dict[int, team.Team] = {}
+        self.players: dict[int, player.Player] = {}
 
 
-    @commands.group(invoke_without_command=True)
-    async def gato(self, ctx: commands.Context):
+    @init_nursery
+    async def nursery_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        choices = []
+
+        player = self.players[interaction.user.id]
+        for i, gato in enumerate(player.nursery):
+            if current.lower() in gato.name.lower() or current.lower() in gato.DISPLAY_NAME.lower() or str(i).startswith(current):
+                choices.append(app_commands.Choice(name=f"{gato.name} ({gato.DISPLAY_NAME})", value=i+1))
+
+        return choices
+
+    @init_nursery
+    async def consumables_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        choices = []
+
+        player = self.players[interaction.user.id]
+        
+        # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
+
+        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME)
+                for itm in gatos.CONSUMABLES
+                if current.lower() in itm.DISPLAY_NAME.lower()]
+
+
+    @init_nursery
+    async def equipments_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        choices = []
+
+        player = self.players[interaction.user.id]
+        
+        # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
+
+        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME)
+                   for itm in gatos.EQUIPMENTS
+                   if current.lower() in itm.DISPLAY_NAME.lower()]
+        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.DISPLAY_NAME)
+                    for itm in gatos.TEAM_EQUIPMENTS
+                    if current.lower() in itm.DISPLAY_NAME.lower()]
+        return choices
+
+
+    async def anything_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        try:
+            all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
+            return [app_commands.Choice(name=itm.DISPLAY_NAME, value=i)
+                    for i, itm in enumerate(all_items)
+                    if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
+        except Exception as e:
+            print(e)
+
+
+    @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
+    async def critter(self, ctx: commands.Context):
         """
-        Ruan Mei Mains' gato gacha game!
+        Ruan Mei Mains' critter gacha game!
         """
 
         await ctx.send_help(ctx.command)
 
 
-    def handle_events(self, user_id: int, team: list[gatos.Gato]):
-        description = ""
+    def handle_events(self, plyr: player.Player, team: list[gatos.Gato]):
+        lines = []
 
         for gato in team:
-            events_by_type = {}
-            for event in gato._events:
-                et = list(event.keys())[0]
-                if et not in events_by_type:
-                    events_by_type[et] = []
-                events_by_type[et].append(event[et])
+            lines += gato.handle_events(plyr, CURRENCY_EMOJI)
 
-            for et, value in events_by_type.items():
-                description += f"- **{gato.name}** "
-
-                args = {}
-                if et == "bitten":
-                    args["amount"] = 0
-                    for _ in value:
-                        rnd = random.randint(10, 50)
-                        args["amount"] += rnd
-                    args["currency"] = CURRENCY_EMOJI
-                    args["count"] = len(value)
-
-                description += gato.EVENT_DESCRIPTIONS[et].format(**args)
-                description += "\n"
-
-        return description
+        return "\n".join(lines)
 
 
-    @gato.command(name="pull")
-    async def pull(self, ctx: commands.Context, *, gato_name: str = None):
-        """ Pull for a random Gato. You can specify a name to give it if it's a gato type you don't own yet. """
+    def create_player(self, player_id):
 
-        if ctx.author.id not in self.nurseries:
-            self.nurseries[ctx.author.id] = []
+        if player_id not in self.players:
+            p = player.Player(user_id=player_id)
+            gato3s = gatos.NormalGato()
+            p.nursery.append(gato3s)
+            self.players[player_id] = p
 
-        nursery = self.nurseries[ctx.author.id]
 
-        pulled = random.choice(["ExampleGato", "NormalGato"])
-
-        gato: gatos.Gato = None
-        for cat in nursery:
-            if cat.__class__.__name__ == pulled:
-                gato = cat
+    async def schedule_simulation(self):
+        while True:
+            cog: Currency = self.bot.get_cog(COG_NAME)
+            if cog is None or cog.cog_id != self.cog_id:
+                # We are in an old cog after update and don't have to send QOTD anymore
                 break
+            sleep = 10
+            await asyncio.sleep(sleep)
 
-        if gato is None:
-            if gato_name is None:
-                gato_name = f"{ctx.author.name}'s {pulled}"
+            for p in self.players.values():
+                if p.deployed_team is None or p.deployed_team.deployed_at is None:
+                    continue
+                tm = p.deployed_team
+                TIME_STEP = 1
+                now = datetime.now()
+                delta = int((now - tm.deployed_at).total_seconds())
+                for _ in range(0, delta, TIME_STEP):
+                    if all(gato._fainted for gato in tm.gatos):
+                        break
 
-            gato = eval(f"gatos.{pulled}")(name=gato_name)
-            nursery.append(gato)
+                    for gato in tm.gatos:
+                        gato.simulate(tm.gatos, TIME_STEP)
+
+                if any(gato.health < 10 for gato in tm.gatos):
+                    if not tm.pinged_already and p.ping:
+                        channel = self.bot.get_channel(p.command_channel)
+                        embed = discord.Embed(
+                            title="Critter expedition",
+                            description="**One of your critter has low HP.**\n\nYou can check their status using `/critter team`.\nYou should probably heal them or recall the team using `/critter recall`.",
+                            colour=discord.Colour.red()
+                        )
+                        embed.set_footer(text="If you want to opt out of these pings, use `/critter lifealert`")
+                        await channel.send(content=f"<@{p.user_id}>", embed=embed)
+                        tm.pinged_already = True
+                else:
+                    tm.pinged_already = False
+                tm.deployed_at = now
+
+
+    @app_commands.command(
+        name="pull",
+        description="List banners and allow to pull on them",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def banners(self, interaction: discord.Interaction):
+        """List banners and allow to pull on them"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        message = await ctx.send("Loading...")
+
+        bv = BannersView(ctx, data.Data.banners, message, self)
+        await bv.refresh_buttons()
+        await bv.refresh_embed()
+
+
+    @app_commands.command(
+        name="nursery",
+        description="Show your critter nursery",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def nursery(self, interaction: discord.Interaction):
+        """ Show your critter nursery """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        player = self.players[ctx.author.id]
+
+        embeds = [g.get_gato_embed() for g in player.nursery]
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        await paginator.run()
+
+
+    @app_commands.command(
+        name="team",
+        description="Show your deployed team",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def team(self, interaction: discord.Interaction):
+        """ Show your deployed team """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        player = self.players[ctx.author.id]
+        if player.deployed_team is None or player.deployed_team.deployed_at is None:
             embed = discord.Embed(
-                title="Pull",
-                colour=discord.Colour.teal(),
-                description=f"{ctx.author.mention} you just obtained a **{pulled}** named **{gato_name}** !!"
-            )
-            await ctx.send(embed=embed)
-        elif gato.eidolon < 6:
-            gato.eidolon += 1
-            embed = discord.Embed(
-                title="Pull",
-                colour=discord.Colour.gold(),
-                description=f"{ctx.author.mention} you just obtained a **{pulled}** !! **{gato.name}**'s Eidolon level increased to **{gato.eidolon}**!"
-            )
-            await ctx.send(embed=embed)
-        else:
-            embed = discord.Embed(
-                title="Pull",
-                colour=discord.Colour.teal(),
-                description=f"{ctx.author.mention} your **{gato.name}** is already at Eidolon level 6! You got **666** {CURRENCY_EMOJI} as a compensation!"
-            )
-            await ctx.send(embed=embed)
-
-
-    @gato.command(name="nursery")
-    async def nursery(self, ctx: commands.Context):
-        """ Show your Gato nursery. """
-
-        description = ""
-        colour = discord.Colour.teal()
-        if ctx.author.id in self.nurseries and len(self.nurseries[ctx.author.id]) > 0:
-            for i, gato in enumerate(self.nurseries[ctx.author.id]):
-                description += f"{i+1}. **{gato.name}**: {gato.__class__.__name__} *(✨ E{gato.eidolon})*\n"
-        else:
-            description = "You have no gatos silly goose ! Use `?gato pull (name of the gato)`"
-            colour = discord.Colour.red()
-
-        embed = discord.Embed(
-            title=f"{ctx.author.display_name}'s nursery",
-            description=description,
-            colour=colour
-        )
-        await ctx.send(embed=embed)
-
-
-    @gato.command(name="info")
-    async def info(self, ctx: commands.Context, number: int):
-        """ Show info about a Gato from your nursery. """
-
-        if ctx.author.id in self.nurseries or len(self.nurseries[ctx.author.id]) == 0:
-            nursery = self.nurseries[ctx.author.id]
-            number -= 1
-
-            if number < 0 or number >= len(nursery):
-                embed = discord.Embed(
-                    title=f"Error",
-                    description=f"Gato number {number + 1} not found. Use `?gato nursery`",
-                    colour=discord.Colour.red()
-                )
-                await ctx.send(embed=embed)
-            else:
-                gato = nursery[number]
-                desc = gato.__doc__.format(eidolon=gato.eidolon)
-
-                description = f"{desc}\n" + \
-                f"**Health:** {round(gato.health)} / {round(gato.max_health)}\n" + \
-                f"**Hunger:** {round(gato.hunger)} / {round(gato.max_hunger)}\n" + \
-                f"**Mood:** {round(gato.mood)} / {round(gato.max_mood)}\n" + \
-                f"**Energy:** {round(gato.energy)} / {round(gato.max_energy)}\n" + \
-                f"\n✨ **Eidolon {gato.eidolon}**"
-
-                embed = discord.Embed(
-                    title=gato.name,
-                    description=description,
-                    colour=discord.Colour.teal()
-                )
-                embed.set_thumbnail(url=gato.IMAGE)
-                embed.set_footer(text="For now, stats don't update in real time. Only when you claim rewards.")
-                await ctx.send(embed=embed)
-        else:
-            embed = discord.Embed(
-                title=f"{ctx.author.display_name}'s nursery",
-                description="You have no gatos silly goose ! Use `?gato pull (name of the gato)`",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-
-
-    @gato.command(name="deploy")
-    async def deploy(self, ctx: commands.Context, *gato_numbers):
-        """ Deploy a team of gatos. Specify numbers from your nursery (example: `?gato deploy 3 2 1 4`) or user `?gato deploy` alone to redeploy previous team. ⚠️ Order matters! Gato skills will take effect in deployment order (for example, put Gatos that boost the whole team in first place). """
-
-        if ctx.author.id not in self.nurseries:
-            embed = discord.Embed(
-                title=f"Deploy team",
-                description="You have no gatos silly goose ! Use `?gato pull (name of the gato)`",
+                title=f"Claim rewards",
+                description="No team has been deployed! Check `/critter deploy` to deploy one first!",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
             return
 
-        nursery = self.nurseries[ctx.author.id]
+        embeds = [g.get_gato_embed() for g in player.deployed_team.gatos]
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        await paginator.run()
 
-        if len(gato_numbers) == 0:
-            if ctx.author.id in self.teams:
-                tm = self.teams[ctx.author.id]
+
+    @app_commands.command(
+        name="info",
+        description="Show info about a critter or an item",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(itm=anything_autocomplete)
+    @init_nursery
+    async def info(self, interaction: discord.Interaction, itm: int):
+        """ Show info about a critter or an item """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        try:
+            all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
+            embed = all_items[itm].get_embed()
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
+
+
+    @app_commands.command(
+        name="deploy",
+        description="(Re)deploy a team of critters. ⚠️ Order matters! Critter skills will take effect in deployment order",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(
+        critter1=nursery_autocomplete,
+        critter2=nursery_autocomplete,
+        critter3=nursery_autocomplete,
+        critter4=nursery_autocomplete
+    )
+    @init_nursery
+    async def deploy(self, interaction: discord.Interaction, critter1: int = None, critter2: int = None, critter3: int = None, critter4: int = None):
+        """ (Re)deploy a team of critters. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        player = self.players[ctx.author.id]
+        nursery = player.nursery
+        gatos = [critter1, critter2, critter3, critter4]
+
+        player.command_channel = ctx.channel.id
+
+        if all([gato is None for gato in gatos]):
+            if player.deployed_team is not None:
+                tm = player.deployed_team
                 if tm.deployed_at is not None:
                     embed = discord.Embed(
                         title=f"Deploy team",
-                        description="A team is already deployed! Use `?gato claim` to see what they fetched for you!",
+                        description="A team is already deployed! Use `/critter claim` to see what they fetched for you!",
                         colour=discord.Colour.red()
                     )
                     await ctx.send(embed=embed)
                 else:
                     tm.deployed_at = datetime.now()
                     for gato in tm.gatos:
-                        gato.deploy()
+                        gato.deploy(tm.gatos)
                     gato_names = "**, **".join([gato.name for gato in tm.gatos])
                     embed = discord.Embed(
                         title=f"Deploy team",
-                        description=f"A team with **{gato_names}** has been deployed! Check back in a while with `?gato claim` to see what they fetched for you!",
+                        description=f"A team with **{gato_names}** has been deployed! Check back in a while with `/critter claim` to see what they fetched for you!",
                         colour=discord.Colour.teal()
                     )
                     await ctx.send(embed=embed)
             else:
                 embed = discord.Embed(
                     title=f"Deploy team",
-                    description="No team was previously deployed! Example use `?gato deploy 1 2 3 4` (check gato numbers with `?gato nursery`)",
+                    description="No team was previously deployed! Example use `/critter deploy 1 2 3 4` (check critter numbers with `/critter nursery`)",
                     colour=discord.Colour.red()
                 )
                 await ctx.send(embed=embed)
         else:
-            if ctx.author.id in self.teams and self.teams[ctx.author.id].deployed_at is not None:
+            if player.deployed_team is not None and player.deployed_team.deployed_at is not None:
                 embed = discord.Embed(
                     title=f"Deploy team",
-                    description="A team is already deployed! Use `?gato claim` to see what they fetched for you!",
+                    description="A team is already deployed! Use `/critter claim` to see what they fetched for you!",
                     colour=discord.Colour.red()
                 )
                 await ctx.send(embed=embed)
                 return
 
             # Get unique numbers
-            gato_numbers = reduce(lambda re, x: re+[x] if x not in re else re, gato_numbers, [])
+            gatos = reduce(lambda re, x: re+[x] if x not in re and x is not None else re, gatos, [])
             legatos: list[gatos.Gato] = []
-            for i in gato_numbers[:4]:
-                if not i.isnumeric():
-                    embed = discord.Embed(
-                        title=f"Deploy team",
-                        description=f"{i} is not a valid number! Example usage: `?gato deploy 1 2 3 4`!",
-                        colour=discord.Colour.red()
-                    )
-                    await ctx.send(embed=embed)
-                    return
-                number = int(i)-1
+            for i in gatos[:4]:
+                number = i-1
                 if number >= 0 and number < len(nursery):
                     legatos.append(nursery[number])
                 else:
                     embed = discord.Embed(
                         title=f"Deploy team",
-                        description=f"Gato number {i} not found in your nursery! Check gato numbers with `?gato nursery`!",
+                        description=f"Critter number {i} not found in your nursery! Check critter numbers with `/critter nursery`!",
                         colour=discord.Colour.red()
                     )
                     await ctx.send(embed=embed)
                     return
 
             tm = team.Team(legatos)
-            self.teams[ctx.author.id] = tm
+            player.deployed_team = tm
             for gato in tm.gatos:
-                gato.deploy()
+                gato.deploy(tm.gatos)
 
             gato_names = "**, **".join([gato.name for gato in legatos])
             embed = discord.Embed(
                 title=f"Deploy team",
-                description=f"A team with **{gato_names}** has been deployed! Check back in a while with `?gato claim` to see what they fetched for you!",
+                description=f"A team with **{gato_names}** has been deployed! Check back in a while with `/critter claim` to see what they fetched for you!",
                 colour=discord.Colour.teal()
             )
             await ctx.send(embed=embed)
             return
 
 
-    @gato.command(name="claim")
-    async def claim(self, ctx: commands.Context):
+    @app_commands.command(
+        name="claim",
+        description="Claim what the deployed team has gathered",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def claim(self, interaction: discord.Interaction):
         """ Claim what the deployed team has gathered. """
+        try:
+            await interaction.response.defer()
+            ctx = await commands.Context.from_interaction(interaction)
 
-        if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
-            embed = discord.Embed(
-                title=f"Claim rewards",
-                description="No team has been deployed! Check `?gato deploy` to deploy one first!",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
+            player = self.players[ctx.author.id]
+            player.command_channel = ctx.channel.id
 
-        tm = self.teams[ctx.author.id]
-        now = datetime.now()
-        delta = int((now - tm.deployed_at).total_seconds())
-        tm.deployed_at = None
+            if player.deployed_team is None or player.deployed_team.deployed_at is None:
+                embed = discord.Embed(
+                    title=f"Claim rewards",
+                    description="No team has been deployed! Check `/critter deploy` to deploy one first!",
+                    colour=discord.Colour.red()
+                )
+                await ctx.send(embed=embed)
+                return
 
-        TIME_STEP = 1
-        currency = 0
-        objects = []
-        for _ in range(0, delta, TIME_STEP):
-            if all(gato._fainted for gato in tm.gatos):
-                break
+            tm = player.deployed_team
+            now = datetime.now()
+            delta = int((now - tm.deployed_at).total_seconds())
+            tm.deployed_at = now
 
+            TIME_STEP = 1
+            for _ in range(0, delta, TIME_STEP):
+                if all(gato._fainted for gato in tm.gatos):
+                    break
+
+                for gato in tm.gatos:
+                    gato.simulate(tm.gatos, TIME_STEP)
+
+            events = self.handle_events(player, tm.gatos)
+            currency = 0
+            objects = []
             for gato in tm.gatos:
-                c, o = gato.simulate(tm.gatos, TIME_STEP)
+                c, o = gato.claim()
                 currency += c
                 objects += o
 
-        events = self.handle_events(ctx.author.id, tm.gatos)
-        if len(events) == 0:
-            events = "*Nothing specific happened.*"
-        if len(objects) > 0:
-            obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
-        else:
-            obj = "*no objects*"
+            if len(events) == 0:
+                events = "*Nothing specific happened.*"
+            if len(objects) > 0:
+                obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
+            else:
+                obj = "*no objects*"
+
+            player.transactions.currency += currency
+            player.transactions.add_items += objects
+
+            embed = discord.Embed(
+                title=f"Claim rewards",
+                description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
+                colour=discord.Colour.teal()
+            )
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
+
+
+    @app_commands.command(
+        name="recall",
+        description="Stops the ongoing expedition and claims the leftover rewards",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def recall(self, interaction: discord.Interaction):
+        try:
+            await self.claim.callback(self, interaction)
+            player = self.players[interaction.user.id]
+            if player.deployed_team is not None:
+                player.deployed_team.deployed_at = None
+                embed = discord.Embed(
+                    title="Recall",
+                    description="Team recalled successfully.",
+                    colour=discord.Colour.teal()
+                )
+                await interaction.channel.send(embed=embed)
+        except Exception as e:
+            print(e)
+
+
+    @app_commands.command(
+        name="use",
+        description="Use a consumable",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(item=consumables_autocomplete, critter=nursery_autocomplete)
+    @init_nursery
+    async def use(self, interaction: discord.Interaction, item: str, critter: int = None, amount: int = 1):
+        """ Use a consumable """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        # TODO: Check if there's enough of the consumable in inventory or in transactions.add_item, and remove amount if yes
+        cls = discord.utils.find(lambda cs: cs.DISPLAY_NAME.lower() == item.lower(), gatos.CONSUMABLES)
+        item: gatos.Consumable = cls()
+        for _ in range(amount):
+            if critter is not None:
+                gato = critter - 1
+                player = self.players[ctx.author.id]
+                nursery = player.nursery
+                if gato < 0 or gato >= len(nursery):
+                    embed = discord.Embed(
+                        title=f"Error",
+                        description=f"Critter number {gato + 1} not found. Use `/critter nursery`",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+
+                gato = nursery[gato]
+            else:
+                gato = None
+
+            success = await item.consume(ctx, self, gato)
+
+            if not success:
+                break
+
+
+    @app_commands.command(
+        name="equip",
+        description="Equip an item",
+        auto_locale_strings=False
+    )
+    @app_commands.autocomplete(item=equipments_autocomplete, critter=nursery_autocomplete)
+    @init_nursery
+    async def equip(self, interaction: discord.Interaction, item: str, critter: int = None):
+        """ Equip an item """
+        try:
+            await interaction.response.defer()
+            ctx = await commands.Context.from_interaction(interaction)
+
+            player = self.players[ctx.author.id]
+
+            # TODO: Check if the equipment is in inventory or in transactions.add_item, and remove one if yes
+            cls = discord.utils.find(lambda eq: eq.DISPLAY_NAME.lower() == item.lower(), gatos.EQUIPMENTS + gatos.TEAM_EQUIPMENTS)
+            item: gatos.Equipment = cls()
+
+            if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
+                if critter is None:
+                    embed = discord.Embed(
+                        title=f"Using equipment",
+                        description="You need to specify a critter to equip this item on!",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return
+
+                idx = critter - 1
+                gato = player.nursery[idx]
+                gato.equipments.append(item)
+                embed = discord.Embed(
+                    title="Equipment",
+                    description=f"**{item.DISPLAY_NAME}** was sucessfully equiped to **{gato.name}**!",
+                    colour=discord.Colour.teal()
+                )
+                await ctx.send(embed=embed)
+            elif str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPMENT):
+                if player.deployed_team is None or player.deployed_team.deployed_at is None:
+                    embed = discord.Embed(
+                        title=f"Using team equipment",
+                        description="No team has been deployed! Check `/critter deploy` to deploy one first!",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
+                    return
+
+                tm = player.deployed_team
+                for g in tm.gatos:
+                    g.equipments.append(item)
+                embed = discord.Embed(
+                    title="Team equipment",
+                    description=f"**{item.DISPLAY_NAME}** was sucessfully equiped to deployed team!",
+                    colour=discord.Colour.teal()
+                )
+                await ctx.send(embed=embed)
+        except Exception as e:
+            print(e)
+
+
+    @app_commands.command(
+        name="rename",
+        description="Rename your critter"
+    )
+    @app_commands.autocomplete(critter=nursery_autocomplete)
+    @init_nursery
+    async def rename(self, interaction: discord.Interaction, critter: int, name: str):
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        idx = critter - 1
+        player = self.players[ctx.author.id]
+        gato = player.nursery[idx]
+        gato.name = name
 
         embed = discord.Embed(
-            title=f"Claim rewards",
-            description=f"### Expedition results\nYour gatos brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
+            title="Rename success",
+            description=f'Your *{gato.DISPLAY_NAME}* has been successfully renamed "{gato.name}"',
             colour=discord.Colour.teal()
         )
         await ctx.send(embed=embed)
 
 
-    @gato.command(name="nanook")
-    async def nanook(self, ctx: commands.Context):
-        """ Set all the stats of all your Gatos to 1 """
+    @app_commands.command(
+        name="lifealert",
+        description="Opt in/out of low HP pings",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def lifealert(self, interaction: discord.Interaction, enabled: bool):
+        """Opt in/out of low HP pings"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
-        if ctx.author.id not in self.nurseries:
-            embed = discord.Embed(
-                title=f"Deploy team",
-                description="You have no gatos silly goose ! Use `?gato pull (name of the gato)`",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
+        player = self.players[ctx.author.id]
+        player.ping = enabled
 
-        for gato in self.nurseries[ctx.author.id]:
-            gato.health = 1
-            gato.mood = 1
-            gato.hunger = 1
-            gato.energy = 1
+        if enabled:
+            description = "Ping on low HP have been enabled"
+        else:
+            description = "Ping on low HP have been disabled. You can always enable them back with `/critter lifealert`"
 
-        await ctx.send("Done! ✅")
-
-
-    @gato.command(name="yaoshi")
-    async def yaoshi(self, ctx: commands.Context):
-        """ Set all the stats of all your Gatos to maximum """
-
-        if ctx.author.id not in self.nurseries:
-            embed = discord.Embed(
-                title=f"Deploy team",
-                description="You have no gatos silly goose ! Use `?gato pull (name of the gato)`",
-                colour=discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return
-
-        for gato in self.nurseries[ctx.author.id]:
-            gato.health = gato.max_health
-            gato.mood = gato.max_mood
-            gato.hunger = gato.max_hunger
-            gato.energy = gato.max_energy
-
-        await ctx.send("Done! ✅")
+        embed = discord.Embed(
+            title="Low HP pings",
+            description=description,
+            colour=discord.Colour.teal()
+        )
+        await ctx.send(embed=embed, ephemeral=True)
 
 
-    @gato.command(name="fastforward", aliases=["ff"])
-    async def ff(self, ctx: commands.Context, seconds: int):
+    @app_commands.command(
+        name="fastforward",
+        description="Fastforward the ongoing Gato expedition by a specified amount of time (in seconds)",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def ff(self, interaction: discord.Interaction, seconds: int):
         """ Fastforward the ongoing Gato expedition by a specified amount of time (in seconds) """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
-        if not ctx.author.id in self.teams or self.teams[ctx.author.id].deployed_at is None:
+        player = self.players[ctx.author.id]
+        if player.deployed_team is None or player.deployed_team.deployed_at is None:
             embed = discord.Embed(
                 title=f"Claim rewards",
-                description="No team has been deployed! Check `?gato deploy` to deploy one first!",
+                description="No team has been deployed! Check `/critter deploy` to deploy one first!",
                 colour=discord.Colour.red()
             )
             await ctx.send(embed=embed)
             return
 
-        tm = self.teams[ctx.author.id]
+        tm = player.deployed_team
         tm.deployed_at -= timedelta(seconds=seconds)
 
         await ctx.send("Done! ✅")
 
 
+    @app_commands.command(
+        name="transactions",
+        description="Debug command to see recent transactions",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def transactions(self, interaction: discord.Interaction, member: discord.Member = None):
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
-async def setup(bot):
+        if member is None:
+            member = ctx.author
+
+        if member.id in self.players:
+            player = self.players[member.id]
+            dct = player.transactions.to_json()
+            dct["add_items"] = dct["add_items"][-20:]
+            dct["rm_items"] = dct["rm_items"][-20:]
+            await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
+        else:
+            await ctx.send(content="❌ This player isn't in our records")
+
+
+    @app_commands.command(
+        name="pullstatus",
+        description="Debug command to see 50/50 and pities",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def pullstatus(self, interaction: discord.Interaction, member: discord.Member = None):
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        if member is None:
+            member = ctx.author
+
+        if member.id in self.players:
+            player = self.players[member.id]
+            dct = player.pulls_status.to_json()
+            await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
+        else:
+            await ctx.send(content="❌ This player isn't in our records")
+
+
+
+async def setup(bot: commands.Bot):
     await bot.add_cog(GatoGame(bot))
+    synced = await bot.tree.sync()
+    gc = 0
+    for guild in bot.guilds:
+        await bot.tree.sync(guild=guild)
+        gc += 1
+    print(f"Synced {len(synced)} command(s) on {gc} guilds.")

@@ -9,44 +9,74 @@ class ExampleGato(ABaseGato):
         > Has **1%** (**2%** at **E6**) chance to find a **Rare treasure** each minute.
     """
 
-    base_efficiency: float = 1.1    # Override initial values for stats
+    # Override constants
+    IMAGE = "https://media.discordapp.net/attachments/435078369852260353/1192961669467488307/cyx_gato.png"
+    ANIMATIONS = "cyxgato"
+    DISPLAY_NAME = "Crème Brûlée"
+    RARITY = 5
+    VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
+        "buff_duration",
+        "buff_cooldown",
+        "find_object_cooldown"
+    ]
 
+    # Override superclass values for stats
+    base_efficiency: float = 1.1
 
-    _buff_duration: int = 0         # Custom variables used for this gato
-    _buff_cooldown: int = 0
-    _has_buff: bool = False
-    _find_object_cooldown: int = 0
+    # Custom variables used for this gato
+    buff_duration: int = 0              # Remaining duration for its buff
+    buff_cooldown: int = 0              # Remaining cooldown until its buff can be triggered again
+    BUFF_KEY: str = "EG_eff_buff"       # dict key to keep track of this gato's buffs
+    find_object_cooldown: int = 0       # Remaining cooldown until it can find a rare object again
 
 
     @require_alive
     def efficiency_buff(self, seconds):
-        self._buff_duration -= seconds
-        self._buff_cooldown -= seconds
+        # Update buff duration and cooldown
+        if self.buff_duration > 0:
+            self.buff_duration = max(self.buff_duration - seconds, 0)
+        if self.buff_cooldown > 0:
+            self.buff_cooldown = max(self.buff_cooldown - seconds, 0)
 
-        if self._buff_cooldown <= 0:
-            self.efficiency_boost += 20/100 + (2/100 * self.eidolon)
-            self._buff_duration += 20*60
-            self._buff_cooldown += 60*60
-            self._has_buff = True
+        # Remove boost and return if duration ran out and still in cooldown
+        if self.buff_duration <= 0 and self.buff_cooldown > 0:
+            self.efficiency_boosts.pop(self.BUFF_KEY, None)
+            return
 
-        if self._buff_duration <= 0 and self._has_buff:
-            self.efficiency_boost -= 20/100 + (2/100 * self.eidolon)
-            self._has_buff = False
+        # Apply buff if cooldown is over
+        if self.buff_cooldown <= 0:
+            # Set base cooldown and duration
+            self.buff_duration = 20*60
+            self.buff_cooldown = 60*60
+
+        # Apply efficiency boost
+        self.efficiency_boosts[self.BUFF_KEY] = 20/100 + (2/100 * self.eidolon)
 
 
-    @require_alive
     def random_object(self, seconds):
-        self._find_object_cooldown -= seconds
+        # Call superclass method to find base objects
+        objects = super().random_object(seconds)
 
-        if self._find_object_cooldown <= 0:
-            self._find_object_cooldown = 60
+        # Update object finding cooldown
+        self.find_object_cooldown -= seconds
 
+        # If the cooldown is over, try to find an object
+        if self.find_object_cooldown <= 0:
+            # Set base cooldown
+            self.find_object_cooldown = 60
+
+            # Calculate chances to find a Rare treasure (see skill description at the top of the class)
             chances = 0.01
             if self.eidolon == 6:
                 chances = 0.02
 
-            if random() < chances:
-                return ["Rare treasure"]
+            # Randomly find an Rare treasure
+            if random() < self.luck*chances:
+                # If we found one, add it to the objects found by the superclass method
+                objects.append("Rare treasure")
+
+        # Return found objects
+        return objects
 
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
@@ -54,12 +84,4 @@ class ExampleGato(ABaseGato):
         self.efficiency_buff(seconds)
 
         # Then call the parent simulation (VERY IMPORTANT)
-        currency, objects = super().simulate(seconds)
-
-        # Then find additional objects once per minute
-        add_objects = self.random_object(seconds)
-        if add_objects is not None:
-            objects += add_objects
-
-        return currency, objects
-
+        super().simulate(seconds)
