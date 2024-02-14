@@ -779,32 +779,35 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     )
     @app_commands.autocomplete(item=consumables_autocomplete, critter=nursery_autocomplete)
     @init_nursery
-    async def use(self, interaction: discord.Interaction, item: str, critter: int = None):
+    async def use(self, interaction: discord.Interaction, item: str, critter: int = None, amount: int = 1):
         """ Use a consumable """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
-        # TODO: Check if the consumable is in inventory or in transactions.add_item, and remove one if yes
+        # TODO: Check if there's enough of the consumable in inventory or in transactions.add_item, and remove amount if yes
         cls = discord.utils.find(lambda cs: cs.DISPLAY_NAME.lower() == item.lower(), gatos.CONSUMABLES)
         item: gatos.Consumable = cls()
+        for _ in range(amount):
+            if critter is not None:
+                gato = critter - 1
+                player = self.players[ctx.author.id]
+                nursery = player.nursery
+                if gato < 0 or gato >= len(nursery):
+                    embed = discord.Embed(
+                        title=f"Error",
+                        description=f"Critter number {gato + 1} not found. Use `/critter nursery`",
+                        colour=discord.Colour.red()
+                    )
+                    await ctx.send(embed=embed)
 
-        if critter is not None:
-            gato = critter - 1
-            player = self.players[ctx.author.id]
-            nursery = player.nursery
-            if gato < 0 or gato >= len(nursery):
-                embed = discord.Embed(
-                    title=f"Error",
-                    description=f"Critter number {gato + 1} not found. Use `/critter nursery`",
-                    colour=discord.Colour.red()
-                )
-                await ctx.send(embed=embed)
+                gato = nursery[gato]
+            else:
+                gato = None
 
-            gato = nursery[gato]
-        else:
-            gato = None
+            success = await item.consume(ctx, self, gato)
 
-        status = await item.consume(ctx, self, gato)
+            if not success:
+                break
 
 
     @app_commands.command(
