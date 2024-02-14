@@ -8,7 +8,9 @@ class Team:
     deployed_at: Optional[datetime] = None
     pinged_already: bool = False
 
-    def __init__(self, gatos: list, deployed_at = datetime.now(), pinged_already = False):
+    def __init__(self, gatos: list, deployed_at = None, pinged_already = False):
+        if deployed_at is None:
+            deployed_at = datetime.now()
         self.deployed_at = deployed_at
         self.gatos = gatos
         self.pinged_already = pinged_already
