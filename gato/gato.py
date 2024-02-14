@@ -488,6 +488,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 TIME_STEP = 1
                 now = datetime.now()
                 delta = int((now - tm.deployed_at).total_seconds())
+                print(tm.deployed_at, now, delta)
                 for _ in range(0, delta, TIME_STEP):
                     if all(gato._fainted for gato in tm.gatos):
                         break
@@ -508,7 +509,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                         tm.pinged_already = True
                 else:
                     tm.pinged_already = False
-                tm.deployed_at = datetime.now()
+                tm.deployed_at = now
 
 
     @app_commands.command(
