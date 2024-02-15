@@ -24,7 +24,7 @@ class Parrot(commands.Cog):
 
         ct = self.messages[message.channel.id]
         if message.content == ct.message:
-            # if message.author.id not in ct.users:
+            if message.author.id not in ct.users:
                 ct.count += 1
                 ct.users.append(message.author.id)
         else:
