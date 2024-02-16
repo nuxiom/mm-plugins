@@ -384,7 +384,7 @@ def init_nursery(function):
 class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     """Critter gacha game plugin"""
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.cog_id = uuid.uuid4()
         self.footer = ""  # TODO: REPLACE ME
@@ -392,6 +392,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         self.bot.loop.create_task(self.schedule_simulation())
 
         self.players: dict[int, player.Player] = {}
+
+        self.__cog_app_commands_group__.on_error = self.on_error
 
 
     @init_nursery
@@ -474,7 +476,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
     async def schedule_simulation(self):
         while True:
-            cog: Currency = self.bot.get_cog(COG_NAME)
+            cog: GatoGame = self.bot.get_cog(COG_NAME)
             if cog is None or cog.cog_id != self.cog_id:
                 # We are in an old cog after update and don't have to send QOTD anymore
                 break
