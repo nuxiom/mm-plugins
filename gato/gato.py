@@ -974,23 +974,11 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             await ctx.send(content="❌ This player isn't in our records")
 
 
-    @app_commands.command(
-        name="testos",
-        description="Teeeeeest",
-        auto_locale_strings=False
-    )
-    @init_nursery
-    async def info(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        ctx = await commands.Context.from_interaction(interaction)
-        await ctx.send(str(3/0))
-
-
     async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):
         ctx = await commands.Context.from_interaction(interaction)
         await ctx.send("An error happened and bot devs may or may not try to understand what happened <a:RuanMeiAiPeace:1164689665740259369>")
         try:
-            chan = self.bot.get_channel(781551409433673748)
+            chan = self.bot.get_channel(1148381402111426693)
             err = ''.join(traceback.TracebackException.from_exception(error.original).format())
             await chan.send(f"Gato game error ```{err}```")
         except:
