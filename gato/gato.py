@@ -4,6 +4,7 @@ import json
 import os
 import random
 import sys
+import traceback
 import uuid
 from datetime import datetime, timedelta
 from functools import reduce, wraps
@@ -986,7 +987,14 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
 
     async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):
-        raise error.original
+        ctx = await commands.Context.from_interaction(interaction)
+        await ctx.send("An error happened and bot devs may or may not try to understand what happened <a:RuanMeiAiPeace:1164689665740259369>")
+        try:
+            chan = self.bot.get_channel(781551409433673748)
+            err = ''.join(traceback.TracebackException.from_exception(error.original).format())
+            await chan.send(f"Gato game error ```{err}```")
+        except:
+            raise error.original
 
 
     @app_commands.command(
