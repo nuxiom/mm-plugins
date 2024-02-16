@@ -972,6 +972,22 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
 
     @app_commands.command(
+        name="testos",
+        description="Teeeeeest",
+        auto_locale_strings=False
+    )
+    @init_nursery
+    async def info(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+        await ctx.send(str(3/0))
+
+
+    async def on_error(self, interaction: discord.Interaction, error):
+        print(error)
+
+
+    @app_commands.command(
         name="pullstatus",
         description="Debug command to see 50/50 and pities",
         auto_locale_strings=False
