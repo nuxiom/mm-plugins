@@ -985,8 +985,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         await ctx.send(str(3/0))
 
 
-    async def on_error(self, interaction: discord.Interaction, error):
-        print(error)
+    async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):
+        raise error.original
 
 
     @app_commands.command(
