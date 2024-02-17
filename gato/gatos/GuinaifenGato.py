@@ -78,8 +78,9 @@ class GuinaifenGato(ABaseGato):
         self.max_stats_buffs = []
 
     def claim(self):
-        super().claim()
+        currency, objects = super().claim()
         self.clear_max_stats_buffs()
+        return currency, objects
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         """Delegates to base method"""
