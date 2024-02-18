@@ -36,7 +36,7 @@ class MapleGato(ABaseGato):
     MAPLE_EVENT_TYPE_TEAM_BUFF_MOOD = "maple_team_buff_mood"
     MAPLE_EVENT_TYPE_TEAM_BUFF_EFF = "maple_team_buff_eff"
     EVENT_DESCRIPTIONS = ABaseGato.EVENT_DESCRIPTIONS | {
-        MAPLE_EVENT_TYPE_SELF_BUFF: "reduced own energy loss! (x{count})",
+        MAPLE_EVENT_TYPE_SELF_BUFF: "reduced own energy loss!",
         MAPLE_EVENT_TYPE_TEAM_BUFF_MOOD: "boosted an ally's mood! (x{count})",
         MAPLE_EVENT_TYPE_TEAM_BUFF_EFF: "boosted allies' efficiency! (x{count})",
     }
@@ -44,11 +44,14 @@ class MapleGato(ABaseGato):
     BUFF_KEY: str = "maple_buff"
 
     # Mutable state variables used for this gato
-    # number of times team buff has been applied
+    # Number of times team buff has been applied
     team_buff_applied_count: int = 0
     # Remaining duration in seconds for team buff
     team_buff_duration: int = 0
-    team_buff_mood_quota: int = 0           # Amount of mood buff amount remaining
+    # Amount of mood buff amount remaining
+    team_buff_mood_quota: int = 0
+    # Self buff flag for event optimisation (avoids 10k+ events)
+    self_buff_event_sent: bool = False
 
     @require_alive
     def self_buff(self):
@@ -58,7 +61,9 @@ class MapleGato(ABaseGato):
                                            self.SELF_ADDITIONAL_ENERGY_LOSS_REDUCTION_PERCENTAGE_PER_STACK_PER_EIDOLON * min(5, self.eidolon)) / 100
         self.energy_loss_reductions[self.BUFF_KEY] = self_buff_stacks * \
             per_stack_energy_loss_reduction
-        self._events.append({self.MAPLE_EVENT_TYPE_SELF_BUFF: None})
+        if not self.self_buff_event_sent and self_buff_stacks > 0:
+            self._events.append({self.MAPLE_EVENT_TYPE_SELF_BUFF: None})
+            self.self_buff_event_sent = True
 
     @require_alive
     def team_buff(self, team, seconds):
