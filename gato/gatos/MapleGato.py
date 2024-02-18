@@ -100,7 +100,7 @@ class MapleGato(ABaseGato):
         self.team_buff_mood_quota = self.TEAM_BUFF_MOOD_BOOST_CAP
 
         # Run parent deploy
-        super().deploy(self, team)
+        super().deploy(team)
 
     def simulate(self, team: list["ABaseGato"], seconds: int = 1):
         # Run self energy loss reduction buff
