@@ -10,6 +10,7 @@ import ABaseGato
 importlib.reload(ABaseGato)
 
 import SwedeGato
+import MapleGato
 import ExampleGato, LNYGato
 import SeeleGato
 import QingqueGato
@@ -24,6 +25,7 @@ import ArgentiGato
 import NormalGato
 
 importlib.reload(SwedeGato)
+importlib.reload(MapleGato)
 importlib.reload(LNYGato)
 importlib.reload(ExampleGato)
 importlib.reload(SeeleGato)
@@ -40,6 +42,7 @@ importlib.reload(NormalGato)
 
 Gato = ABaseGato.ABaseGato
 SwedeGato = SwedeGato.SwedeGato
+MapleGato = MapleGato.MapleGato
 LNYGato = LNYGato.LNYGato
 ExampleGato = ExampleGato.ExampleGato
 SeeleGato = SeeleGato.SeeleGato
@@ -56,6 +59,7 @@ NormalGato = NormalGato.NormalGato
 
 GATOS = [
     SwedeGato,
+    MapleGato,
     LNYGato,
     SeeleGato,
     QingqueGato,
