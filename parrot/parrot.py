@@ -8,6 +8,7 @@ class MessageCounter:
         self.message = ""
         self.count = 0
         self.users = []
+        self.stickers = []
 
 
 class Parrot(commands.Cog):
@@ -23,17 +24,21 @@ class Parrot(commands.Cog):
             self.messages[message.channel.id] = MessageCounter()
 
         ct = self.messages[message.channel.id]
-        if message.content == ct.message:
+        if message.content == ct.message or (message.stickers and message.stickers[0].id == ct.stickers[0]):
             if message.author.id not in ct.users:
                 ct.count += 1
-                ct.users.append(message.author.id)
+                # ct.users.append(message.author.id)
         else:
             ct.message = message.content
             ct.users = [message.author.id]
             ct.count = 1
+            if message.stickers is not None:
+                ct.stickers = message.stickers
+            else:
+                ct.stickers = []
 
         if ct.count == 4:
-            await message.channel.send(ct.message)
+            await message.channel.send(ct.message, stickers=ct.stickers)
 
 
 async def setup(bot):
