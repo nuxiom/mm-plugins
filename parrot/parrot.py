@@ -5,10 +5,10 @@ from discord.ext import commands
 class MessageCounter:
 
     def __init__(self):
-        self.message = ""
+        self.message = None
         self.count = 0
         self.users = []
-        self.stickers = []
+        self.stickers = None
 
 
 class Parrot(commands.Cog):
@@ -24,24 +24,22 @@ class Parrot(commands.Cog):
             self.messages[message.channel.id] = MessageCounter()
 
         ct = self.messages[message.channel.id]
-        if message.content == ct.message or (message.stickers and message.stickers[0].id == ct.stickers[0]):
+        print(message.content, message.stickers, ct.message, ct.stickers, ct.count)
+        if message.content == ct.message or (message.stickers and ct.stickers and message.stickers[0].id == ct.stickers[0].id):
             if message.author.id not in ct.users:
                 ct.count += 1
                 # ct.users.append(message.author.id)
         else:
-            ct.message = message.content
-            ct.users = [message.author.id]
-            ct.count = 1
-            if message.stickers is not None:
-                ct.stickers = message.stickers
+            if message.content:
+                ct.message = message.content
             else:
-                ct.stickers = []
+                ct.message = None
+            # ct.users = [message.author.id]
+            ct.count = 1
+            ct.stickers = message.stickers
 
         if ct.count == 4:
-            if ct.stickers:
-                await message.channel.send(stickers=ct.stickers)
-            else:
-                await message.channel.send(ct.message)
+            await message.channel.send(content=ct.message, stickers=ct.stickers)
 
 
 async def setup(bot):
