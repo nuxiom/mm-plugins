@@ -24,17 +24,16 @@ class Parrot(commands.Cog):
             self.messages[message.channel.id] = MessageCounter()
 
         ct = self.messages[message.channel.id]
-        print(message.content, message.stickers, ct.message, ct.stickers, ct.count)
         if message.content == ct.message or (message.stickers and ct.stickers and message.stickers[0].id == ct.stickers[0].id):
             if message.author.id not in ct.users:
                 ct.count += 1
-                # ct.users.append(message.author.id)
+                ct.users.append(message.author.id)
         else:
             if message.content:
                 ct.message = message.content
             else:
                 ct.message = None
-            # ct.users = [message.author.id]
+            ct.users = [message.author.id]
             ct.count = 1
             ct.stickers = message.stickers
 
