@@ -20,6 +20,9 @@ class Parrot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
         if message.channel.id not in self.messages:
             self.messages[message.channel.id] = MessageCounter()
 
