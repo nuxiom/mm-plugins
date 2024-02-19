@@ -38,7 +38,10 @@ class Parrot(commands.Cog):
                 ct.stickers = []
 
         if ct.count == 4:
-            await message.channel.send(ct.message, stickers=ct.stickers)
+            if ct.stickers:
+                await message.channel.send(stickers=ct.stickers)
+            else:
+                await message.channel.send(ct.message)
 
 
 async def setup(bot):
