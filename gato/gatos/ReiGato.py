@@ -69,7 +69,7 @@ class ReiGato(ABaseGato):
             if mood_lost + hunger_lost >= self.MINT_RESTORE_THRESHOLD:
                 # Calculate percentage increase
                 restore_percentage = self.MINT_BASE_RESTORE_PERCENTAGE + \
-                    max(5, self.eidolon) * \
+                    min(5, self.eidolon) * \
                     self.ADDITIONAL_RESTORE_PERCENTAGE_PER_EIDOLON
                 mood_restore_amount = g.max_mood * restore_percentage / 100
                 energy_restore_amount = g.max_energy * restore_percentage / 100
