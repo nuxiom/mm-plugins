@@ -187,6 +187,7 @@ class ABaseGato(ABaseItem):
         self.hunger_reductions = {}
         self.mood_loss_reductions = {}
         self.energy_loss_reductions = {}
+        self.bite_chance_reductions = {}
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -255,6 +256,7 @@ class ABaseGato(ABaseItem):
         self.hunger_reductions = {}
         self.mood_loss_reductions = {}
         self.energy_loss_reductions = {}
+        self.bite_chance_reductions = {}
 
         if self.health > 0:
             self._fainted = False
