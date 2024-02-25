@@ -131,6 +131,9 @@ class ABaseGato(ABaseItem):
     energy_loss_reductions: dict[str, float] = {}
     """Reduces energy loss. The gato or other gatos can add things to it, with a unique key per gato."""
 
+    bite_chance_reductions: dict[str, float] = {}
+    """Reduces bite chance. The gato or other gatos can add things to it, with a unique key per gato."""
+
     friendship: float = 1.0
     """Friendship stat, starts at 1, max 10."""
 
@@ -350,7 +353,9 @@ class ABaseGato(ABaseItem):
             self.add_health(-0.02 * seconds)
 
         if self.mood < 10:
-            if random() < self.BITE_CHANCE / self.friendship:
+            bite_chance = ABaseGato.apply_reductions(
+                bite_chance, self.bite_chance_reductions.values())
+            if random() < bite_chance / self.friendship:
                 self._events.append({"bitten": randint(2, 10)})
 
 
@@ -421,7 +426,8 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.damage_reductions.values())
+            amount = ABaseGato.apply_reductions(
+                amount, self.damage_reductions.values())
 
         self.health += amount
 
@@ -446,7 +452,8 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.mood_loss_reductions.values())
+            amount = ABaseGato.apply_reductions(
+                amount, self.mood_loss_reductions.values())
 
         self.mood += amount
 
@@ -469,7 +476,8 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.hunger_reductions.values())
+            amount = ABaseGato.apply_reductions(
+                amount, self.hunger_reductions.values())
 
         self.hunger += amount
 
@@ -492,7 +500,8 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.energy_loss_reductions.values())
+            amount = ABaseGato.apply_reductions(
+                amount, self.energy_loss_reductions.values())
 
         self.energy += amount
 
@@ -507,9 +516,24 @@ class ABaseGato(ABaseItem):
         Use this rather than modifying :py:attr:`eidolon` directly.
         *Can be overriden.* 
 
-        :param amount: New eidolon value to set.
-        :type amount: int
+        :param value: New eidolon value to set.
+        :type value: int
         """
         
         # clamp value to [0, 6]
         self.eidolon = max(min(value, 6), 0)
+
+    @staticmethod
+    def apply_reductions(amount: float, reductions: list[float]) -> float:
+        """Helper method to apply stats reduction multiplers.
+        
+        :param amount: The base amount to apply reductions to.
+        :type amount: float
+        :param reductions: List of reduction multiplers.
+        :type reductions: list[float]
+        :return: The amount after reductions are applied.
+        :rtype: float
+        """
+        # sum all reduction multiplers and clamp within [0, 1]
+        multiplier = max(min(sum(reductions), 1), 0)
+        return amount * (1 - multiplier)
