@@ -94,7 +94,7 @@ class Player:
         return {
             "nursery": [gato.to_json() for gato in self.nursery],
             "pulls_status": self.pulls_status.to_json(),
-            "deployed_team": self.deployed_team.to_json(),
+            "deployed_team": self.deployed_team.to_json() if self.deployed_team else None,
             "currency": self.currency,
             "inventory": self.inventory,
             "currency_boost": self.currency_boost,
