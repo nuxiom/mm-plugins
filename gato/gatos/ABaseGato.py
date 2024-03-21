@@ -421,7 +421,7 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.damage_reductions.values())
+            amount = amount * max(0, 1 - sum(self.damage_reductions.values()))
 
         self.health += amount
 
@@ -446,7 +446,7 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.mood_loss_reductions.values())
+            amount = amount * max(0, 1 - sum(self.mood_loss_reductions.values()))
 
         self.mood += amount
 
@@ -469,7 +469,7 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.hunger_reductions.values())
+            amount = amount * max(0, 1 - sum(self.hunger_reductions.values()))
 
         self.hunger += amount
 
@@ -492,7 +492,7 @@ class ABaseGato(ABaseItem):
         """
 
         if amount < 0:
-            amount /= 1 + sum(self.energy_loss_reductions.values())
+            amount = amount * max(0, 1 - sum(self.energy_loss_reductions.values()))
 
         self.energy += amount
 
@@ -500,6 +500,7 @@ class ABaseGato(ABaseItem):
             self.energy = self.max_energy
         elif self.energy <= 0.0:
             self.energy = 0.0
+
 
     def set_eidolon(self, value: int):
         """Setter for a gato's eidolon value.
