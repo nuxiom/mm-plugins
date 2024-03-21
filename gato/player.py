@@ -105,5 +105,5 @@ class Player:
     def from_json(cls, plyr: dict):
         plyr["nursery"] = [eval(g["type"]).from_json(g) for g in plyr["nursery"]]
         plyr["pulls_status"] = PullsStatus.from_json(plyr["pulls_status"])
-        plyr["deployed_team"] = team.Team.from_json(plyr["deployed_team"], plyr["nursery"])
+        plyr["deployed_team"] = team.Team.from_json(plyr["deployed_team"], plyr["nursery"]) if plyr["deployed_team"] else None
         return cls(**plyr)
