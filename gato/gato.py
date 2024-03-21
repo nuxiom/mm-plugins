@@ -488,7 +488,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     def create_player(self, player_id):
 
         if player_id not in self.players:
-            p = player.Player(user_id=player_id)
+            p = player.Player()
             gato3s = gatos.NormalGato()
             p.nursery.append(gato3s)
             self.players[player_id] = p
@@ -503,7 +503,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             sleep = 10
             await asyncio.sleep(sleep)
 
-            for p in self.players.values():
+            for user_id, p in self.players.items():
                 if p.deployed_team is None or p.deployed_team.deployed_at is None:
                     continue
                 tm = p.deployed_team
@@ -526,7 +526,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                             colour=discord.Colour.red()
                         )
                         embed.set_footer(text="If you want to opt out of these pings, use `/critter lifealert`")
-                        await channel.send(content=f"<@{p.user_id}>", embed=embed)
+                        await channel.send(content=f"<@{user_id}>", embed=embed)
                         tm.pinged_already = True
                 else:
                     tm.pinged_already = False

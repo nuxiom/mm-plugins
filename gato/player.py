@@ -52,7 +52,6 @@ class Player:
     
     command_channel: int
     ping: bool
-    user_id: int
 
     currency: float = 0
     currency_boost: float = 0
@@ -99,7 +98,6 @@ class Player:
             "inventory": self.inventory,
             "currency_boost": self.currency_boost,
             "command_channel": self.command_channel,
-            "user_id": self.user_id,
             "ping": self.ping
         }
 
