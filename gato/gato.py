@@ -30,7 +30,8 @@ importlib.reload(data)
 
 COG_NAME = "GatoGame"
 DIR = os.path.dirname(__file__)
-SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
+SAVE_FILE = os.path.join(os.getcwd(), "gato_beta.json")
+CURRENCY_SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 CURRENCY_NAME = "Plum Blossom"
 CURRENCY_EMOJI = "🌸"
 
@@ -382,11 +383,40 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         self.cog_id = uuid.uuid4()
         self.footer = ""  # TODO: REPLACE ME
 
+        self.players: dict[int, player.Player] = {}
+        if not os.path.exists(SAVE_FILE):
+            with open(CURRENCY_SAVE_FILE, "r") as f:
+                currency_save: dict = json.load(f)
+            for id, p in currency_save.items():
+                self.players[id] = player.Player(
+                    currency=p["currency"],
+                    inventory=p["inventory"],
+                    currency_boost=p["currency_boost"]
+                )
+            self.save_conf()
+        else:
+            self.load_conf()
+
         self.bot.loop.create_task(self.schedule_simulation())
 
-        self.players: dict[int, player.Player] = {}
-
         self.__cog_app_commands_group__.on_error = self.on_error
+
+
+    def load_conf(self):
+        with open(SAVE_FILE, "r") as f:
+            save: dict = json.load(f)
+
+        for k, v in save.items():
+            self.players[int(k)] = player.Player.from_json(v)
+
+
+    def save_conf(self):
+        save = {}
+        for k, v in self.players.items():
+            save[str(k)] = v.to_json()
+
+        with open(SAVE_FILE, "w+") as f:
+            json.dump(save, f)
 
 
     @init_nursery
