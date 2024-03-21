@@ -334,7 +334,7 @@ class ABaseGato(ABaseItem):
             args["currency"] = CURRENCY_EMOJI
 
             if et == "bitten":
-                player.transactions.currency -= args["amount"]
+                player.currency -= args["amount"]
 
             line += self.EVENT_DESCRIPTIONS[et].format(**args)
             lines.append(line)

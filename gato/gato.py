@@ -260,7 +260,7 @@ class BannersView(discord.ui.View):
 
         nursery = player.nursery
 
-        player.transactions.currency -= pull_count * bann.pull_cost
+        player.currency -= pull_count * bann.pull_cost
 
         result_lines = []
         item: gatos.Item
@@ -286,10 +286,14 @@ class BannersView(discord.ui.View):
                         3: bann.pull_cost//2
                     }
                     money = cpr[thegato.RARITY]
-                    player.transactions.currency += money
+                    player.currency += money
                     result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
             else:
-                player.transactions.add_items.append(f"gatos.{item.__name__}")
+                class_name = f"gatos.{item.__name__}"
+                if class_name not in player.inventory:
+                    player.inventory[class_name] = 1
+                else:
+                    player.inventory[class_name] += 1
                 result_lines.append(f"- {item.DISPLAY_NAME}")
 
         for i, gato in enumerate(pull_results):
@@ -755,8 +759,12 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         else:
             obj = "*no objects*"
 
-        player.transactions.currency += currency
-        player.transactions.add_items += objects
+        player.currency += currency
+        for obj in objects:
+            if obj not in player.inventory:
+                player.inventory[obj] = 1
+            else:
+                player.inventory[obj] += 1
 
         embed = discord.Embed(
             title=f"Claim rewards",
@@ -956,29 +964,6 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         tm.deployed_at -= timedelta(seconds=seconds)
 
         await ctx.send("Done! ✅")
-
-
-    @app_commands.command(
-        name="transactions",
-        description="Debug command to see recent transactions",
-        auto_locale_strings=False
-    )
-    @init_nursery
-    async def transactions(self, interaction: discord.Interaction, member: discord.Member = None):
-        await interaction.response.defer()
-        ctx = await commands.Context.from_interaction(interaction)
-
-        if member is None:
-            member = ctx.author
-
-        if member.id in self.players:
-            player = self.players[member.id]
-            dct = player.transactions.to_json()
-            dct["add_items"] = dct["add_items"][-20:]
-            dct["rm_items"] = dct["rm_items"][-20:]
-            await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
-        else:
-            await ctx.send(content="❌ This player isn't in our records")
 
 
     async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):

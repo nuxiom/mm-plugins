@@ -74,7 +74,7 @@ class RedPacketView(View):
             if player_id not in self.gatogame.players:
                 self.gatogame.create_player(player_id)
             player = self.gatogame.players[player_id]
-            player.transactions.currency += amt
+            player.currency += amt
 
             self.claimed[player_id] = f"- {interaction.user.display_name} received {amt} {CURRENCY_EMOJI}"
             embed = discord.Embed(
