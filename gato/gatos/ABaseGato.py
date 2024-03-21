@@ -71,9 +71,13 @@ class ABaseGato(ABaseItem):
         "health",
         "efficiency_boosts",
         "damage_reductions",
+        "hunger_reductions",
+        "mood_loss_reductions",
+        "energy_loss_reductions",
         "eidolon",
         "friendship",
-        "deployed_today"
+        "deployed_today",
+        "claimed_today"
     ]
     """Attributes that will be saved when exporting the gato to JSON. *Can be overriden or completed with custom attributes.*"""
 
