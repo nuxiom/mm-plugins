@@ -402,6 +402,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             self.load_conf()
 
         self.bot.loop.create_task(self.schedule_simulation())
+        self.bot.loop.create_task(self.schedule_save())
 
         self.__cog_app_commands_group__.on_error = self.on_error
 
@@ -421,6 +422,18 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         with open(SAVE_FILE, "w+") as f:
             json.dump(save, f)
+
+
+    async def schedule_save(self):
+        while True:
+            cog: GatoGame = self.bot.get_cog(COG_NAME)
+            if cog is None or cog.cog_id != self.cog_id:
+                # We are in an old cog after update and don't have to send QOTD anymore
+                break
+            sleep = 2
+            await asyncio.sleep(sleep)
+            # self.compute_vc_currency(sleep)
+            self.save_conf()
 
 
     @init_nursery
