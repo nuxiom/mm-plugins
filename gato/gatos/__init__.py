@@ -54,7 +54,7 @@ HimekoGato = HimekoGato.HimekoGato
 ArgentiGato = ArgentiGato.ArgentiGato
 NormalGato = NormalGato.NormalGato
 
-GATOS = [
+GATOS: list[Gato] = [
     SwedeGato,
     LNYGato,
     ExampleGato,
@@ -107,7 +107,7 @@ DefibrilatorConsumable = DefibrilatorConsumable.DefibrilatorConsumable
 FeatherTeaserConsumable = FeatherTeaserConsumable.FeatherTeaserConsumable
 SalmonConsumable = SalmonConsumable.SalmonConsumable
 
-CONSUMABLES = [
+CONSUMABLES: list[AConsumable.AConsumable] = [
     RedPacketConsumable,
     TrashConsumable,
     MedkitConsumable,
@@ -132,7 +132,7 @@ importlib.reload(FakeMouseEq)
 EfficiencyFoodEq = EfficiencyFoodEq.EfficiencyFoodEq
 FakeMouseEq = FakeMouseEq.FakeMouseEq
 
-EQUIPMENTS = [FakeMouseEq]
+EQUIPMENTS: list[AEquipment.AEquipment] = [FakeMouseEq]
 
 # Team equipments
 
@@ -142,10 +142,10 @@ importlib.reload(MedicalInsuranceTEq)
 
 MedicalInsuranceTEq = MedicalInsuranceTEq.MedicalInsuranceTEq
 
-TEAM_EQUIPMENTS = [MedicalInsuranceTEq]
+TEAM_EQUIPMENTS: list[AEquipment.AEquipment] = [MedicalInsuranceTEq]
 
 # All items together
 
-ALL_ITEMS = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS
+ALL_ITEMS: list[Item] = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS
 
 items_helper = {v.__name__: v for v in ALL_ITEMS}

@@ -189,7 +189,7 @@ class BannersView(discord.ui.View):
     banners: list[data.Banner]
     current_banner: int
     gato_game: "GatoGame"
-    
+
     author_id: int
     ctx: commands.Context
     message: discord.Message
@@ -302,7 +302,7 @@ class BannersView(discord.ui.View):
                 anim_name = f"train{max_rarity}"
             else:
                 anim_name = "solo"
-            
+
             anims_lists.append({
                 "anim": data.Data.animations[gato.ANIMATIONS][anim_name]["url"],
                 "solo": data.Data.animations[gato.ANIMATIONS]["solo"]["url"],
@@ -452,7 +452,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         choices = []
 
         player = self.players[interaction.user.id]
-        
+
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
         return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME)
@@ -465,7 +465,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         choices = []
 
         player = self.players[interaction.user.id]
-        
+
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
         choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME)
@@ -478,10 +478,13 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
 
     async def anything_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
-        all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
-        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=i)
-                for i, itm in enumerate(all_items)
-                if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
+        choices = [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm_name)
+                   for itm_name, itm in gatos.items_helper.items()
+                   if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
+        choices += [app_commands.Choice(name=v["name"], value=k)
+                    for k, v in data.Data.LEGACY_ITEMS.items()
+                    if current.lower() in v["name"].lower() or current.lower() in v["description"].lower()]
+        return choices
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
@@ -619,13 +622,24 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     )
     @app_commands.autocomplete(itm=anything_autocomplete)
     @init_nursery
-    async def info(self, interaction: discord.Interaction, itm: int):
+    async def info(self, interaction: discord.Interaction, itm: str):
         """ Show info about a critter or an item """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
-        all_items = gatos.CONSUMABLES+gatos.EQUIPMENTS+gatos.TEAM_EQUIPMENTS+gatos.GATOS
-        embed = all_items[itm].get_embed()
+        if itm in gatos.items_helper:
+            embed = gatos.items_helper[itm].get_embed()
+        else:
+            item = data.Data.LEGACY_ITEMS[itm]
+            description = f"# {item['name']}\n"
+            description += item['description']
+
+            embed = discord.Embed(
+                title=item['name'],
+                description=description,
+                colour=discord.Colour.teal()
+            )
+
         await ctx.send(embed=embed)
 
 
@@ -692,7 +706,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
             # Get unique numbers
             gatos = reduce(lambda re, x: re+[x] if x not in re and x is not None else re, gatos, [])
-            legatos: list[gatos.Gato] = []
+            legatos: list = []
             for i in gatos[:4]:
                 number = i-1
                 if number >= 0 and number < len(nursery):
@@ -977,6 +991,41 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         tm.deployed_at -= timedelta(seconds=seconds)
 
         await ctx.send("Done! ✅")
+
+
+    @app_commands.command(
+        name="give",
+        description="Give items or currency to a user or yourself"
+    )
+    @app_commands.autocomplete(item=anything_autocomplete)
+    @app_commands.checks.has_any_role(
+        692818953604562964,     # Staff role for Ruan Dev
+        1117348317790224434,    # Bot Lead Dev
+        1106785500167155763,    # drinking tea is good
+        1106786509991977000,    # Meihua (Admins)
+        1106789830626639882     # Staff (remove after beta)
+    )
+    async def give(self, interaction: discord.Interaction, amount: int, member: discord.Member = None, item: str = None):
+        """ Give items or currency to a user or yourself """
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        if member is None:
+            member = ctx.author
+
+        player = self.players[member.id]
+
+        if item is None:
+            player.currency += amount
+            description = f"**{member.mention}** received **{amount}** {CURRENCY_EMOJI}"
+        else:
+            if item not in player.inventory:
+                player.inventory[item] = amount
+            else:
+                player.inventory[item] += amount
+            description = f"**{member.mention}** received **{amount} {item}**"
+
+        await ctx.send(embed=discord.Embed(title="Give", description=description, colour=discord.Colour.teal()))
 
 
     async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):

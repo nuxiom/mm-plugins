@@ -256,15 +256,15 @@ class Data:
         animations = json.load(f)
 
 
-    items: dict[str, LegacyItem] = {}
+    LEGACY_ITEMS: dict[str, LegacyItem] = {}
 
-    shops: list[LegacyShop] = []
+    LEGACY_SHOPS: list[LegacyShop] = []
 
     with open(os.path.join(DIR, "legacy_data.json"), encoding='utf8') as f:
         o = json.load(f)
 
         for k, v in o["items"].items():
-            items[k] = LegacyItem.from_dict(v)
+            LEGACY_ITEMS[k] = LegacyItem.from_dict(v)
 
         for s in o["shops"]:
-            shops.append(LegacyShop.from_dict(s))
+            LEGACY_SHOPS.append(LegacyShop.from_dict(s))
