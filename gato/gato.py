@@ -1013,6 +1013,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         if member is None:
             member = ctx.author
 
+        self.create_player(member.id)
         player = self.players[member.id]
 
         if item is None:
