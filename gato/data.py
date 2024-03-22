@@ -2,6 +2,8 @@ import json
 import os
 import random
 
+from PIL import Image
+
 from gatos import *
 
 DIR = os.path.dirname(__file__)
@@ -115,7 +117,7 @@ class Banner():
                 if len(itms) > 0:
                     text += f"- {r}⭐ items: **{itms}**\n"
 
-            text += "### 50/50\nEverytime you get a 4⭐️ or 5⭐️, there's a 50% chance to get an uprate item, and a 50% chance to get an offrate item.\n"
+            text += "### 50/50\nEverytime you get a 4⭐ or 5⭐, there's a 50% chance to get an uprate item, and a 50% chance to get an offrate item.\n"
 
         text += "### Drop rates\n"
 
@@ -126,6 +128,73 @@ class Banner():
             text += f"- {rate:.2f}% chance to get a {r}⭐ item\n"
 
         return text.strip()
+    
+    
+class LegacyItem():
+
+    """ Name of the item """
+    name: str
+
+    """ Description in shop """
+    description: str
+
+    """ Icon in shop / collection """
+    image: str
+
+    """ Effects """
+    effects: dict[str, list]
+
+
+    def __init__(self, name: str, description: str, image: str, effects: dict[str, list] = {}) -> None:
+        self.name = name
+        self.description = description
+        self.image = image
+        self.effects = effects
+
+    def to_dict(self):
+        res = {
+            "name": self.name,
+            "description": self.description,
+            "image": self.image,
+            "effects": self.effects
+        }
+
+        return res
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(**d)
+
+    def get_image(self):
+        return Image.open(os.path.join(DIR, "img", "items", self.image))
+
+
+class LegacyShop():
+    """ Shop name """
+    name: str
+
+    """ Items you can buy (dict  item_id -> price) """
+    to_buy: dict[str, int]
+
+    """ Items you can sell (dict  item_id -> price) """
+    to_sell: dict[str, int]
+
+
+    def __init__(self, name: str, to_buy: dict = {}, to_sell: dict = {}):
+        self.name = name
+        self.to_buy = to_buy
+        self.to_sell = to_sell
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "to_buy": self.to_buy,
+            "to_sell": self.to_sell
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(**d)
 
 
 class Data:
@@ -135,7 +204,6 @@ class Data:
     PERMANENT_FIVE_STARS = [
         ExampleGato
     ]
-    ALL_ITEMS = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS
     THREE_STARS = [i for i in ALL_ITEMS if i.RARITY == 3]
 
     banners = [
@@ -186,3 +254,17 @@ class Data:
     animations: dict
     with open(os.path.join(DIR, "animations.json"), "r") as f:
         animations = json.load(f)
+
+
+    items: dict[str, LegacyItem] = {}
+
+    shops: list[LegacyShop] = []
+
+    with open(os.path.join(DIR, "legacy_data.json"), encoding='utf8') as f:
+        o = json.load(f)
+
+        for k, v in o["items"].items():
+            items[k] = LegacyItem.from_dict(v)
+
+        for s in o["shops"]:
+            shops.append(LegacyShop.from_dict(s))
