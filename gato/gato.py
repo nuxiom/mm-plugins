@@ -392,11 +392,11 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             with open(CURRENCY_SAVE_FILE, "r") as f:
                 currency_save: dict = json.load(f)
             for id, p in currency_save.items():
-                self.players[id] = player.Player(
-                    currency=p["currency"],
-                    inventory=p["inventory"],
-                    currency_boost=p["currency_boost"]
-                )
+                self.create_player(id)
+                np = self.players[id]
+                np.currency = p["currency"]
+                np.inventory = p["inventory"]
+                np.currency_boost = p["currency_boost"]
             self.save_conf()
         else:
             self.load_conf()
