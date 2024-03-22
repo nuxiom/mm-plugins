@@ -481,9 +481,9 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         choices = [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm_name)
                    for itm_name, itm in gatos.items_helper.items()
                    if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
-        choices += [app_commands.Choice(name=v["name"], value=k)
+        choices += [app_commands.Choice(name=v.name, value=k)
                     for k, v in data.Data.LEGACY_ITEMS.items()
-                    if current.lower() in v["name"].lower() or current.lower() in v["description"].lower()]
+                    if current.lower() in v.name.lower() or current.lower() in v.description.lower()]
         return choices
 
 
@@ -631,11 +631,11 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             embed = gatos.items_helper[itm].get_embed()
         else:
             item = data.Data.LEGACY_ITEMS[itm]
-            description = f"# {item['name']}\n"
-            description += item['description']
+            description = f"# {item.name}\n"
+            description += item.description
 
             embed = discord.Embed(
-                title=item['name'],
+                title=item.name,
                 description=description,
                 colour=discord.Colour.teal()
             )
