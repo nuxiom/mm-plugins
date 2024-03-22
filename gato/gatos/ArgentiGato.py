@@ -19,8 +19,7 @@ class ArgentiGato(ABaseGato):
     RARITY = 4
     VALUES_TO_SAVE = ABaseGato.VALUES_TO_SAVE + [
         "energy_threshold",
-        "max_stacks",
-        "chance_cooldown"
+        "max_stacks"
     ]
 
     # Override superclass values for stats
