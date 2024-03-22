@@ -1,6 +1,7 @@
 import unittest
 import sys
 import inspect
+import random
 from itertools import islice
 
 from gato.gatos import ABaseGato
@@ -40,11 +41,12 @@ class SmokeTests(unittest.TestCase):
 
     def test(self):
         lines = []
-        normal_run_currency: float = 0
-        saved_run_currency: float = 0
         # run each team
         for team in self.teams:
+            normal_run_currency: list[float] = []
+            saved_run_currency: list[float] = []
             lines += [f'\nteam: {", ".join([g.name for g in team])}']
+            random.seed(0)
             # deploy each gato in the team
             for gato in team:
                 gato.deploy(team)
@@ -58,10 +60,11 @@ class SmokeTests(unittest.TestCase):
             # claim each gato
             for gato in team:
                 currency, _ = gato.claim()
-                normal_run_currency += currency
+                normal_run_currency.append(currency)
 
             # duplicate the team to test with intermediate save/load
             team_copy = [gato.__class__() for gato in team]
+            random.seed(0)
             # deploy each gato in the team
             for gato in team_copy:
                 gato.deploy(team_copy)
@@ -79,9 +82,14 @@ class SmokeTests(unittest.TestCase):
             # claim each gato
             for gato in team_copy:
                 currency, _ = gato.claim()
-                saved_run_currency += currency
+                saved_run_currency.append(currency)
 
-            assert saved_run_currency == normal_run_currency
+            for i in range(len(saved_run_currency)):
+                try:
+                    assert saved_run_currency[i] == normal_run_currency[i]
+                except:
+                    print(f"Assertion failed for {team[i].name}: {saved_run_currency[i]} != {normal_run_currency}", file=sys.stderr)
+                    raise
 
         print('\n'.join(lines))
 
