@@ -1050,7 +1050,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
     @app_commands.command(
         name="balance",
-        description=f"Check your {CURRENCY_EMOJI} {CURRENCY_NAME} balance"
+        description=f"Check your (or someone else's) {CURRENCY_EMOJI} {CURRENCY_NAME} balance"
     )
     async def balance(self, interaction: discord.Interaction, member: discord.Member = None):
         """Shows a user's currency balance"""
@@ -1075,6 +1075,51 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         )
         embed.set_footer(text=self.footer)
 
+        await ctx.send(embed=embed)
+
+
+    # Items and currencies inventory
+    @app_commands.command(
+        name="inventory",
+        description=f"Check your (or someone else's) inventory"
+    )
+    async def inventory(self, interaction: discord.Interaction, member: discord.Member = None):
+        """Shows a user's inventory"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        if member is None:
+            member = ctx.author
+
+        if member.id in self.players:
+            player = self.players[member.id]
+
+            description = "## Items:\n"
+            i = 0
+            for item, amount in player.inventory.items():
+                i += 1
+                if item in data.Data.LEGACY_ITEMS:
+                    itm = data.Data.LEGACY_ITEMS[item]
+                    description += f"- **{itm.name}** x{amount}\n"
+                elif item in gatos.items_helper:
+                    itm = gatos.items_helper[item]
+                    description += f"- **{itm.DISPLAY_NAME} x{amount}\n"
+                else:
+                    description += f"- **{item} x{amount}\n"
+            if i == 0:
+                description += "This user has no items in their inventory."
+
+            colour = discord.Colour.teal()
+        else:
+            description = f"{member.display_name} isn't in our database. Have they ever talked??"
+            colour = discord.Colour.red()
+
+        embed = discord.Embed(
+            title=f"{member.display_name}'s inventory",
+            description=description,
+            colour=colour
+        )
+        embed.set_footer(text=self.footer)
         await ctx.send(embed=embed)
 
 
