@@ -5,6 +5,8 @@ import discord
 
 import team
 importlib.reload(team)
+import gatos
+importlib.reload(gatos)
 
 
 class PullsStatus:
@@ -103,7 +105,7 @@ class Player:
 
     @classmethod
     def from_json(cls, plyr: dict):
-        plyr["nursery"] = [eval(g["type"]).from_json(g) for g in plyr["nursery"]]
+        plyr["nursery"] = [gatos.items_helper[g["type"]].from_json(g, gatos.items_helper) for g in plyr["nursery"]]
         plyr["pulls_status"] = PullsStatus.from_json(plyr["pulls_status"])
         plyr["deployed_team"] = team.Team.from_json(plyr["deployed_team"], plyr["nursery"]) if plyr["deployed_team"] else None
         return cls(**plyr)

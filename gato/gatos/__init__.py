@@ -57,6 +57,7 @@ NormalGato = NormalGato.NormalGato
 GATOS = [
     SwedeGato,
     LNYGato,
+    ExampleGato,
     SeeleGato,
     QingqueGato,
     HertaGato,
@@ -142,3 +143,9 @@ importlib.reload(MedicalInsuranceTEq)
 MedicalInsuranceTEq = MedicalInsuranceTEq.MedicalInsuranceTEq
 
 TEAM_EQUIPMENTS = [MedicalInsuranceTEq]
+
+# All items together
+
+ALL_ITEMS = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS
+
+items_helper = {v.__name__: v for v in ALL_ITEMS}
