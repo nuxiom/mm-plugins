@@ -17,12 +17,8 @@ def batched(iterable, n):
         yield batch
 
 
-class FakeTransactions:
-    currency = 0.0
-
-
 class FakePlayer:
-    transactions = FakeTransactions()
+    currency = 0.0
 
 
 class SmokeTests(unittest.TestCase):
@@ -44,6 +40,8 @@ class SmokeTests(unittest.TestCase):
 
     def test(self):
         lines = []
+        normal_run_currency: float = 0
+        saved_run_currency: float = 0
         # run each team
         for team in self.teams:
             lines += [f'\nteam: {", ".join([g.name for g in team])}']
@@ -59,5 +57,32 @@ class SmokeTests(unittest.TestCase):
                 lines += gato.handle_events(self.player, self.CURRENCY_EMOJI)
             # claim each gato
             for gato in team:
-                gato.claim()
+                currency, _ = gato.claim()
+                normal_run_currency += currency
+
+            # duplicate the team to test with intermediate save/load
+            team_copy = [gato.__class__() for gato in team]
+            # deploy each gato in the team
+            for gato in team_copy:
+                gato.deploy(team_copy)
+            # simulate 1000 game ticks
+            for _ in range(0, 1000):
+                for gato in team:
+                    gato.simulate(team, 1)
+            # save gatos
+            team_save = [gato.to_json() for gato in team_copy]
+            team_copy = [team_copy[i].__class__.from_json(team_save[i]) for i in range(len(team_save))]
+            # simulate the remaining 85400 game ticks
+            for _ in range(0, 85400):
+                for gato in team:
+                    gato.simulate(team, 1)
+            # claim each gato
+            for gato in team_copy:
+                currency, _ = gato.claim()
+                saved_run_currency += currency
+
+            assert saved_run_currency == normal_run_currency
+
         print('\n'.join(lines))
+
+
