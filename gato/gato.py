@@ -445,7 +445,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             if current.lower() in gato.name.lower() or current.lower() in gato.DISPLAY_NAME.lower() or str(i).startswith(current):
                 choices.append(app_commands.Choice(name=f"{gato.name} ({gato.DISPLAY_NAME})", value=i+1))
 
-        return choices
+        return choices[:25]
 
     @init_nursery
     async def consumables_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
@@ -457,7 +457,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME)
                 for itm in gatos.CONSUMABLES
-                if current.lower() in itm.DISPLAY_NAME.lower()]
+                if current.lower() in itm.DISPLAY_NAME.lower()][:25]
 
 
     @init_nursery
@@ -474,7 +474,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.DISPLAY_NAME)
                     for itm in gatos.TEAM_EQUIPMENTS
                     if current.lower() in itm.DISPLAY_NAME.lower()]
-        return choices
+        return choices[:25]
 
 
     async def anything_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
@@ -484,7 +484,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         choices += [app_commands.Choice(name=v.name, value=k)
                     for k, v in data.Data.LEGACY_ITEMS.items()
                     if current.lower() in v.name.lower() or current.lower() in v.description.lower()]
-        return choices
+        return choices[:25]
 
 
     @commands.group(name="critter", invoke_without_command=True, aliases=["gato", "catto", "cake"])
