@@ -70,15 +70,15 @@ class SmokeTests(unittest.TestCase):
                 gato.deploy(team_copy)
             # simulate 1000 game ticks
             for _ in range(0, 1000):
-                for gato in team:
-                    gato.simulate(team, 1)
+                for gato in team_copy:
+                    gato.simulate(team_copy, 1)
             # save gatos
             team_save = [gato.to_json() for gato in team_copy]
             team_copy = [team_copy[i].__class__.from_json(team_save[i]) for i in range(len(team_save))]
             # simulate the remaining 85400 game ticks
             for _ in range(0, 85400):
-                for gato in team:
-                    gato.simulate(team, 1)
+                for gato in team_copy:
+                    gato.simulate(team_copy, 1)
             # claim each gato
             for gato in team_copy:
                 currency, _ = gato.claim()
@@ -88,7 +88,7 @@ class SmokeTests(unittest.TestCase):
                 try:
                     assert saved_run_currency[i] == normal_run_currency[i]
                 except:
-                    print(f"Assertion failed for {team[i].name}: {saved_run_currency[i]} != {normal_run_currency}", file=sys.stderr)
+                    print(f"Assertion failed for {team[i].name}: {saved_run_currency[i]} != {normal_run_currency[i]}", file=sys.stderr)
                     raise
 
         print('\n'.join(lines))
