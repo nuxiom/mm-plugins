@@ -77,7 +77,9 @@ class ABaseGato(ABaseItem):
         "eidolon",
         "friendship",
         "_time_deployed",
-        "claimed_today"
+        "claimed_today",
+        "fetched_currency",
+        "fetched_objects"
     ]
     """Attributes that will be saved when exporting the gato to JSON. *Can be overriden or completed with custom attributes.*"""
 
