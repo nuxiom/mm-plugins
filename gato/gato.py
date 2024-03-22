@@ -392,8 +392,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             with open(CURRENCY_SAVE_FILE, "r") as f:
                 currency_save: dict = json.load(f)
             for id, p in currency_save.items():
-                self.create_player(id)
-                np = self.players[id]
+                self.create_player(int(id))
+                np = self.players[int(id)]
                 np.currency = p["currency"]
                 np.inventory = p["inventory"]
                 np.currency_boost = p["currency_boost"]
@@ -1046,6 +1046,36 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 description = f"{member.mention} received **{amount} {item}**"
 
         await ctx.send(embed=discord.Embed(title="Give", description=description, colour=discord.Colour.teal()))
+
+
+    @app_commands.command(
+        name="balance",
+        description=f"Check your {CURRENCY_EMOJI} {CURRENCY_NAME} balance"
+    )
+    async def balance(self, interaction: discord.Interaction, member: discord.Member = None):
+        """Shows a user's currency balance"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+
+        if member is None:
+            member = ctx.author
+
+        if member.id in self.players:
+            player = self.players[member.id]
+            description = f"{member.display_name} currently has {int(player.currency)} {CURRENCY_EMOJI}"
+            colour = discord.Colour.teal()
+        else:
+            description = f"{member.display_name} isn't in our database. Have they ever talked??"
+            colour = discord.Colour.red()
+
+        embed = discord.Embed(
+            title=f"{member.display_name}'s money",
+            description=f"{description}",
+            colour=colour
+        )
+        embed.set_footer(text=self.footer)
+
+        await ctx.send(embed=embed)
 
 
     async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):

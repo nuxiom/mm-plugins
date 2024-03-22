@@ -35,7 +35,6 @@ class RedPacketView(View):
         dist = self.TOTAL / self.MAX_CLAIMS
         separators = [0] + sorted(sample(range(1, self.TOTAL), self.MAX_CLAIMS - 1)) + [self.TOTAL]
         self.amounts = [separators[i] - separators[i-1] for i in range(1, len(separators))]
-        print(self.amounts)
 
     async def start(self, ctx: Context):
         self.owner = ctx.author.display_name
