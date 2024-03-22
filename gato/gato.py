@@ -1050,13 +1050,16 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
     async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):
         ctx = await commands.Context.from_interaction(interaction)
-        await ctx.send("An error happened and bot devs may or may not try to understand what happened <a:RuanMeiAiPeace:1164689665740259369>")
-        try:
-            chan = self.bot.get_channel(1148381402111426693)
-            err = ''.join(traceback.TracebackException.from_exception(error.original).format())
-            await chan.send(f"Gato game error ```{err}```")
-        except:
-            raise error.original
+        if isinstance(error, discord.app_commands.MissingAnyRole):
+            await ctx.send("You don't have the permission to use that command <:RuanMeiGun:1196842753347309608>")
+        else:
+            await ctx.send("An error happened and bot devs may or may not try to understand what happened <a:RuanMeiAiPeace:1164689665740259369>")
+            err = ''.join(traceback.TracebackException.from_exception(error).format())
+            try:
+                chan = self.bot.get_channel(1148381402111426693)
+                await chan.send(f"Gato game error ```{err}```")
+            except:
+                print(err, file=sys.stderr)
 
 
     @app_commands.command(
