@@ -1005,7 +1005,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         1106786509991977000,    # Meihua (Admins)
         1106789830626639882     # Staff (remove after beta)
     )
-    async def give(self, interaction: discord.Interaction, amount: int, member: discord.Member = None, item: str = None):
+    async def give(self, interaction: discord.Interaction, amount: int = 1, member: discord.Member = None, item: str = None):
         """ Give items or currency to a user or yourself """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
@@ -1018,13 +1018,32 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         if item is None:
             player.currency += amount
-            description = f"**{member.mention}** received **{amount}** {CURRENCY_EMOJI}"
+            description = f"{member.mention} received **{amount}** {CURRENCY_EMOJI}"
         else:
-            if item not in player.inventory:
-                player.inventory[item] = amount
+            if issubclass(gatos.items_helper[item], gatos.Gato):
+                lines = []
+                for _ in range(amount):
+                    gato: gatos.Gato = discord.utils.find(lambda g: g.__class__.__name__ == item, player.nursery)
+                    if gato is None:
+                        ng: gatos.Gato = gatos.items_helper[item]()
+                        player.nursery.append(ng)
+                        lines.append(f"{member.mention} received a **{ng.DISPLAY_NAME}**")
+                    elif gato.eidolon < 6:
+                        gato.set_eidolon(gato.eidolon + 1)
+                        lines.append(f"{member.mention}'s **{gatos.items_helper[item].DISPLAY_NAME}** is now at :sparkles: **E{gato.eidolon}**")
+                    else:
+                        lines.append(f":warning: {member.mention} already has **E6 {gatos.items_helper[item].DISPLAY_NAME}**")
+                description = "\n".join(lines)
             else:
-                player.inventory[item] += amount
-            description = f"**{member.mention}** received **{amount} {item}**"
+                if item in data.Data.LEGACY_ITEMS:
+                    # Resolve effects
+                    pass
+
+                if item not in player.inventory:
+                    player.inventory[item] = amount
+                else:
+                    player.inventory[item] += amount
+                description = f"{member.mention} received **{amount} {item}**"
 
         await ctx.send(embed=discord.Embed(title="Give", description=description, colour=discord.Colour.teal()))
 
