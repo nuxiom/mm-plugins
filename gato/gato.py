@@ -241,6 +241,14 @@ class BannersView(discord.ui.View):
         player_id = interaction.user.id
         player = self.gato_game.players[player_id]
 
+        if player.currency < self.banners[self.current_banner].pull_cost * pull_count:
+            await interaction.response.send_message(embed=discord.Embed(
+                title="You're broke!!",
+                description=f"You don't have enough {CURRENCY_EMOJI} {CURRENCY_NAME}s to pull on this banner! Check your balance with `/critter balance`.",
+                colour=discord.Colour.red()
+            ), ephemeral=True)
+            return
+
         ongoing_pulls = self.gato_game.players[player_id]._pull_view
         if ongoing_pulls is not None and ongoing_pulls.ongoing:
             description = f"You already have an ongoing pull, please be patient!"
@@ -832,13 +840,20 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
-        # TODO: Check if there's enough of the consumable in inventory or in transactions.add_item, and remove amount if yes
-        cls = discord.utils.find(lambda cs: cs.DISPLAY_NAME.lower() == item.lower(), gatos.CONSUMABLES)
-        item: gatos.Consumable = cls()
+        player = self.players[ctx.author.id]
+        itm: gatos.Consumable = gatos.items_helper[item]()
+
+        if item not in player.inventory or player.inventory[item] < amount:
+            await interaction.response.send_message(embed=discord.Embed(
+                title=f"Not enough {itm.DISPLAY_NAME}",
+                description=f"You don't have enough of this consumable! Check your inventory with `/critter inventory`.",
+                colour=discord.Colour.red()
+            ), ephemeral=True)
+            return
+
         for _ in range(amount):
             if critter is not None:
                 gato = critter - 1
-                player = self.players[ctx.author.id]
                 nursery = player.nursery
                 if gato < 0 or gato >= len(nursery):
                     embed = discord.Embed(
@@ -852,10 +867,12 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             else:
                 gato = None
 
-            success = await item.consume(ctx, self, gato)
+            success = await itm.consume(ctx, self, gato)
 
             if not success:
                 break
+            else:
+                player.inventory[item] -= 1
 
 
     @app_commands.command(
@@ -871,12 +888,18 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         ctx = await commands.Context.from_interaction(interaction)
 
         player = self.players[ctx.author.id]
+        itm: gatos.Consumable = gatos.items_helper[item]()
 
-        # TODO: Check if the equipment is in inventory or in transactions.add_item, and remove one if yes
-        cls = discord.utils.find(lambda eq: eq.DISPLAY_NAME.lower() == item.lower(), gatos.EQUIPMENTS + gatos.TEAM_EQUIPMENTS)
-        item: gatos.Equipment = cls()
+        if item not in player.inventory or player.inventory[item] < 1:
+            await interaction.response.send_message(embed=discord.Embed(
+                title=f"Not enough {itm.DISPLAY_NAME}",
+                description=f"You don't have enough of this equipment! Check your inventory with `/critter inventory`.",
+                colour=discord.Colour.red()
+            ), ephemeral=True)
+            return
 
-        if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
+
+        if str(itm.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.EQUIPMENT):
             if critter is None:
                 embed = discord.Embed(
                     title=f"Using equipment",
@@ -887,15 +910,17 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 return
 
             idx = critter - 1
-            gato = player.nursery[idx]
-            gato.equipments.append(item)
+            gato: gatos.Gato = player.nursery[idx]
+            gato.equipments.append(itm)
             embed = discord.Embed(
                 title="Equipment",
-                description=f"**{item.DISPLAY_NAME}** was sucessfully equiped to **{gato.name}**!",
+                description=f"**{itm.DISPLAY_NAME}** was sucessfully equiped to **{gato.name}**!",
                 colour=discord.Colour.teal()
             )
             await ctx.send(embed=embed)
-        elif str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPMENT):
+
+            player.inventory[item] -= 1
+        elif str(itm.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.TEAM_EQUIPMENT):
             if player.deployed_team is None or player.deployed_team.deployed_at is None:
                 embed = discord.Embed(
                     title=f"Using team equipment",
@@ -907,13 +932,15 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
             tm = player.deployed_team
             for g in tm.gatos:
-                g.equipments.append(item)
+                g.equipments.append(itm)
             embed = discord.Embed(
                 title="Team equipment",
-                description=f"**{item.DISPLAY_NAME}** was sucessfully equiped to deployed team!",
+                description=f"**{itm.DISPLAY_NAME}** was sucessfully equiped to deployed team!",
                 colour=discord.Colour.teal()
             )
             await ctx.send(embed=embed)
+
+            player.inventory[item] -= 1
 
 
     @app_commands.command(
