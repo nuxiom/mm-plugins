@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import importlib
 import json
 import os
@@ -12,6 +13,7 @@ from functools import reduce, wraps
 import discord
 from discord.ext import commands
 from discord import app_commands
+from PIL import Image, ImageDraw, ImageFont
 
 from core import checks
 from core.models import PermissionLevel
@@ -34,6 +36,10 @@ SAVE_FILE = os.path.join(os.getcwd(), "gato_beta.json")
 CURRENCY_SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 CURRENCY_NAME = "Plum Blossom"
 CURRENCY_EMOJI = "🌸"
+
+
+def hash2(s: str):
+    return hashlib.md5(s.encode()).hexdigest()
 
 
 class PullView(discord.ui.View):
@@ -389,6 +395,10 @@ def init_nursery(function):
     return new_function
 
 
+def get_image_from_url(url):
+    pass
+
+
 @app_commands.guilds(
     311149232402726912,
     1106785082028597258
@@ -417,6 +427,19 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         self.bot.loop.create_task(self.schedule_simulation())
         self.bot.loop.create_task(self.schedule_save())
+
+        shops_save = os.path.join(DIR, "shops_url.json")
+        self.shop_images = {}
+        if os.path.exists(shops_save):
+            with open(shops_save) as f:
+                self.shop_images = json.load(f)
+        for shop in data.Data.LEGACY_SHOPS:
+            n = len(shop.to_buy) // 8 + 1
+            for i in range(n):
+                filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                if filename not in self.shop_images.keys():
+                    # TODO: "upload" to Discord and retrieve URL
+                    print(f"No image for shop {shop.name}-{i}")
 
         self.__cog_app_commands_group__.on_error = self.on_error
 
@@ -498,6 +521,18 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         choices += [app_commands.Choice(name=v.name, value=k)
                     for k, v in data.Data.LEGACY_ITEMS.items()
                     if current.lower() in v.name.lower() or current.lower() in v.description.lower()]
+        return choices[:25]
+
+
+    async def shops_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        choices = []
+        for itm, price in sum([shp.to_buy.items() for shp in data.Data.LEGACY_SHOPS]):
+            item = data.Data.LEGACY_ITEMS[itm]
+            if current.lower() in item.name.lower() or current.lower() in item.description.lower():
+                choices.append(app_commands.Choice(
+                    name=f"{item.name} ({CURRENCY_EMOJI} {price})",
+                    value=itm
+                ))
         return choices[:25]
 
 
@@ -1287,6 +1322,46 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         if img is not None: embed.set_thumbnail(url=img)
         embed.set_footer(text=self.footer)
         await ctx.send(embed=embed)
+
+
+    @app_commands.command(
+        name="shops",
+        description=f"Shows what's to buy in the shops"
+    )
+    async def shops(self, ctx: commands.Context):
+        """Shows what's to buy in the shops"""
+
+        embeds = []
+        for shop in data.Data.LEGACY_SHOPS:
+            n = len(shop.to_buy) // 8 + 1
+            for i in range(n):
+                embed = discord.Embed(
+                    title="Items to buy",
+                    description=f"## Items to buy - {shop.name} ({i+1}/{n})",
+                    colour=discord.Colour.green()
+                )
+
+                filename = f"to_buy_{hash2(json.dumps(shop.to_dict()))}_{i}.png"
+                if filename in self.shop_images.keys():
+                    embed.set_image(url=self.shop_images[filename])
+                else:
+                    embed.set_footer(text="ERROR: No image for this shop. Please ping @cyxo")
+                embeds.append(embed)
+
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        await paginator.run()
+
+
+    @app_commands.command(
+        name="buy",
+        description=f"Buy an item at the shop"
+    )
+    @app_commands.autocomplete(item=shops_autocomplete)
+    async def shops(self, interaction: discord.Interaction, item: str, amount: int = 1):
+        """Buy an item at the shop"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
+        await ctx.send("OK")
 
 
     @app_commands.command(

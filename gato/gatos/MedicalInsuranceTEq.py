@@ -6,6 +6,7 @@ class MedicalInsuranceTEq(AEquipment):
 
     ITEM_TYPE: ItemType = ItemType.TEAM_EQUIPMENT
     DISPLAY_NAME = "Medical Insurance"
+    RARITY = 4
 
     def claim(self, gato):
         super().claim(gato)
