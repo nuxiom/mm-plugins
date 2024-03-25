@@ -25,6 +25,6 @@ class Team:
     @classmethod
     def from_json(cls, d: dict, nursery: list):
         gatos = [[gato for gato in nursery if gato.DISPLAY_NAME == DISPLAY_NAME][0] for DISPLAY_NAME in d["gatos"]]
-        deployed_at = datetime.fromtimestamp(d["deployed_at"])
+        deployed_at = datetime.fromtimestamp(d["deployed_at"]) if d["deployed_at"] is not None else None
         pinged_already = d["pinged_already"]
         return cls(gatos, deployed_at, pinged_already)
