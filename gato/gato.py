@@ -248,7 +248,7 @@ class BannersView(discord.ui.View):
         player = self.gato_game.players[player_id]
 
         if player.currency < self.banners[self.current_banner].pull_cost * pull_count:
-            await interaction.response.send_message(embed=discord.Embed(
+            await interaction.followup.send(embed=discord.Embed(
                 title="You're broke!!",
                 description=f"You don't have enough {CURRENCY_EMOJI} {CURRENCY_NAME}s to pull on this banner! Check your balance with `/critter balance`.",
                 colour=discord.Colour.red()
@@ -303,7 +303,7 @@ class BannersView(discord.ui.View):
                     player.currency += money
                     result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
             else:
-                class_name = f"gatos.{item.__name__}"
+                class_name = item.__name__
                 if class_name not in player.inventory:
                     player.inventory[class_name] = 1
                 else:
@@ -469,7 +469,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
-        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.DISPLAY_NAME)
+        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.__name__)
                 for itm in gatos.CONSUMABLES
                 if current.lower() in itm.DISPLAY_NAME.lower()][:25]
 
@@ -482,10 +482,10 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
-        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.DISPLAY_NAME)
+        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.__name__)
                    for itm in gatos.EQUIPMENTS
                    if current.lower() in itm.DISPLAY_NAME.lower()]
-        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.DISPLAY_NAME)
+        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.__name__)
                     for itm in gatos.TEAM_EQUIPMENTS
                     if current.lower() in itm.DISPLAY_NAME.lower()]
         return choices[:25]
@@ -850,7 +850,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         itm: gatos.Consumable = gatos.items_helper[item]()
 
         if item not in player.inventory or player.inventory[item] < amount:
-            await interaction.response.send_message(embed=discord.Embed(
+            await interaction.followup.send(embed=discord.Embed(
                 title=f"Not enough {itm.DISPLAY_NAME}",
                 description=f"You don't have enough of this consumable! Check your inventory with `/critter inventory`.",
                 colour=discord.Colour.red()
@@ -897,7 +897,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         itm: gatos.Consumable = gatos.items_helper[item]()
 
         if item not in player.inventory or player.inventory[item] < 1:
-            await interaction.response.send_message(embed=discord.Embed(
+            await interaction.followup.send(embed=discord.Embed(
                 title=f"Not enough {itm.DISPLAY_NAME}",
                 description=f"You don't have enough of this equipment! Check your inventory with `/critter inventory`.",
                 colour=discord.Colour.red()

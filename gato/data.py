@@ -98,7 +98,7 @@ class Banner():
         text += "### Guarantees:\n"
         if len(self.pities) > 0:
             for rarity, pulls in self.pities.items():
-                text += f"- Guaranteed to get a **{rarity}⭐️ item** every **{pulls} pulls**\n"
+                text += f"- Guaranteed to get a **{rarity}:star: item** every **{pulls} pulls**\n"
         else:
             text += "*No guarantees*\n"
 
