@@ -17,18 +17,18 @@ class PullsStatus:
     def __init__(self, **kwargs) -> None:
         self.pities = {
             "limited": {
-                5: 0,
-                4: 0
+                "5": 0,
+                "4": 0
             },
             "permanent": {
-                5: 0,
-                4: 0
+                "5": 0,
+                "4": 0
             }
         }
         self.fiftyfifties = {
             "limited": {
-                5: True,
-                4: True
+                "5": True,
+                "4": True
             }
         }
 

@@ -67,7 +67,7 @@ class Banner():
                 if rnd < self._cumulative_weights[i]:
                     rarity = list(self.drop_weights.keys())[i]
                     for r in sorted(player.pulls_status.pities[self.tag].keys()):
-                        if player.pulls_status.pities[self.tag][r] == self.pities[r] - 1:
+                        if player.pulls_status.pities[self.tag][r] == self.pities[int(r)] - 1:
                             rarity = r
                     for r in player.pulls_status.pities[self.tag]:
                         if rarity == r:
@@ -76,16 +76,16 @@ class Banner():
                             player.pulls_status.pities[self.tag][r] += 1
 
                     if self.fiftyfifty and len(self._offrates_by_rarity[rarity]) > 0:
-                        if player.pulls_status.fiftyfifties[self.tag][rarity]:
+                        if player.pulls_status.fiftyfifties[self.tag][str(rarity)]:
                             win = (random.random() > 0.5)
                         else:
                             win = True
                         if win:
                             item = random.choice(self._items_by_rarity[rarity])
-                            player.pulls_status.fiftyfifties[self.tag][rarity] = True
+                            player.pulls_status.fiftyfifties[self.tag][str(rarity)] = True
                         else:
                             item = random.choice(self._offrates_by_rarity[rarity])
-                            player.pulls_status.fiftyfifties[self.tag][rarity] = False
+                            player.pulls_status.fiftyfifties[self.tag][str(rarity)] = False
                     else:
                         item = random.choice(self._items_by_rarity[rarity])
                     pull_results.append(item)
