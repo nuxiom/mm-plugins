@@ -769,7 +769,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                     await ctx.send(embed=embed)
                     return
 
-            tm = team.Team(legatos)
+            tm = team.Team(legatos, deployed_at=datetime.now())
             player.deployed_team = tm
             for gato in tm.gatos:
                 gato.deploy(tm.gatos)
