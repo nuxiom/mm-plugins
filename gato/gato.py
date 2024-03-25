@@ -1289,20 +1289,6 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         await ctx.send(embed=embed)
 
 
-    async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):
-        ctx = await commands.Context.from_interaction(interaction)
-        if isinstance(error, discord.app_commands.MissingAnyRole):
-            await ctx.send("You don't have the permission to use that command <:RuanMeiGun:1196842753347309608>")
-        else:
-            await ctx.send("An error happened and bot devs may or may not try to understand what happened <a:RuanMeiAiPeace:1164689665740259369>")
-            err = ''.join(traceback.TracebackException.from_exception(error).format())
-            try:
-                chan = self.bot.get_channel(1148381402111426693)
-                await chan.send(f"Gato game error ```{err}```")
-            except:
-                print(err, file=sys.stderr)
-
-
     @app_commands.command(
         name="pullstatus",
         description="Debug command to see 50/50 and pities",
@@ -1322,6 +1308,24 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
         else:
             await ctx.send(content="❌ This player isn't in our records")
+
+
+    async def on_error(self, interaction: discord.Interaction, error: app_commands.CommandInvokeError):
+        try:
+            await interaction.response.defer()
+        except:
+            # Already defered
+            pass
+        if isinstance(error, discord.app_commands.MissingAnyRole):
+            await interaction.followup.send("You don't have the permission to use that command <:RuanMeiGun:1196842753347309608>")
+        else:
+            await interaction.followup.send("An error happened and bot devs may or may not try to understand what happened <a:RuanMeiAiPeace:1164689665740259369>")
+            err = ''.join(traceback.TracebackException.from_exception(error).format())
+            try:
+                chan = self.bot.get_channel(1148381402111426693)
+                await chan.send(f"Gato game error ```{err}```")
+            except:
+                print(err, file=sys.stderr)
 
 
 
