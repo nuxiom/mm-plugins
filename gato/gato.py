@@ -113,6 +113,9 @@ class PullView(discord.ui.View):
         self.message = await self.channel.send(self.author.mention)
         await self.handle_frame(0, skipping=False)
 
+    async def on_error(self, interaction, error, item) -> None:
+        await self.gato_game.on_error(interaction, error)
+
     async def on_timeout(self):
         await self.handle_frame(len(self.frames))
 
@@ -214,6 +217,9 @@ class BannersView(discord.ui.View):
         )
         embed.set_image(url=self.banners[self.current_banner].img)
         await self.message.edit(content="", embed=embed)
+
+    async def on_error(self, interaction, error, item) -> None:
+        await self.gato_game.on_error(interaction, error)
 
     async def on_timeout(self) -> None:
         self.stop()
