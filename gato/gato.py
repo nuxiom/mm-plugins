@@ -526,7 +526,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
     async def shops_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         choices = []
-        for itm, price in sum([shp.to_buy.items() for shp in data.Data.LEGACY_SHOPS]):
+        for itm, price in data.Data.LEGACY_SHOPS[0].to_buy.items(): # TODO: maybe handle more than the first shop?
             item = data.Data.LEGACY_ITEMS[itm]
             if current.lower() in item.name.lower() or current.lower() in item.description.lower():
                 choices.append(app_commands.Choice(
@@ -1328,8 +1328,10 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         name="shops",
         description=f"Shows what's to buy in the shops"
     )
-    async def shops(self, ctx: commands.Context):
+    async def shops(self, interaction: discord.Interaction):
         """Shows what's to buy in the shops"""
+        await interaction.response.defer()
+        ctx = await commands.Context.from_interaction(interaction)
 
         embeds = []
         for shop in data.Data.LEGACY_SHOPS:
