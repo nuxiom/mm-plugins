@@ -1359,7 +1359,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         description=f"Buy an item at the shop"
     )
     @app_commands.autocomplete(item=shops_autocomplete)
-    async def shops(self, interaction: discord.Interaction, item: str, amount: int = 1):
+    async def buy(self, interaction: discord.Interaction, item: str, amount: int = 1):
         """Buy an item at the shop"""
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
