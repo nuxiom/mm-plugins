@@ -9,8 +9,11 @@ import traceback
 import uuid
 from datetime import datetime, timedelta
 from functools import reduce, wraps
+from io import BytesIO
 
 import discord
+from dotenv import load_dotenv
+import requests
 from discord.ext import commands
 from discord import app_commands
 from PIL import Image, ImageDraw, ImageFont
@@ -44,6 +47,22 @@ def hash2(s: str):
     return hashlib.md5(s.encode()).hexdigest()
 
 
+def get_image_from_url(url) -> Image:
+    r = requests.get(url)
+    return Image.open(BytesIO(r.content))
+
+
+def discord_send_file(file: BytesIO) -> str:
+    files = {
+        'payload_json': (None, '{"username": "test", "content": "hello"}'),
+        'file1': file
+    }
+
+    response = requests.post(os.getenv('GATO_WEBHOOK_URL', ''), files=files)
+
+    return response.json()["attachments"][0]["proxy_url"]
+
+
 class PullView(discord.ui.View):
 
     frames: list[dict] = []
@@ -51,6 +70,7 @@ class PullView(discord.ui.View):
     title: str
     results: list[gatos.Gato]
     result_lines: list[str]
+    result_image: str
     banner: data.Banner
     gato_game: "GatoGame"
 
@@ -72,6 +92,20 @@ class PullView(discord.ui.View):
         self.result_lines = result_lines
         self.banner = banner
         self.gato_game = gato_game
+        self.result_image = None
+
+        if len(result_lines) > 1:
+            self.gato_game.bot.loop.create_task(self.create_image())
+
+    async def create_image(self):
+        recap = Image.open(os.path.join(DIR, "gachabg.png"))
+        for i in range(len(self.result_lines)):
+            item = self.results[i]
+            itm = get_image_from_url(item.IMAGE)
+            recap.paste(itm, (30 * (1+(i % 5)) + 92 * (i % 5), 60 * (1+(i // 5)) + 92 * (i // 5)), itm)
+        bio = BytesIO()
+        recap.save(bio, format="PNG")
+        self.result_image = discord_send_file(bio)
 
     async def handle_frame(self, frame: int, skipping=False):
         if skipping:
@@ -80,7 +114,7 @@ class PullView(discord.ui.View):
         if frame == len(self.frames):
             self.ongoing = False
             self.stop()
-            description="\n".join(self.result_lines)
+            description="\n".join(self.result_lines) # TODO: Probably remove that description later
             pull_again_view = PullAgainView(self.ctx, self.message, self.banner, self.gato_game)
             await pull_again_view.refresh_buttons()
             if len(self.frames) == 1:
@@ -97,8 +131,8 @@ class PullView(discord.ui.View):
                     embed.set_image(url=self.frames[0]["static"])
                     await self.message.edit(embed=embed, view=pull_again_view)
             else:
-                ls = "- " + "\n- ".join([itm.DISPLAY_NAME for itm in self.results])
                 embed = discord.Embed(title=self.title, colour=discord.Colour.teal(), description=description)
+                embed.set_image(url=self.result_image)
                 await self.message.edit(embed=embed, view=pull_again_view)
         else:
             embed = discord.Embed(title=self.title, colour=discord.Colour.teal())
@@ -398,10 +432,6 @@ def init_nursery(function):
     return new_function
 
 
-def get_image_from_url(url):
-    pass
-
-
 @app_commands.guilds(
     311149232402726912,
     1106785082028597258
@@ -413,6 +443,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         self.bot = bot
         self.cog_id = uuid.uuid4()
         self.footer = ""  # TODO: REPLACE ME
+
+        print("GATO_WEBHOOK_URL", os.getenv('GATO_WEBHOOK_URL', 'no url'))
 
         self.players: dict[int, player.Player] = {}
         if not os.path.exists(SAVE_FILE):

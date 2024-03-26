@@ -69,9 +69,9 @@ class Banner():
                     rarity = list(self.drop_weights.keys())[i]
                     for r in sorted(player.pulls_status.pities[self.tag].keys()):
                         if player.pulls_status.pities[self.tag][r] == self.pities[int(r)] - 1:
-                            rarity = r
+                            rarity = int(r)
                     for r in player.pulls_status.pities[self.tag]:
-                        if rarity == r:
+                        if rarity == int(r):
                             player.pulls_status.pities[self.tag][r] = 0
                         else:
                             player.pulls_status.pities[self.tag][r] += 1
