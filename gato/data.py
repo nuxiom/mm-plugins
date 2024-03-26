@@ -2,6 +2,7 @@ import json
 import os
 import random
 
+from discord.utils import get
 from PIL import Image
 
 from gatos import *
@@ -195,6 +196,47 @@ class LegacyShop():
     @classmethod
     def from_dict(cls, d: dict):
         return cls(**d)
+
+
+class LegacyEffects:
+    @staticmethod
+    async def give_role(player, ctx, role_id: int):
+        """ Gives you the <@&{}> Discord role """
+
+        try:
+            role = get(ctx.guild.roles, id=role_id)
+            print(f"{ctx.author} won role {role.name}")
+            await ctx.author.add_roles(role)
+            return role.name
+        except:
+            print(f"Error while giving role {role_id} to {ctx.author}")
+
+    @staticmethod
+    async def dna_role(player, ctx, dna_role_id: int):
+        """ Collect them all to get a special prize! """
+
+        dna_list = ["adenine", "cytosine", "guanine", "thymine"]
+
+        if all(dna in player.inventory.keys() for dna in dna_list):
+            role_name = await LegacyEffects.give_role(player, ctx, dna_role_id)
+            await ctx.author.send(f'Congrats! You collected all the parts to assemble Ruan Mei\'s hairpin! You received the role "{role_name}"! Please keep it a secret <a:RuanMeiAiPeace:1164689665740259369>')
+
+    @staticmethod
+    async def currency_boost(player, ctx):
+        """ Boosts your currency earnings. The more you have the better!
+            - 1 Currency Boost: +5%
+            - 5 Currency Boost: +10%
+            - 20 Currency Boost: +15%
+            - 50 Currency Boost: +20%
+        """
+        if player.inventory["currencyboost"] < 5:
+            player.currency_boost = 0.05
+        elif player.inventory["currencyboost"] < 20:
+            player.currency_boost = 0.1
+        elif player.inventory["currencyboost"] < 50:
+            player.currency_boost = 0.15
+        else:
+            player.currency_boost = 0.2
 
 
 class Data:

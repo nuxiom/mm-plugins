@@ -251,15 +251,16 @@ class BannersView(discord.ui.View):
 
     async def start_pulls(self, interaction: discord.Interaction, pull_count: int):
         player_id = interaction.user.id
-        player = self.gato_game.players[player_id]
 
-        if player.currency < self.banners[self.current_banner].pull_cost * pull_count:
+        if player_id not in self.gato_game.players or self.gato_game.players[player_id].currency < self.banners[self.current_banner].pull_cost * pull_count:
             await interaction.followup.send(embed=discord.Embed(
                 title="You're broke!!",
-                description=f"You don't have enough {CURRENCY_EMOJI} {CURRENCY_NAME}s to pull on this banner! Check your balance with `/critter balance`.",
+                description=f"You don't have enough {CURRENCY_EMOJI} {CURRENCY_NAME}s to pull on this banner! <a:RuanMeiBugcatBroke:1181134215446806579> Check your balance with `/critter balance`.",
                 colour=discord.Colour.red()
             ), ephemeral=True)
             return
+
+        player = self.gato_game.players[player_id]
 
         ongoing_pulls = self.gato_game.players[player_id]._pull_view
         if ongoing_pulls is not None and ongoing_pulls.ongoing:
@@ -526,13 +527,14 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
     async def shops_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         choices = []
-        for itm, price in data.Data.LEGACY_SHOPS[0].to_buy.items(): # TODO: maybe handle more than the first shop?
-            item = data.Data.LEGACY_ITEMS[itm]
-            if current.lower() in item.name.lower() or current.lower() in item.description.lower():
-                choices.append(app_commands.Choice(
-                    name=f"{item.name} ({CURRENCY_EMOJI} {price})",
-                    value=itm
-                ))
+        for shp in data.Data.LEGACY_SHOPS:
+            for itm, price in shp.to_buy.items(): # TODO: maybe handle more than the first shop?
+                item = data.Data.LEGACY_ITEMS[itm]
+                if current.lower() in item.name.lower() or current.lower() in item.description.lower():
+                    choices.append(app_commands.Choice(
+                        name=f"{item.name} ({CURRENCY_EMOJI} {price})",
+                        value=itm
+                    ))
         return choices[:25]
 
 
@@ -561,6 +563,41 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             gato3s = gatos.NormalGato()
             p.nursery.append(gato3s)
             self.players[player_id] = p
+
+
+    async def give_item_to_player(self, ctx: commands.Context, member: discord.Member, item_class: str, amount: int = 1):
+        plyr = self.players[member.id]
+
+        if item_class in gatos.items_helper and issubclass(gatos.items_helper[item_class], gatos.Gato):
+            lines = []
+            for _ in range(amount):
+                gato: gatos.Gato = discord.utils.find(lambda g: g.__class__.__name__ == item_class, plyr.nursery)
+                if gato is None:
+                    ng: gatos.Gato = gatos.items_helper[item_class]()
+                    plyr.nursery.append(ng)
+                    lines.append(f"{member.mention} received a **{ng.DISPLAY_NAME}**")
+                elif gato.eidolon < 6:
+                    gato.set_eidolon(gato.eidolon + 1)
+                    lines.append(f"{member.mention}'s **{gatos.items_helper[item_class].DISPLAY_NAME}** is now at :sparkles: **E{gato.eidolon}**")
+                else:
+                    lines.append(f":warning: {member.mention} already has **E6 {gatos.items_helper[item_class].DISPLAY_NAME}**")
+            return "\n".join(lines)
+        else:
+            if item_class in data.Data.LEGACY_ITEMS:
+                itm = data.Data.LEGACY_ITEMS[item_class]
+                for effect, args in itm.effects.items():
+                    await eval(f"data.LegacyEffects.{effect}")(plyr, ctx, *args)
+                item_name = itm.name
+            elif item_class in gatos.items_helper:
+                item_name = gatos.items_helper[item_class].DISPLAY_NAME
+            else:
+                item_name = item_class
+
+            if item_class not in plyr.inventory:
+                plyr.inventory[item_class] = amount
+            else:
+                plyr.inventory[item_class] += amount
+            return f"{member.mention} received **{amount} {item_name}**"
 
 
     async def schedule_simulation(self):
@@ -1088,30 +1125,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             player.currency += amount
             description = f"{member.mention} received **{amount}** {CURRENCY_EMOJI}"
         else:
-            if issubclass(gatos.items_helper[item], gatos.Gato):
-                lines = []
-                for _ in range(amount):
-                    gato: gatos.Gato = discord.utils.find(lambda g: g.__class__.__name__ == item, player.nursery)
-                    if gato is None:
-                        ng: gatos.Gato = gatos.items_helper[item]()
-                        player.nursery.append(ng)
-                        lines.append(f"{member.mention} received a **{ng.DISPLAY_NAME}**")
-                    elif gato.eidolon < 6:
-                        gato.set_eidolon(gato.eidolon + 1)
-                        lines.append(f"{member.mention}'s **{gatos.items_helper[item].DISPLAY_NAME}** is now at :sparkles: **E{gato.eidolon}**")
-                    else:
-                        lines.append(f":warning: {member.mention} already has **E6 {gatos.items_helper[item].DISPLAY_NAME}**")
-                description = "\n".join(lines)
-            else:
-                if item in data.Data.LEGACY_ITEMS:
-                    # Resolve effects
-                    pass
-
-                if item not in player.inventory:
-                    player.inventory[item] = amount
-                else:
-                    player.inventory[item] += amount
-                description = f"{member.mention} received **{amount} {item}**"
+            description = await self.give_item_to_player(ctx, member, item, amount)
 
         await ctx.send(embed=discord.Embed(title="Give", description=description, colour=discord.Colour.teal()))
 
@@ -1120,6 +1134,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         name="balance",
         description=f"Check your (or someone else's) {CURRENCY_EMOJI} {CURRENCY_NAME} balance"
     )
+    @init_nursery
     async def balance(self, interaction: discord.Interaction, member: discord.Member = None):
         """Shows a user's currency balance"""
         await interaction.response.defer()
@@ -1151,6 +1166,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         name="inventory",
         description=f"Check your (or someone else's) inventory"
     )
+    @init_nursery
     async def inventory(self, interaction: discord.Interaction, member: discord.Member = None):
         """Shows a user's inventory"""
         await interaction.response.defer()
@@ -1200,6 +1216,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         app_commands.Choice(name="Heads", value="heads"),
         app_commands.Choice(name="Tails", value="tails")
     ])
+    @init_nursery
     async def flip(self, interaction: discord.Interaction, guess: str, money: int):
         """ Gamble currency by flippîng a coin """
         await interaction.response.defer()
@@ -1269,6 +1286,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         app_commands.Choice(name="Paper", value="paper"),
         app_commands.Choice(name="Scissors", value="scissors"),
     ])
+    @init_nursery
     async def rps(self, interaction: discord.Interaction, move: str, money: int):
         """ Gamble currency by playing Rock Paper Scissors """
         await interaction.response.defer()
@@ -1328,6 +1346,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         name="shops",
         description=f"Shows what's to buy in the shops"
     )
+    @init_nursery
     async def shops(self, interaction: discord.Interaction):
         """Shows what's to buy in the shops"""
         await interaction.response.defer()
@@ -1359,11 +1378,44 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         description=f"Buy an item at the shop"
     )
     @app_commands.autocomplete(item=shops_autocomplete)
+    @init_nursery
     async def buy(self, interaction: discord.Interaction, item: str, amount: int = 1):
         """Buy an item at the shop"""
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
-        await ctx.send("OK")
+        
+        player = self.players[ctx.author.id]
+
+        price = None
+        for shp in data.Data.LEGACY_SHOPS:
+            if item in shp.to_buy:
+                price = shp.to_buy[item]
+                break
+
+        if price is None:
+            await interaction.followup.send(embed=discord.Embed(
+                title="Can't buy that",
+                description=f"That item isn't for sale! <:RuanMeiCurious:1173930315195101234> Check shops with `/critter shops`.",
+                colour=discord.Colour.red()
+            ), ephemeral=True)
+            return
+
+        if item in data.Data.LEGACY_ITEMS:
+            item_name = data.Data.LEGACY_ITEMS[item].name
+        else:
+            item_name = gatos.items_helper[item].DISPLAY_NAME
+
+        if player.currency < price * amount:
+            await interaction.followup.send(embed=discord.Embed(
+                title="You're broke!!",
+                description=f"You don't have enough {CURRENCY_EMOJI} {CURRENCY_NAME}s to buy {amount} {item_name}(s)! <a:RuanMeiBugcatBroke:1181134215446806579> Check your balance with `/critter balance`.",
+                colour=discord.Colour.red()
+            ), ephemeral=True)
+            return
+
+        player.currency -= price * amount
+        description = await self.give_item_to_player(ctx, ctx.author, item, amount)
+        await ctx.send(embed=discord.Embed(title="Item bought!", description=description, colour=discord.Colour.teal()))
 
 
     @app_commands.command(
