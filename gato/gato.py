@@ -37,6 +37,8 @@ CURRENCY_SAVE_FILE = os.path.join(os.getcwd(), "currency.json")
 CURRENCY_NAME = "Plum Blossom"
 CURRENCY_EMOJI = "🌸"
 
+NERFED_CHANNELS = [1106794426711408700]
+
 
 def hash2(s: str):
     return hashlib.md5(s.encode()).hexdigest()
@@ -445,6 +447,43 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         self.__cog_app_commands_group__.on_error = self.on_error
 
 
+    def compute_vc_currency(self, duration: int):
+        # duration in seconds since last compute
+
+        for g in self.bot.guilds:
+            for vc in g.voice_channels:
+                for member in vc.members:
+                    if member.id not in self.players.keys():
+                        self.create_player(member.id)
+                    player = self.players[member.id]
+
+                    mute = (member.voice.mute or member.voice.self_mute) and not member.voice.suppress
+                    deaf = member.voice.deaf or member.voice.self_deaf
+
+                    if deaf:
+                        player._vc_earn_rate = 0
+                    elif mute:
+                        player._vc_earn_rate = 0.5
+                    else:
+                        player._vc_earn_rate = 0.7
+
+                    boost = 1 + player.currency_boost
+                    if any([role.id == 1145893255062495303 for role in member.roles]):
+                        boost += 0.1
+
+                    decay = max(1 - player._time_in_vc / (3*60*60), 0.3)
+
+                    if vc.id in NERFED_CHANNELS:
+                        player._vc_earn_rate = 0.005
+                        decay = 1
+                        boost = 1
+
+                    earnings = 100 / 60 * duration * boost * player._vc_earn_rate * decay
+                    player.currency += earnings
+
+                    player._time_in_vc += duration
+
+
     def load_conf(self):
         with open(SAVE_FILE, "r") as f:
             save: dict = json.load(f)
@@ -470,8 +509,37 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 break
             sleep = 2
             await asyncio.sleep(sleep)
-            # self.compute_vc_currency(sleep)
+            self.compute_vc_currency(sleep)
             self.save_conf()
+
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        self.create_player(message.author.id)
+        player = self.players[message.author.id]
+
+        t = datetime.now()
+        if player._last_talked.minute != t.minute or player._last_talked.hour != t.hour or player._last_talked.date() != t.date():
+            player._last_talked = t
+            player._talked_this_minute = 0
+
+        msg: str = message.content
+        if not msg.startswith("?") and player._talked_this_minute < 10:
+            filtered = list(filter(lambda w: len(w) > 1, msg.split()))
+            score = min(len(filtered), 20)
+            boost = 1 + player.currency_boost
+            if any([role.id == 1145893255062495303 for role in message.author.roles]):
+                boost += 0.1
+            
+            player.currency += score * boost
+
+            if len(message.stickers) > 0:
+                player.currency += 3
+
+            player._talked_this_minute += 1
 
 
     @init_nursery
@@ -864,6 +932,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             c, o = gato.claim()
             currency += c
             objects += o
+
+        currency *= 1 + player.currency_boost
 
         if len(events) == 0:
             events = "*Nothing specific happened.*"
