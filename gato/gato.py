@@ -542,6 +542,19 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             player._talked_this_minute += 1
 
 
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        if member.id not in self.players.keys():
+            self.create_player(member.id)
+        player = self.players[member.id]
+
+        if before.channel is None and after.channel is not None:
+            now = datetime.now()
+            if now.date() != player._last_day_in_vc.date():
+                player._time_in_vc = 0
+            player._last_day_in_vc = now
+
+
     @init_nursery
     async def nursery_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         choices = []
