@@ -37,7 +37,7 @@ class ABaseGato(ABaseItem):
     Attributes starting with a `_` should not be modified manually.
     Attributes in CAPS are constants."""
 
-    IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    IMAGE: str = "https://i.ibb.co/9n5gT9D/download.png"
     """Sprite of the gato. **OVERRIDE IT!**"""
 
     ANIMATIONS: str = "mooncakegato"

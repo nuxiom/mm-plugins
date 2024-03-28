@@ -10,7 +10,7 @@ class KafkaGato(ABaseGato):
     """
 
     # TODO: image & animation
-    IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1201435790845165658/nuxiom_gato.PNG"
+    IMAGE = "https://i.ibb.co/zr82fFH/nuxiom-gato.png"
     # ANIMATIONS = "kafkagato"
     DISPLAY_NAME = "Shader Cat"
     RARITY = 4

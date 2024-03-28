@@ -12,7 +12,7 @@ from AConsumable import AConsumable
 class DefibrilatorConsumable(AConsumable):
     """> Revives an undeployed critter with 20 HP"""
 
-    # IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    # IMAGE: str = "UPLOAD IT TO IMGBB.COM"
     # ANIMATIONS: str = "medkit"
     DISPLAY_NAME: str = "Defibrilator"
     RARITY: int = 3

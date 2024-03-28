@@ -13,7 +13,7 @@ class HimekoGato(ABaseGato):
     """
 
     # Override constants
-    IMAGE = "https://cdn.discordapp.com/attachments/1117346551644295239/1199465789372240072/himeko_gato1.png"
+    IMAGE = "https://i.ibb.co/LCpWG4P/himeko-gato1.png"
     # ANIMATIONS = "4star"
     DISPLAY_NAME = "Rose Tiramisu"
     RARITY = 4

@@ -12,7 +12,8 @@ from AConsumable import AConsumable
 class MedkitConsumable(AConsumable):
     """> Restores 50 HP to the selected critter"""
 
-    IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    # TODO: ask swede for the image and upload to imgbb.com
+    IMAGE: str = "https://i.ibb.co/9n5gT9D/download.png"
     ANIMATIONS: str = "medkit"
     DISPLAY_NAME: str = "Medkit"
     RARITY: int = 3

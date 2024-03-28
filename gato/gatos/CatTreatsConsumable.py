@@ -12,7 +12,7 @@ from AConsumable import AConsumable
 class CatTreatsConsumable(AConsumable):
     """> Restores 30 hunger and 50 energy"""
 
-    # IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    # IMAGE: str = "UPLOAD IT TO IMGBB.COM"
     # ANIMATIONS: str = "medkit"
     DISPLAY_NAME: str = "Cat treats"
     RARITY: int = 3

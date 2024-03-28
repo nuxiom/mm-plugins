@@ -10,7 +10,7 @@ class SeeleGato(ABaseGato):
     """
 
     # Override constants
-    IMAGE = "https://media.discordapp.net/attachments/435078369852260353/1192963553934704730/seelegato.png"
+    IMAGE = "https://i.ibb.co/0QJhz0c/seelegato.png"
     ANIMATIONS = "seelegato"
     DISPLAY_NAME = "Berry Butterfly"
     RARITY = 4

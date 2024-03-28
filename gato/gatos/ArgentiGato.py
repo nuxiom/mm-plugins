@@ -13,7 +13,7 @@ class ArgentiGato(ABaseGato):
     """
 
     # Override constants
-    IMAGE = "https://cdn.discordapp.com/attachments/1117346551644295239/1200036370568196146/argenti_gato.png"
+    IMAGE = "https://i.ibb.co/8cfy5W5/argenti-gato.png"
     # ANIMATIONS = "4star"
     DISPLAY_NAME = "Creme de Rose"
     RARITY = 4

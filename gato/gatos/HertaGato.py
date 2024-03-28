@@ -9,7 +9,7 @@ class HertaGato(ABaseGato):
         > E6: (increases time to 30 minutes)
     """
 
-    IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1198011033130901665/herta_gato.png"
+    IMAGE = "https://i.ibb.co/MGcLYqv/herta-gato.png"
     ANIMATIONS = "hertagato"
     DISPLAY_NAME = "Wisteria Cake"
     RARITY = 4

@@ -14,7 +14,7 @@ from SwedeGato import SwedeGato
 class SwedishFishConsumable(AConsumable):
     """> Restores 30 hunger and increases efficiency by 10% for 1 hour. ⚠️ Efficiency food buffs don't stack!"""
 
-    IMAGE: str = "https://media.discordapp.net/attachments/1106794389759598662/1181130462874312714/image0.png"
+    IMAGE: str = "https://i.ibb.co/McD71pV/image0.png"
     # ANIMATIONS: str = "medkit"
     DISPLAY_NAME: str = "Swedish Fish"
     RARITY: int = 3

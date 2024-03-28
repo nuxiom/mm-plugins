@@ -5,7 +5,7 @@ class NormalGato(ABaseGato):
         > A gato with 140 base HP.
     """
 
-    IMAGE = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    IMAGE = "https://i.ibb.co/9n5gT9D/download.png"
     ANIMATIONS = "mooncakegato"
     DISPLAY_NAME = "Mooncake"
     RARITY = 3

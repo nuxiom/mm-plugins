@@ -12,7 +12,7 @@ class GuinaifenGato(ABaseGato):
     """
 
     # TODO: img & display name & animation
-    IMAGE: str = "https://cdn.discordapp.com/attachments/1198010808672723075/1201435790845165658/nuxiom_gato.PNG"
+    IMAGE: str = "https://i.ibb.co/zr82fFH/nuxiom-gato.png"
     # ANIMATIONS: str = "guinaifengato"
     DISPLAY_NAME: str = "Guinaifen Gato"
     RARITY: int = 4

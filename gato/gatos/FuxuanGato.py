@@ -14,7 +14,7 @@ class FuxuanGato(ABaseGato):
     """
 
     # TODO: name & animation
-    IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1198174175936917504/fuxuangato.png"
+    IMAGE = "https://i.ibb.co/8bThsz0/fuxuangato.png"
     # ANIMATIONS = "fuxuangato"
     DISPLAY_NAME = "Fuxuan Gato"
     RARITY = 4

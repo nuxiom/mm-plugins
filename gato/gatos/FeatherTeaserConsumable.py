@@ -12,7 +12,7 @@ from AConsumable import AConsumable
 class FeatherTeaserConsumable(AConsumable):
     """> Play with the critter to increase its mood by 50"""
 
-    # IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    # IMAGE: str = "UPLOAD IT TO IMGBB.COM"
     # ANIMATIONS: str = "medkit"
     DISPLAY_NAME: str = "Feather teaser"
     RARITY: int = 3

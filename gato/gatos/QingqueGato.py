@@ -38,7 +38,7 @@ class QingqueGato(ABaseGato):
         > and her hand is cleared. This double recovery does not generate tiles.
     """
 
-    IMAGE = "https://cdn.discordapp.com/attachments/1198010808672723075/1198011033458049184/qingque_gato.PNG"
+    IMAGE = "https://i.ibb.co/zHR9K98/qingque-gato.png"
     ANIMATIONS = "qingquegato"
     DISPLAY_NAME = "Lucky Snack"
     RARITY = 4

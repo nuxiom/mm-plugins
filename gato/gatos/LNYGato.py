@@ -8,7 +8,7 @@ class LNYGato(ABaseGato):
     """
 
     # Override constants
-    IMAGE = "https://media.discordapp.net/attachments/1174877208377036884/1197920834669510777/IMG_2328.png"
+    IMAGE = "https://i.ibb.co/nmrMHWZ/IMG-2328.png"
     ANIMATIONS = "lnygato"
     DISPLAY_NAME = "Lucky Tangerine"
     RARITY = 5

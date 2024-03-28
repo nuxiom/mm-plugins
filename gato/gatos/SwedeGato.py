@@ -5,7 +5,7 @@ class SwedeGato(ABaseGato):
         > A gato with 500% base efficiency.
     """
 
-    IMAGE = "https://media.discordapp.net/attachments/435078369852260353/1197974365439021176/swede_gato.png"
+    IMAGE = "https://i.ibb.co/mNddLB0/swede-gato.png"
     ANIMATIONS = "swedegato"
     DISPLAY_NAME = "Pistachio Sesame"
     RARITY = 6

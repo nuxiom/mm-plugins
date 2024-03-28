@@ -12,7 +12,8 @@ from AConsumable import AConsumable
 class TrashConsumable(AConsumable):
     """> Poison food. Reduces HP by 20, restores 50 hunger."""
 
-    IMAGE: str = "https://cdn.discordapp.com/emojis/1173895764087414855.webp"
+    # TODO: take the HSR trash image from some wiki and upload to imgbb.com
+    IMAGE: str = "https://i.ibb.co/9n5gT9D/download.png"
     ANIMATIONS: str = "trash"
     DISPLAY_NAME: str = "Trash"
     RARITY: int = 3
