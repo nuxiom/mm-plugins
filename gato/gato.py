@@ -96,9 +96,9 @@ class PullView(discord.ui.View):
         self.result_image = None
 
         if len(result_lines) > 1:
-            self.gato_game.bot.loop.create_task(self.create_image())
+            self.gato_game.bot.loop.run_in_executor(None, self.create_image)
 
-    async def create_image(self):
+    def create_image(self):
         recap = Image.open(os.path.join(DIR, "gachabg.png"))
         for i in range(len(self.result_lines)):
             item = self.results[i]
@@ -114,9 +114,13 @@ class PullView(discord.ui.View):
             self.skipped_yet = True
 
         if frame == len(self.frames):
+            while len(self.frames) > 1 and self.result_image is None:
+                await asyncio.sleep(0.5)
+
             self.ongoing = False
             self.stop()
-            description="\n".join(self.result_lines) # TODO: Probably remove that description later
+            description="\n".join(self.result_lines) # Old recap text before recap images
+            # description = None # New recap "text"
             pull_again_view = PullAgainView(self.ctx, self.message, self.banner, self.gato_game)
             await pull_again_view.refresh_buttons()
             if len(self.frames) == 1:
