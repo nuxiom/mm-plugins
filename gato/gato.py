@@ -47,9 +47,9 @@ def hash2(s: str):
     return hashlib.md5(s.encode()).hexdigest()
 
 
-def get_image_from_url(url) -> Image:
+def get_image_from_url(url) -> Image.Image:
     r = requests.get(url)
-    return Image.open(BytesIO(r.content))
+    return Image.open(BytesIO(r.content)).convert("RGBA")
 
 
 def discord_send_file(file: BytesIO) -> str:
@@ -101,7 +101,7 @@ class PullView(discord.ui.View):
         recap = Image.open(os.path.join(DIR, "gachabg.png"))
         for i in range(len(self.result_lines)):
             item = self.results[i]
-            itm = get_image_from_url(item.IMAGE)
+            itm = get_image_from_url(item.IMAGE).resize((92, 92))
             recap.paste(itm, (30 * (1+(i % 5)) + 92 * (i % 5), 60 * (1+(i // 5)) + 92 * (i // 5)), itm)
         bio = BytesIO()
         recap.save(bio, format="PNG")
