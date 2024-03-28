@@ -58,7 +58,8 @@ def discord_send_file(file: BytesIO) -> str:
         'file1': file
     }
 
-    response = requests.post(os.getenv('GATO_WEBHOOK_URL', ''), files=files)
+    url = os.getenv('GATO_WEBHOOK_URL', '')
+    response = requests.post(url[1:-1], files=files)
 
     return response.json()["attachments"][0]["proxy_url"]
 
@@ -105,6 +106,7 @@ class PullView(discord.ui.View):
             recap.paste(itm, (30 * (1+(i % 5)) + 92 * (i % 5), 60 * (1+(i // 5)) + 92 * (i // 5)), itm)
         bio = BytesIO()
         recap.save(bio, format="PNG")
+        bio.seek(0)
         self.result_image = discord_send_file(bio)
 
     async def handle_frame(self, frame: int, skipping=False):
