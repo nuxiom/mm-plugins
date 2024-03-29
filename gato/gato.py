@@ -1032,9 +1032,9 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         description="Use a consumable",
         auto_locale_strings=False
     )
-    @app_commands.autocomplete(item=consumables_autocomplete, critter=nursery_autocomplete)
+    @app_commands.autocomplete(item=consumables_autocomplete)
     @init_nursery
-    async def use(self, interaction: discord.Interaction, item: str, critter: int = None, amount: int = 1):
+    async def use(self, interaction: discord.Interaction, item: str, amount: int = 1):
         """ Use a consumable """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
@@ -1053,23 +1053,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             return
 
         for _ in range(amount):
-            if critter is not None:
-                gato = critter - 1
-                nursery = player.nursery
-                if gato < 0 or gato >= len(nursery):
-                    embed = discord.Embed(
-                        title=f"Error",
-                        description=f"Critter number {gato + 1} not found. Use `/critter nursery`",
-                        colour=discord.Colour.red()
-                    )
-                    await ctx.send(embed=embed)
-
-                gato = nursery[gato]
-            else:
-                gato = None
-
             itm: gatos.Consumable = gatos.items_helper[item]()
-            success = await itm.consume(ctx, self, gato)
+            success = await itm.consume(ctx, self)
 
             if not success:
                 break
