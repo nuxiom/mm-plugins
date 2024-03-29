@@ -7,6 +7,7 @@ from discord.ext.commands.context import Context
 from discord.ui import View
 
 from AConsumable import AConsumable
+from ViewGato import ViewGato
 
 
 class AvocadoToastConsumable(AConsumable):
@@ -17,34 +18,42 @@ class AvocadoToastConsumable(AConsumable):
     DISPLAY_NAME: str = "Avocado toast"
     RARITY: int = 3
 
-    async def consume(self, ctx: Context, gatogame, gato = None):
-        await super().consume(ctx, gatogame, gato)
+    _gato = None
+    _player = None
+    result = None
 
-        if gato is None:
-            embed = discord.Embed(
-                title = self.DISPLAY_NAME,
-                description = "You need to specify a critter to use this on",
-                colour = discord.Colour.red()
+    async def modal_callback(self, value):
+        if value:
+            self.gato = find(
+                lambda g: g.DISPLAY_NAME == value,
+                self._player.nursery
             )
-            await ctx.send(embed=embed)
-            return False
+            self.gato.add_health(30)
+            self.gato.add_hunger(30)
+            self.result = True
+        else:
+            self.result = False
 
-        if gato._fainted:
-            embed = discord.Embed(
-                title = self.DISPLAY_NAME,
-                description = "This critter has fainted, please revive it first",
-                colour = discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return False
+    async def consume(self, interaction: Interaction, gatogame, gato = None):
+        await super().consume(interaction, gatogame, gato)
 
-        gato.add_hunger(30)
-        gato.add_health(30)
+        self._player = gatogame.players[interaction.user.id]
+        count = self._player.inventory[self.__class__.__name__]
 
-        embed = discord.Embed(
-            title = self.DISPLAY_NAME,
-            description = f"**30 hunger** and **30 HP** were restored to **{gato.name}**",
-            colour = discord.Colour.teal()
+        view = ViewGato(
+            player=self._player,
+            callback=self.modal_callback
         )
-        await ctx.send(embed=embed)
-        return True
+
+        await interaction.response.send_message(
+            content=f"You have **{count} {self.DISPLAY_NAME}** left. Which critter do you want to use **{self.DISPLAY_NAME}** on?",
+            view=view,
+            ephemeral=True
+        )
+
+        while self.result is None:
+            await asyncio.sleep(0.5)
+
+        await interaction.delete_original_response()
+
+        return self.result

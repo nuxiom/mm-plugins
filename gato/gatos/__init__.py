@@ -81,6 +81,8 @@ Item = ABaseItem.ABaseItem
 
 import AConsumable
 importlib.reload(AConsumable)
+import ViewGato as ViewGato
+importlib.reload(ViewGato)
 
 import RedPacketConsumable, TrashConsumable, MedkitConsumable, \
     AvocadoToastConsumable, CatTreatsConsumable, SwedishFishConsumable, \
