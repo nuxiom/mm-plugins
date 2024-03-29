@@ -12,10 +12,14 @@ class ModalGato(Modal):
 
     gato = Select(
         placeholder = "Select a critter to use this on",
-        options = []
+        options = [
+            SelectOption(
+                label="Placeholder"
+            )
+        ]
     )
 
-    def __init__(self, player, description, callback, title: str = "Select a critter", timeout: float | None = None, custom_id: str = ...) -> None:
+    def __init__(self, player, description, callback) -> None:
         self.gato = Select(
             placeholder = description,
             options = [
@@ -28,7 +32,7 @@ class ModalGato(Modal):
             ]
         )
         self.callback = callback
-        super().__init__(title=title, timeout=timeout, custom_id=custom_id)
+        super().__init__(title="Select a critter")
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer()
