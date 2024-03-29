@@ -1296,36 +1296,50 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         if member is None:
             member = ctx.author
 
+        descriptions = []
         if member.id in self.players:
             player = self.players[member.id]
 
             description = "## Items:\n"
             i = 0
+            lines = []
             for item, amount in player.inventory.items():
                 i += 1
                 if item in data.Data.LEGACY_ITEMS:
                     itm = data.Data.LEGACY_ITEMS[item]
-                    description += f"- **{itm.name}** x{amount}\n"
+                    lines.append(f"- **{itm.name}** x{amount}")
                 elif item in gatos.items_helper:
                     itm = gatos.items_helper[item]
-                    description += f"- **{itm.DISPLAY_NAME}** x{amount}\n"
+                    lines.append(f"- **{itm.DISPLAY_NAME}** x{amount}")
                 else:
-                    description += f"- **{item}** x{amount}\n"
+                    lines.append(f"- **{item}** x{amount}")
             if i == 0:
-                description += "This user has no items in their inventory."
+                lines.append("This user has no items in their inventory.")
+            lines.sort()
+
+            lns = []
+            for i, line in enumerate(lines):
+                lns.append(line)
+                if len(lns) == 10 or i == len(lines) - 1:
+                    descriptions.append(description + "\n".join(lns))
+                    lns = []
 
             colour = discord.Colour.teal()
         else:
-            description = f"{member.display_name} isn't in our database. Have they ever talked??"
+            descriptions = [f"{member.display_name} isn't in our database. Have they ever talked??"]
             colour = discord.Colour.red()
 
-        embed = discord.Embed(
-            title=f"{member.display_name}'s inventory",
-            description=description,
-            colour=colour
-        )
-        embed.set_footer(text=self.footer)
-        await ctx.send(embed=embed)
+        embeds = []
+        for description in descriptions:
+            embed = discord.Embed(
+                title=f"{member.display_name}'s inventory",
+                description=description,
+                colour=colour
+            )
+            embed.set_footer(text=self.footer)
+            embeds.append(embed)
+        paginator = EmbedPaginatorSession(ctx, *embeds)
+        await paginator.run()
 
 
     # Gamble currency in heads/tails
