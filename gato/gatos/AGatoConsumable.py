@@ -41,7 +41,6 @@ class AGatoConsumable(AConsumable):
             ephemeral=True
         )
 
-        print(self, self.result)
         while self.result is None:
             await asyncio.sleep(0.5)
 

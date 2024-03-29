@@ -12,7 +12,7 @@ class DefibrilatorConsumable(AGatoConsumable):
     DISPLAY_NAME: str = "Defibrilator"
     RARITY: int = 3
 
-    async def __init__(self, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.ctx = None
         self.team = None
