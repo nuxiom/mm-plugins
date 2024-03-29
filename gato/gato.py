@@ -1040,11 +1040,10 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         ctx = await commands.Context.from_interaction(interaction)
 
         player = self.players[ctx.author.id]
-        itm: gatos.Consumable = gatos.items_helper[item]()
 
         if item not in player.inventory or player.inventory[item] < amount:
             await interaction.followup.send(embed=discord.Embed(
-                title=f"Not enough {itm.DISPLAY_NAME}",
+                title=f"Not enough {gatos.items_helper[item].DISPLAY_NAME}",
                 description=f"You don't have enough of this consumable! Check your inventory with `/critter inventory`.",
                 colour=discord.Colour.red()
             ), ephemeral=True)
@@ -1066,6 +1065,9 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             else:
                 gato = None
 
+            itm: gatos.Consumable = gatos.items_helper[item]()
+            _msg = await ctx.send("Loading...") # Dirty fix for first message not being ephemeral
+            await _msg.delete()
             success = await itm.consume(ctx, self, gato)
 
             if not success:

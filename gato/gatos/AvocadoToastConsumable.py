@@ -1,10 +1,8 @@
-from random import randint
+import asyncio
 
-import discord
-from discord.ext import commands
+from discord.utils import find
 
 from discord.ext.commands.context import Context
-from discord.ui import View
 
 from AConsumable import AConsumable
 from ViewGato import ViewGato
@@ -20,7 +18,10 @@ class AvocadoToastConsumable(AConsumable):
 
     _gato = None
     _player = None
-    result = None
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.result = None
 
     async def modal_callback(self, value):
         if value:
@@ -34,10 +35,10 @@ class AvocadoToastConsumable(AConsumable):
         else:
             self.result = False
 
-    async def consume(self, interaction: Interaction, gatogame, gato = None):
-        await super().consume(interaction, gatogame, gato)
+    async def consume(self, ctx: Context, gatogame, gato = None):
+        await super().consume(ctx, gatogame, gato)
 
-        self._player = gatogame.players[interaction.user.id]
+        self._player = gatogame.players[ctx.author.id]
         count = self._player.inventory[self.__class__.__name__]
 
         view = ViewGato(
@@ -45,15 +46,16 @@ class AvocadoToastConsumable(AConsumable):
             callback=self.modal_callback
         )
 
-        await interaction.response.send_message(
+        message = await ctx.send(
             content=f"You have **{count} {self.DISPLAY_NAME}** left. Which critter do you want to use **{self.DISPLAY_NAME}** on?",
             view=view,
             ephemeral=True
         )
 
+        print(self, self.result)
         while self.result is None:
             await asyncio.sleep(0.5)
 
-        await interaction.delete_original_response()
+        await message.delete()
 
         return self.result
