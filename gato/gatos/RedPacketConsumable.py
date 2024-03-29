@@ -97,7 +97,7 @@ class RedPacketConsumable(AConsumable):
     DISPLAY_NAME: str = "Red Packet"
     RARITY: int = 3
 
-    async def consume(self, ctx: Context, gatogame, gato = None):
+    async def consume(self, ctx: Context, gatogame):
         await super().consume(ctx, gatogame)
 
         red_packet_view = RedPacketView(gatogame)

@@ -1039,6 +1039,9 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
+        _msg = await ctx.send("Loading...") # Dirty fix for first message not allowed to be ephemeral
+        await _msg.delete()
+
         player = self.players[ctx.author.id]
 
         if item not in player.inventory or player.inventory[item] < amount:
@@ -1066,8 +1069,6 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 gato = None
 
             itm: gatos.Consumable = gatos.items_helper[item]()
-            _msg = await ctx.send("Loading...") # Dirty fix for first message not being ephemeral
-            await _msg.delete()
             success = await itm.consume(ctx, self, gato)
 
             if not success:

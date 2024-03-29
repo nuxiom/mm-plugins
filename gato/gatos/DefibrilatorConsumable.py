@@ -1,15 +1,10 @@
-from random import randint
-
 import discord
-from discord.ext import commands
+from discord.utils import find
 
-from discord.ext.commands.context import Context
-from discord.ui import View
-
-from AConsumable import AConsumable
+from AGatoConsumable import AGatoConsumable
 
 
-class DefibrilatorConsumable(AConsumable):
+class DefibrilatorConsumable(AGatoConsumable):
     """> Revives an undeployed critter with 20 HP"""
 
     # IMAGE: str = "UPLOAD IT TO IMGBB.COM"
@@ -17,45 +12,46 @@ class DefibrilatorConsumable(AConsumable):
     DISPLAY_NAME: str = "Defibrilator"
     RARITY: int = 3
 
-    async def consume(self, ctx: Context, gatogame, gato = None):
-        await super().consume(ctx, gatogame, gato)
+    async def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.ctx = None
+        self.team = None
 
+    async def modal_callback(self, value):
+        if value:
+            gato = find(
+                lambda g: g.DISPLAY_NAME == value,
+                self._player.nursery
+            )
+
+            if self.tm is not None and self.tm.deployed_at is not None and gato in self.tm.gatos:
+                embed = discord.Embed(
+                    title = "Defibrilator",
+                    description = "This critter is currently deployed. Please recall it using `/critter recall` first",
+                    colour = discord.Colour.red()
+                )
+                await self.ctx.send(embed=embed)
+                self.result = False
+                return
+
+            if not gato._fainted:
+                embed = discord.Embed(
+                    title = "Defibrilator",
+                    description = "This critter has not fainted, so it can't be revived",
+                    colour = discord.Colour.red()
+                )
+                await self.ctx.send(embed=embed)
+                self.result = False
+                return
+
+            gato._fainted = False
+            gato.add_health(20)
+
+        await super().modal_callback()
+
+    async def consume(self, ctx, gatogame):
         player = gatogame.players[ctx.author.id]
-        if gato is None:
-            embed = discord.Embed(
-                title = "Defibrilator",
-                description = "You need to specify a critter to use this on",
-                colour = discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return False
 
-        tm = player.deployed_team
-        if tm is not None and tm.deployed_at is not None and gato in tm.gatos:
-            embed = discord.Embed(
-                title = "Defibrilator",
-                description = "This critter is currently deployed. Please recall it using `/critter recall` first",
-                colour = discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return False
-
-        if not gato._fainted:
-            embed = discord.Embed(
-                title = "Defibrilator",
-                description = "This critter has not fainted, so it can't be revived",
-                colour = discord.Colour.red()
-            )
-            await ctx.send(embed=embed)
-            return False
-
-        gato._fainted = False
-        gato.add_health(20)
-
-        embed = discord.Embed(
-            title = "Defibrilator",
-            description = f"**{gato.name}** was revived with **20 HP**",
-            colour = discord.Colour.teal()
-        )
-        await ctx.send(embed=embed)
-        return True
+        self.tm = player.deployed_team
+        self.ctx = ctx
+        return await super().consume(ctx, gatogame)
