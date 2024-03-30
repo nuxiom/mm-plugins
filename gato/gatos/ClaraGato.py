@@ -39,10 +39,10 @@ class ClaraGato(ABaseGato):
         self._events.append({self.CLARA_COUNTER_EVENT_TYPE: None})
 
     @require_alive
-    def add_health(self, amount: float):
+    def add_health(self, amount: float, allow_overflow: bool = False):
         """Overrides base method to allow :py:meth:`counter` on health change"""
 
-        super().add_health(amount)
+        super().add_health(amount, allow_overflow)
         self.counter(amount)
 
     def deploy(self, team: list["ABaseGato"]):
