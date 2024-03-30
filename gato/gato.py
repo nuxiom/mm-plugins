@@ -612,7 +612,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
-        return [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm.__name__)
+        return [app_commands.Choice(name=f"{itm.DISPLAY_NAME} ({player.inventory[itm.__name__]})", value=itm.__name__)
                 for itm in gatos.CONSUMABLES
                 if current.lower() in itm.DISPLAY_NAME.lower()][:25]
 
@@ -625,10 +625,10 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
 
-        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment)", value=itm.__name__)
+        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment) ({player.inventory[itm.__name__]})", value=itm.__name__)
                    for itm in gatos.EQUIPMENTS
                    if current.lower() in itm.DISPLAY_NAME.lower()]
-        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment)", value=itm.__name__)
+        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment) ({player.inventory[itm.__name__]})", value=itm.__name__)
                     for itm in gatos.TEAM_EQUIPMENTS
                     if current.lower() in itm.DISPLAY_NAME.lower()]
         return choices[:25]

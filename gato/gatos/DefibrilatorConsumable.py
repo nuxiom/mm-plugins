@@ -27,20 +27,20 @@ class DefibrilatorConsumable(AGatoConsumable):
             if self.tm is not None and self.tm.deployed_at is not None and gato in self.tm.gatos:
                 embed = discord.Embed(
                     title = "Defibrilator",
-                    description = "This critter is currently deployed. Please recall it using `/critter recall` first",
+                    description = f"**{gato.name}** is currently deployed. Please recall it using `/critter recall` first",
                     colour = discord.Colour.red()
                 )
-                await self.ctx.send(embed=embed)
+                await self.ctx.send(embed=embed, ephemeral=True)
                 self.result = False
                 return
 
             if not gato._fainted:
                 embed = discord.Embed(
                     title = "Defibrilator",
-                    description = "This critter has not fainted, so it can't be revived",
+                    description = f"**{gato.name}** has not fainted, so it can't be revived",
                     colour = discord.Colour.red()
                 )
-                await self.ctx.send(embed=embed)
+                await self.ctx.send(embed=embed, ephemeral=True)
                 self.result = False
                 return
 
