@@ -20,4 +20,4 @@ class AvocadoToastConsumable(AGatoConsumable):
             gato.add_health(30)
             gato.add_hunger(30)
 
-        await super().modal_callback()
+        await super().modal_callback(value)

@@ -19,4 +19,4 @@ class SalmonConsumable(AGatoConsumable):
             )
             gato.add_hunger(50)
 
-        await super().modal_callback()
+        await super().modal_callback(value)

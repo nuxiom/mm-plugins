@@ -19,4 +19,4 @@ class FeatherTeaserConsumable(AGatoConsumable):
             )
             gato.add_mood(50)
 
-        await super().modal_callback()
+        await super().modal_callback(value)

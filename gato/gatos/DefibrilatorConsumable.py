@@ -47,7 +47,7 @@ class DefibrilatorConsumable(AGatoConsumable):
             gato._fainted = False
             gato.add_health(20)
 
-        await super().modal_callback()
+        await super().modal_callback(value)
 
     async def consume(self, ctx, gatogame):
         player = gatogame.players[ctx.author.id]

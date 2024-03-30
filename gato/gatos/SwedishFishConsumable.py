@@ -35,4 +35,4 @@ class SwedishFishConsumable(AGatoConsumable):
                 gato.add_mood(20)
                 gato.add_hunger(20)
 
-        await super().modal_callback()
+        await super().modal_callback(value)

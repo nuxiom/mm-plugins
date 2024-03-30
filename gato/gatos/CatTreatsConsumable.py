@@ -19,4 +19,4 @@ class CatTreatsConsumable(AGatoConsumable):
             )
             gato.add_energy(50)
 
-        await super().modal_callback()
+        await super().modal_callback(value)

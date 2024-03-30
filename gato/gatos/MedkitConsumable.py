@@ -20,4 +20,4 @@ class MedkitConsumable(AGatoConsumable):
             )
             gato.add_health(50)
 
-        await super().modal_callback()
+        await super().modal_callback(value)

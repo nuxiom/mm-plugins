@@ -21,4 +21,4 @@ class TrashConsumable(AGatoConsumable):
             gato.add_health(-20)
             gato.add_hunger(50)
 
-        await super().modal_callback()
+        await super().modal_callback(value)
