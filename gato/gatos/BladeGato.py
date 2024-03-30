@@ -39,10 +39,10 @@ class BladeGato(ABaseGato):
         self._events.append({event_type: None})
 
     @require_alive
-    def add_health(self, amount: float):
+    def add_health(self, amount: float, allow_overflow: bool = False):
         """Overrides base method to allow :py:meth:`hellscape` on health change"""
 
-        super().add_health(amount)
+        super().add_health(amount, allow_overflow)
         self.hellscape(amount)
 
     def set_eidolon(self, value: int):

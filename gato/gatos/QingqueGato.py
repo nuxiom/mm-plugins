@@ -127,26 +127,26 @@ class QingqueGato(ABaseGato):
         return 0.1 + 0.02 * self.eidolon
 
     @require_alive
-    def add_health(self, amount: float):
-        super().add_health(amount)
+    def add_health(self, amount: float, allow_overflow: bool = False):
+        super().add_health(amount, allow_overflow)
         if amount < 0 and random.random() < self.skill_threshold():
             self.skill(amount, RecoverableStat.HEALTH)
 
     @require_alive
-    def add_mood(self, amount: float):
-        super().add_mood(amount)
+    def add_mood(self, amount: float, allow_overflow: bool = False):
+        super().add_mood(amount, allow_overflow)
         if amount < 0 and random.random() < self.skill_threshold():
             self.skill(amount, RecoverableStat.MOOD)
 
     @require_alive
-    def add_hunger(self, amount: float):
-        super().add_hunger(amount)
+    def add_hunger(self, amount: float, allow_overflow: bool = False):
+        super().add_hunger(amount, allow_overflow)
         if amount < 0 and random.random() < self.skill_threshold():
             self.skill(amount, RecoverableStat.HUNGER)
 
     @require_alive
-    def add_energy(self, amount: float):
-        super().add_energy(amount)
+    def add_energy(self, amount: float, allow_overflow: bool = False):
+        super().add_energy(amount, allow_overflow)
         if amount < 0 and random.random() < self.skill_threshold():
             self.skill(amount, RecoverableStat.ENERGY)
 
