@@ -84,4 +84,4 @@ class ExampleGato(ABaseGato):
         self.efficiency_buff(seconds)
 
         # Then call the parent simulation (VERY IMPORTANT)
-        super().simulate(seconds)
+        super().simulate(team, seconds)

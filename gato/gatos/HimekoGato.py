@@ -68,4 +68,4 @@ class HimekoGato(ABaseGato):
         self.energy_buff(seconds, team)
 
         # Then call the parent simulation (VERY IMPORTANT)
-        super().simulate(seconds)
+        super().simulate(team, seconds)
