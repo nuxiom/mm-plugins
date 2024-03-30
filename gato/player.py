@@ -11,8 +11,8 @@ importlib.reload(gatos)
 
 class PullsStatus:
 
-    pities: dict[str, dict[int, int]]
-    fiftyfifties: dict[str, dict[int, bool]]
+    pities: dict[str, dict[str, int]]
+    fiftyfifties: dict[str, dict[str, bool]]
 
     def __init__(self, **kwargs) -> None:
         self.pities = {

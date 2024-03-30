@@ -1564,8 +1564,22 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         if member.id in self.players:
             player = self.players[member.id]
-            dct = player.pulls_status.to_json()
-            await ctx.send(content=f"```json\n{json.dumps(dct)}``` ✅ *This is a debug command*")
+            banner_per_tag = {b.tag: b for b in data.Data.banners}
+            available_tags = [tag for tag in player.pulls_status.pities if tag in banner_per_tag.keys()]
+            embed = discord.Embed(title=f"{member.display_name}'s pulls status", colour=discord.Colour.teal())
+            for tag in available_tags:
+                description = ""
+                for r in player.pulls_status.pities[tag]:
+                    description += f"{r}:star: pity: {player.pulls_status.pities[tag][r]}/{banner_per_tag[tag].pities[int(r)]}\n"
+                if tag in player.pulls_status.fiftyfifties:
+                    for r in player.pulls_status.fiftyfifties[tag]:
+                        description += f"{r}:star: on 50/50 : "
+                        description += "Yes\n" if player.pulls_status.fiftyfifties[tag][r] else "No\n"
+                embed.add_field(
+                    name=tag.capitalize(),
+                    value=description
+                )
+            await ctx.send(embed=embed)
         else:
             await ctx.send(content="❌ This player isn't in our records")
 
