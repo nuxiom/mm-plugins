@@ -1,6 +1,7 @@
 import unittest
 import sys
 import inspect
+import json
 import random
 from itertools import islice
 
@@ -74,6 +75,7 @@ class SmokeTests(unittest.TestCase):
                     gato.simulate(team_copy, 1)
             # save gatos
             team_save = [gato.to_json() for gato in team_copy]
+            json.dumps(team_save) # verify all gatos are JSON-serializable
             team_copy = [team_copy[i].__class__.from_json(team_save[i]) for i in range(len(team_save))]
             # simulate the remaining 85400 game ticks
             for _ in range(0, 85400):
