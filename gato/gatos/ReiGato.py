@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from ABaseGato import ABaseGato, require_alive
 
 
