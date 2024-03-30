@@ -31,7 +31,7 @@ class GuinaifenGato(ABaseGato):
 
     # Mutable state variables used for this gato
     # Timestamps of recent deploy time buffs
-    recent_stats_buff_ts: list[datetime] = []
+    recent_stats_buff_ts: list[str] = []
 
     def deploy(self, team: list["ABaseGato"]):
         """Increase mood and energy for the team on deploy"""
@@ -41,17 +41,17 @@ class GuinaifenGato(ABaseGato):
         # Check if we've already buffed allies twice today (utc), skip if so
         now = datetime.now(timezone.utc)
         self.recent_stats_buff_ts = [
-            ts for ts in self.recent_stats_buff_ts if ts.date() == now.date()]
+            ts for ts in self.recent_stats_buff_ts if datetime.fromisoformat(ts).date() == now.date()]
         if len(self.recent_stats_buff_ts) >= 2:
             return
-        
+
         # Otherwise, apply buff
         buff_amount = 20 if self.eidolon < 6 else 25
         for g in team:
             # increase energy and mood
             g.add_energy(buff_amount, allow_overflow=True)
             g.add_mood(buff_amount, allow_overflow=True)
-        self.recent_stats_buff_ts.append(now)
+        self.recent_stats_buff_ts.append(now.isoformat())
 
         # event
         self._events.append({self.GUINAIFEN_STATS_UP_EVENT_TYPE: None})

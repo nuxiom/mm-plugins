@@ -31,14 +31,14 @@ class FuxuanGato(ABaseGato):
     }
     FX_DMG_REDUCTION_KEY: str = "FX_dmg_reduction"
 
-    recent_heal_ts: list[datetime] = []
+    recent_heal_ts: list[str] = []
     heal_cooldown: int = 0
 
     def maybe_apply_heal(self, seconds):
         # Tick down heal cd if needed
         if self.heal_cooldown > 0:
             self.heal_cooldown = max(self.heal_cooldown - seconds, 0)
-        
+
         # Check if we are still within cooldown since last heal, skip if so
         if self.heal_cooldown > 0:
             return
@@ -50,14 +50,14 @@ class FuxuanGato(ABaseGato):
         # Check if we've already healed twice today (utc), skip if so
         now = datetime.now(timezone.utc)
         self.recent_heal_ts = [
-            ts for ts in self.recent_heal_ts if ts.date() == now.date()]
+            ts for ts in self.recent_heal_ts if datetime.fromisoformat(ts).date() == now.date()]
         if len(self.recent_heal_ts) >= 2:
             return
 
         # Now we can heal
         heal_amount = self.max_health * 0.3 if self.eidolon < 6 else self.max_health * 0.35
         self.add_health(heal_amount)
-        self.recent_heal_ts.append(now)
+        self.recent_heal_ts.append(now.isoformat())
         self.heal_cooldown = 7200 if self.eidolon < 6 else 5400
         self._events.append({self.FX_HEAL_EVENT_TYPE: None})
 
@@ -70,7 +70,7 @@ class FuxuanGato(ABaseGato):
         for gato in team:
             if self.FX_DMG_REDUCTION_KEY not in gato.damage_reductions:
                 gato.damage_reductions[self.FX_DMG_REDUCTION_KEY] = dmg_reduction_amount
-                self._events.append({self.FX_MATRIX_EVENT_TYPE: None})        
+                self._events.append({self.FX_MATRIX_EVENT_TYPE: None})
 
         # Apply self heal if applicable
         self.maybe_apply_heal(seconds)
