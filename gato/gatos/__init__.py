@@ -148,6 +148,6 @@ TEAM_EQUIPMENTS: list[AEquipment.AEquipment] = [MedicalInsuranceTEq]
 
 # All items together
 
-ALL_ITEMS: list[Item] = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS
+ALL_ITEMS: list[Item] = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS+[EfficiencyFoodEq]
 
 items_helper = {v.__name__: v for v in ALL_ITEMS}
