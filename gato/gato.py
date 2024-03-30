@@ -598,7 +598,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         choices = []
 
         player = self.players[interaction.user.id]
-        for i, gato in enumerate(player.nursery):
+        for i, gato in enumerate(sorted(player.nursery, key=lambda a: a.name)):
             if current.lower() in gato.name.lower() or current.lower() in gato.DISPLAY_NAME.lower() or str(i).startswith(current):
                 choices.append(app_commands.Choice(name=f"{gato.name} ({gato.DISPLAY_NAME})", value=i+1))
 
@@ -610,11 +610,14 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         player = self.players[interaction.user.id]
 
-        # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
+        for itm in sorted(gatos.CONSUMABLES, key=lambda i: i.DISPLAY_NAME):
+            if current.lower() in itm.DISPLAY_NAME.lower() \
+            and itm.__name__ in player.inventory and player.inventory[itm.__name__] > 0:
+                choices.append(
+                    app_commands.Choice(name=f"{itm.DISPLAY_NAME} ({player.inventory[itm.__name__]})", value=itm.__name__)
+                )
 
-        return [app_commands.Choice(name=f"{itm.DISPLAY_NAME} ({player.inventory[itm.__name__]})", value=itm.__name__)
-                for itm in gatos.CONSUMABLES
-                if current.lower() in itm.DISPLAY_NAME.lower()][:25]
+        return choices[:25]
 
 
     @init_nursery
@@ -623,23 +626,27 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         player = self.players[interaction.user.id]
 
-        # TODO: later, loop through the player's items that are consumables, instead of just the list of consumables
-
-        choices = [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment) ({player.inventory[itm.__name__]})", value=itm.__name__)
-                   for itm in gatos.EQUIPMENTS
-                   if current.lower() in itm.DISPLAY_NAME.lower()]
-        choices += [app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment) ({player.inventory[itm.__name__]})", value=itm.__name__)
-                    for itm in gatos.TEAM_EQUIPMENTS
-                    if current.lower() in itm.DISPLAY_NAME.lower()]
+        for itm in sorted(gatos.EQUIPMENTS, key=lambda i: i.DISPLAY_NAME):
+            if current.lower() in itm.DISPLAY_NAME.lower() \
+            and itm.__name__ in player.inventory and player.inventory[itm.__name__] > 0:
+                choices.append(
+                    app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Critter equipment) ({player.inventory[itm.__name__]})", value=itm.__name__)
+                )
+        for itm in sorted(gatos.TEAM_EQUIPMENTS, key=lambda i: i.DISPLAY_NAME):
+            if current.lower() in itm.DISPLAY_NAME.lower() \
+            and itm.__name__ in player.inventory and player.inventory[itm.__name__] > 0:
+                choices.append(
+                    app_commands.Choice(name=f"{itm.DISPLAY_NAME} (Team equipment) ({player.inventory[itm.__name__]})", value=itm.__name__)
+                )
         return choices[:25]
 
 
     async def anything_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         choices = [app_commands.Choice(name=itm.DISPLAY_NAME, value=itm_name)
-                   for itm_name, itm in gatos.items_helper.items()
+                   for itm_name, itm in sorted(gatos.items_helper.items(), key=lambda i: i[1].DISPLAY_NAME)
                    if current.lower() in itm.DISPLAY_NAME.lower() or current.lower() in itm.__doc__.lower()]
         choices += [app_commands.Choice(name=v.name, value=k)
-                    for k, v in data.Data.LEGACY_ITEMS.items()
+                    for k, v in sorted(data.Data.LEGACY_ITEMS.items(), key=lambda i: i[1].name)
                     if current.lower() in v.name.lower() or current.lower() in v.description.lower()]
         return choices[:25]
 
@@ -647,7 +654,8 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     async def shops_autocomplete(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         choices = []
         for shp in data.Data.LEGACY_SHOPS:
-            for itm, price in shp.to_buy.items(): # TODO: maybe handle more than the first shop?
+            for itm, price in sorted(shp.to_buy.items(), key=lambda i: i[0]):
+                # TODO: Prepare to handle new items later too
                 item = data.Data.LEGACY_ITEMS[itm]
                 if current.lower() in item.name.lower() or current.lower() in item.description.lower():
                     choices.append(app_commands.Choice(

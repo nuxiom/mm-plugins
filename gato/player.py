@@ -48,7 +48,7 @@ class PullsStatus:
 
 class Player:
 
-    nursery: list
+    nursery: list[gatos.Gato]
     pulls_status: PullsStatus
     deployed_team: team.Team
     
