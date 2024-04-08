@@ -94,7 +94,8 @@ importlib.reload(ViewGato)
 
 import RedPacketConsumable, TrashConsumable, MedkitConsumable, \
     AvocadoToastConsumable, CatTreatsConsumable, SwedishFishConsumable, \
-    DefibrilatorConsumable, FeatherTeaserConsumable, SalmonConsumable
+    DefibrilatorConsumable, FeatherTeaserConsumable, SalmonConsumable, \
+    YaoshiConsumable
 
 importlib.reload(RedPacketConsumable)
 importlib.reload(TrashConsumable)
@@ -105,6 +106,7 @@ importlib.reload(SwedishFishConsumable)
 importlib.reload(DefibrilatorConsumable)
 importlib.reload(FeatherTeaserConsumable)
 importlib.reload(SalmonConsumable)
+importlib.reload(YaoshiConsumable)
 
 Consumable = AConsumable.AConsumable
 RedPacketConsumable = RedPacketConsumable.RedPacketConsumable
@@ -116,6 +118,7 @@ SwedishFishConsumable = SwedishFishConsumable.SwedishFishConsumable
 DefibrilatorConsumable = DefibrilatorConsumable.DefibrilatorConsumable
 FeatherTeaserConsumable = FeatherTeaserConsumable.FeatherTeaserConsumable
 SalmonConsumable = SalmonConsumable.SalmonConsumable
+YaoshiConsumable = YaoshiConsumable.YaoshiConsumable
 
 CONSUMABLES: list[AConsumable.AConsumable] = [
     RedPacketConsumable,
@@ -156,6 +159,6 @@ TEAM_EQUIPMENTS: list[AEquipment.AEquipment] = [MedicalInsuranceTEq]
 
 # All items together
 
-ALL_ITEMS: list[Item] = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS+[EfficiencyFoodEq]
+ALL_ITEMS: list[Item] = CONSUMABLES+EQUIPMENTS+TEAM_EQUIPMENTS+GATOS+[EfficiencyFoodEq,YaoshiConsumable]
 
 items_helper = {v.__name__: v for v in ALL_ITEMS}
