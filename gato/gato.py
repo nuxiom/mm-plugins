@@ -678,6 +678,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         lines = []
 
         for gato in team:
+            print(gato._events)
             lines += gato.handle_events(plyr, CURRENCY_EMOJI)
 
         return "\n".join(lines)
@@ -997,9 +998,10 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         if len(events) == 0:
             events = "*Nothing specific happened.*"
         if len(objects) > 0:
-            obj = "**" + '**, **'.join(set([f"{objects.count(o)}x {o}" for o in objects])) + "**"
+            objnames = [gatos.items_helper[o].DISPLAY_NAME for o in objects]
+            objs = "**" + '**, **'.join(set([f"{objnames.count(o)}x {o}" for o in objnames])) + "**"
         else:
-            obj = "*no objects*"
+            objs = "*no objects*"
 
         player.currency += currency
         for obj in objects:
@@ -1010,7 +1012,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         embed = discord.Embed(
             title=f"Claim rewards",
-            description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {obj}.\n### Event log\n{events}",
+            description=f"### Expedition results\nYour critters brought back **{int(currency)}** {CURRENCY_EMOJI} and {objs}.\n### Event log\n{events}",
             colour=discord.Colour.teal()
         )
         await ctx.send(embed=embed)
