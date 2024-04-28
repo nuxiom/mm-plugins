@@ -73,7 +73,7 @@ class ExampleGato(ABaseGato):
             # Randomly find an Rare treasure
             if random() < self.luck*chances:
                 # If we found one, add it to the objects found by the superclass method
-                objects.append("Rare treasure")
+                objects.append("MedicalInsuranceTEq")
 
         # Return found objects
         return objects

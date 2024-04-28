@@ -33,7 +33,7 @@ class LNYGato(ABaseGato):
             self.find_object_cooldown = 3600
 
             # Find a Red Packet
-            objects.append("gatos.RedPacketConsumable")
+            objects.append("RedPacketConsumable")
 
         # Return found objects
         return objects

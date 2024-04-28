@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from functools import wraps
-from random import random, randint
+from random import random, randint, choice
 
 import discord
 
@@ -85,6 +85,20 @@ class ABaseGato(ABaseItem):
 
     ITEM_TYPE = ItemType.GATO
     """This is just because ABaseGato now extends ABaseItem. **DON'T OVERRIDE IT**, it would make no sense..."""
+
+    RANDOM_OBJECT_WEIGHTS = {
+        "TrashConsumable": 10,
+        "MedkitConsumable": 10,
+        "AvocadoToastConsumable": 10,
+        "CatTreatsConsumable": 10,
+        "SwedishFishConsumable": 10,
+        "DefibrilatorConsumable": 10,
+        "FeatherTeaserConsumable": 10,
+        "SalmonConsumable": 10,
+        "FakeMouseEq": 10,
+        "MedicalInsuranceTEq": 1
+    }
+    """Weight of each object when fetching a random object. *Can be overriden or completed with custom objects.*"""
 
 
     max_mood: float = 100.0
@@ -376,7 +390,11 @@ class ABaseGato(ABaseItem):
         objects = []
         if self._time_deployed % 60 == 0 and self.efficiency >= 1:
             if random() < self.luck / 100:
-                objects.append("Shiny thing")
+                cumulative_items = []
+                for k, v in self.RANDOM_OBJECT_WEIGHTS.items():
+                    cumulative_items += [k]*v
+                obj = choice(cumulative_items)
+                objects.append(obj)
 
         return objects
 
