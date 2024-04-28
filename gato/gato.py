@@ -328,36 +328,50 @@ class BannersView(discord.ui.View):
         result_lines = []
         item: gatos.Item
         for item in pull_results:
-            if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.GATO):
-                gato: gatos.Gato = item
-                thegato: gatos.Gato = None
-                for g in nursery:
-                    if isinstance(g, gato):
-                        thegato = g
-                if thegato is None:
-                    thegato = gato(name=f"{interaction.user.name}'s {gato.DISPLAY_NAME}")
-                    nursery.append(thegato)
-                    result_lines.append(f"- **{gato.DISPLAY_NAME}** obtained!")
-                elif thegato.eidolon < 6:
-                    thegato.set_eidolon(thegato.eidolon + 1)
-                    result_lines.append(f"- **{thegato.name}**'s eidolon level increased to **E{thegato.eidolon}**!")
-                else:
-                    cpr = {
-                        6: 10*bann.pull_cost,
-                        5: 5*bann.pull_cost,
-                        4: 1*bann.pull_cost,
-                        3: bann.pull_cost//2
-                    }
-                    money = cpr[thegato.RARITY]
-                    player.currency += money
-                    result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
+            line = await self.gato_game.give_item_to_player(self.ctx, interaction.user, str(item.__name__), 1)
+            print(line)
+            if "already has **E6" in line:
+                cpr = {
+                    6: 10*bann.pull_cost,
+                    5: 5*bann.pull_cost,
+                    4: 1*bann.pull_cost,
+                    3: bann.pull_cost//2
+                }
+                money = cpr[item.RARITY]
+                player.currency += money
+                result_lines.append(f"- **{item.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
             else:
-                class_name = item.__name__
-                if class_name not in player.inventory:
-                    player.inventory[class_name] = 1
-                else:
-                    player.inventory[class_name] += 1
-                result_lines.append(f"- {item.DISPLAY_NAME}")
+                result_lines.append(f"- {line}")
+            # if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.GATO):
+            #     gato: gatos.Gato = item
+            #     thegato: gatos.Gato = None
+            #     for g in nursery:
+            #         if isinstance(g, gato):
+            #             thegato = g
+            #     if thegato is None:
+            #         thegato = gato(name=f"{interaction.user.name}'s {gato.DISPLAY_NAME}")
+            #         nursery.append(thegato)
+            #         result_lines.append(f"- **{gato.DISPLAY_NAME}** obtained!")
+            #     elif thegato.eidolon < 6:
+            #         thegato.set_eidolon(thegato.eidolon + 1)
+            #         result_lines.append(f"- **{thegato.name}**'s eidolon level increased to **E{thegato.eidolon}**!")
+            #     else:
+            #         cpr = {
+            #             6: 10*bann.pull_cost,
+            #             5: 5*bann.pull_cost,
+            #             4: 1*bann.pull_cost,
+            #             3: bann.pull_cost//2
+            #         }
+            #         money = cpr[thegato.RARITY]
+            #         player.currency += money
+            #         result_lines.append(f"- **{thegato.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
+            # else:
+            #     class_name = item.__name__
+            #     if class_name not in player.inventory:
+            #         player.inventory[class_name] = 1
+            #     else:
+            #         player.inventory[class_name] += 1
+            #     result_lines.append(f"- {item.DISPLAY_NAME}")
 
         for i, gato in enumerate(pull_results):
             anim_name: str
@@ -1012,10 +1026,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
 
         player.currency += currency
         for obj in objects:
-            if obj not in player.inventory:
-                player.inventory[obj] = 1
-            else:
-                player.inventory[obj] += 1
+            await self.give_item_to_player(ctx, ctx.author, obj, 1)
 
         embed = discord.Embed(
             title=f"Claim rewards",
