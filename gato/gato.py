@@ -691,7 +691,6 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         lines = []
 
         for gato in team:
-            print(gato._events)
             lines += gato.handle_events(plyr, CURRENCY_EMOJI)
 
         return "\n".join(lines)

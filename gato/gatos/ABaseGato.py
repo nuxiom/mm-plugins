@@ -341,12 +341,14 @@ class ABaseGato(ABaseItem):
                 if et not in events_by_type:
                     events_by_type[et] = []
                 events_by_type[et].append(event[et])
+        print(events_by_type)
 
         for et, values in events_by_type.items():
             line = f"- **{self.name}** "
 
             args = self.get_args_for_event(et, values)
             args["count"] = len(values)
+            print(et, len(values), values)
             args["currency"] = CURRENCY_EMOJI
 
             if et == "bitten":
