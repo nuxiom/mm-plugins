@@ -21,7 +21,7 @@ class KafkaGato(ABaseGato):
 
     KAFKA_EFF_BOOST_EVENT_TYPE: str = "kafka_eff_boost"
     EVENT_DESCRIPTIONS: dict[str, str] = ABaseGato.EVENT_DESCRIPTIONS | {
-        KAFKA_EFF_BOOST_EVENT_TYPE: "boosted efficiency of all allies!",
+        KAFKA_EFF_BOOST_EVENT_TYPE: "boosted efficiency of all allies!  (x{count})",
     }
     KAFKA_EFF_BOOST_KEY: str = "kafka_eff_boost"
 
