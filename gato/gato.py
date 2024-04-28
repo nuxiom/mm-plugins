@@ -846,7 +846,13 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         else:
             item = data.Data.LEGACY_ITEMS[itm]
             description = f"# {item.name}\n"
-            description += item.description
+            description += item.description + "\n\n"
+            description += "**Effects:**\n"
+            if len(item.effects.keys()) > 0:
+                for effect in item.effects.keys():
+                    description += f"- {eval(f'data.LegacyEffects.{effect}').__doc__.format(*item.effects[effect])}\n"
+            else:
+                description += "*No effect, this item is purely a collectible!*\n"
 
             embed = discord.Embed(
                 title=item.name,
