@@ -1,7 +1,9 @@
 import json
 import os
 import random
+from io import BytesIO
 
+import requests
 from discord.utils import get
 from PIL import Image
 
@@ -167,7 +169,8 @@ class LegacyItem():
         return cls(**d)
 
     def get_image(self):
-        return Image.open(os.path.join(DIR, "img", "items", self.image))
+        r = requests.get(self.image)
+        return Image.open(BytesIO(r.content)).convert("RGBA")
 
 
 class LegacyShop():

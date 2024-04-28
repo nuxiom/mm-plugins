@@ -859,6 +859,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 description=description,
                 colour=discord.Colour.teal()
             )
+            embed.set_thumbnail(url=item.image)
 
         await ctx.send(embed=embed)
 
