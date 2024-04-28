@@ -329,7 +329,6 @@ class BannersView(discord.ui.View):
         item: gatos.Item
         for item in pull_results:
             line = await self.gato_game.give_item_to_player(self.ctx, interaction.user, str(item.__name__), 1)
-            print(line)
             if "already has **E6" in line:
                 cpr = {
                     6: 10*bann.pull_cost,
@@ -339,7 +338,7 @@ class BannersView(discord.ui.View):
                 }
                 money = cpr[item.RARITY]
                 player.currency += money
-                result_lines.append(f"- **{item.name}** is already **E6**. You received **{money}** {CURRENCY_EMOJI} in compensation.")
+                result_lines.append(f"- {line}. You received **{money}** {CURRENCY_EMOJI} in compensation.")
             else:
                 result_lines.append(f"- {line}")
             # if str(item.ITEM_TYPE) == str(gatos.ABaseItem.ItemType.GATO):
