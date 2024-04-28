@@ -241,10 +241,10 @@ class ABaseGato(ABaseItem):
         description = f"# {self.name}\n"
         description += f"## {self.DISPLAY_NAME}\n"
         description += f"{self.__doc__.format(eidolon=self.eidolon)}\n" + \
-            f"**Health:** {round(self.health)} / {round(self.max_health)}\n" + \
-            f"**Hunger:** {round(self.hunger)} / {round(self.max_hunger)}\n" + \
-            f"**Mood:** {round(self.mood)} / {round(self.max_mood)}\n" + \
-            f"**Energy:** {round(self.energy)} / {round(self.max_energy)}\n" + \
+            f"❤️ {round(self.health)} / {round(self.max_health)} │ " + \
+            f"🍗 {round(self.hunger)} / {round(self.max_hunger)} │ " + \
+            f"🌞 {round(self.mood)} / {round(self.max_mood)} │ " + \
+            f"⚡ {round(self.energy)} / {round(self.max_energy)}\n" + \
             f"**Friendship:** {int(self.friendship)}/10\n" + \
             f"\n✨ **Eidolon {self.eidolon}**\n\nEquipments:\n"
 
