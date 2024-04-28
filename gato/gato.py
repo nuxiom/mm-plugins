@@ -940,9 +940,11 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
             # Get unique numbers
             gatos = reduce(lambda re, x: re+[x] if x not in re and x is not None else re, gatos, [])[:4]
             legatos: list = []
-            for g in player.nursery:
-                if g.DISPLAY_NAME in gatos:
-                    legatos.append(g)
+            for ga in gatos:
+                for g in player.nursery:
+                    if g.DISPLAY_NAME == ga:
+                        legatos.append(g)
+                        break
 
             tm = team.Team(legatos, deployed_at=datetime.now())
             player.deployed_team = tm
