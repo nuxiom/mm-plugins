@@ -613,7 +613,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         player = self.players[interaction.user.id]
         for i, gato in enumerate(sorted(player.nursery, key=lambda a: a.name)):
             if current.lower() in gato.name.lower() or current.lower() in gato.DISPLAY_NAME.lower() or str(i).startswith(current):
-                choices.append(app_commands.Choice(name=f"{gato.name} ({gato.DISPLAY_NAME})", value=i+1))
+                choices.append(app_commands.Choice(name=f"{gato.name} ({gato.DISPLAY_NAME})", value=gato.DISPLAY_NAME))
 
         return choices[:25]
 
@@ -888,7 +888,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
         critter4=nursery_autocomplete
     )
     @init_nursery
-    async def deploy(self, interaction: discord.Interaction, critter1: int = None, critter2: int = None, critter3: int = None, critter4: int = None):
+    async def deploy(self, interaction: discord.Interaction, critter1: str = None, critter2: str = None, critter3: str = None, critter4: str = None):
         """ (Re)deploy a team of critters. ⚠️ Order matters! Critter skills will take effect in deployment order (for example, put Critters that boost the whole team in first place). """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
@@ -938,20 +938,11 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 return
 
             # Get unique numbers
-            gatos = reduce(lambda re, x: re+[x] if x not in re and x is not None else re, gatos, [])
+            gatos = reduce(lambda re, x: re+[x] if x not in re and x is not None else re, gatos, [])[:4]
             legatos: list = []
-            for i in gatos[:4]:
-                number = i-1
-                if number >= 0 and number < len(nursery):
-                    legatos.append(nursery[number])
-                else:
-                    embed = discord.Embed(
-                        title=f"Deploy team",
-                        description=f"Critter number {i} not found in your nursery! Check critter numbers with `/critter nursery`!",
-                        colour=discord.Colour.red()
-                    )
-                    await ctx.send(embed=embed)
-                    return
+            for g in player.nursery:
+                if g.DISPLAY_NAME in gatos:
+                    legatos.append(g)
 
             tm = team.Team(legatos, deployed_at=datetime.now())
             player.deployed_team = tm
@@ -1095,7 +1086,7 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     )
     @app_commands.autocomplete(item=equipments_autocomplete, critter=nursery_autocomplete)
     @init_nursery
-    async def equip(self, interaction: discord.Interaction, item: str, critter: int = None):
+    async def equip(self, interaction: discord.Interaction, item: str, critter: str = None):
         """ Equip an item """
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
@@ -1122,8 +1113,18 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
                 await ctx.send(embed=embed)
                 return
 
-            idx = critter - 1
-            gato: gatos.Gato = player.nursery[idx]
+            gato: gatos.Gato = None
+            for g in player.nursery:
+                if g.DISPLAY_NAME == critter:
+                    gato = g
+            if gato is None:
+                embed = discord.Embed(
+                    title=f"Using equipment",
+                    description=f'Critter "{critter}" not found! What are you trying to do...',
+                    colour=discord.Colour.red()
+                )
+                await ctx.send(embed=embed)
+                return
             gato.equipments.append(itm)
             embed = discord.Embed(
                 title="Equipment",
@@ -1162,13 +1163,22 @@ class GatoGame(commands.GroupCog, name=COG_NAME, group_name="critter"):
     )
     @app_commands.autocomplete(critter=nursery_autocomplete)
     @init_nursery
-    async def rename(self, interaction: discord.Interaction, critter: int, name: str):
+    async def rename(self, interaction: discord.Interaction, critter: str, name: str):
         await interaction.response.defer()
         ctx = await commands.Context.from_interaction(interaction)
 
-        idx = critter - 1
-        player = self.players[ctx.author.id]
-        gato = player.nursery[idx]
+        gato: gatos.Gato = None
+        for g in player.nursery:
+            if g.DISPLAY_NAME == critter:
+                gato = g
+        if gato is None:
+            embed = discord.Embed(
+                title=f"Using equipment",
+                description=f'Critter "{critter}" not found! What are you trying to do...',
+                colour=discord.Colour.red()
+            )
+            await ctx.send(embed=embed)
+            return
         gato.name = name
 
         embed = discord.Embed(
