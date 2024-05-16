@@ -9,9 +9,10 @@ sys.path.append(DIR)
 import ABaseGato
 importlib.reload(ABaseGato)
 
-import ReiGato
 import SwedeGato
+import ReiGato
 import MapleGato
+import MakGato
 import ExampleGato, LNYGato
 import SeeleGato
 import QingqueGato
@@ -23,11 +24,13 @@ import GuinaifenGato
 import KafkaGato
 import HimekoGato
 import ArgentiGato
+import DanHengGato
 import NormalGato
 
-importlib.reload(ReiGato)
 importlib.reload(SwedeGato)
+importlib.reload(ReiGato)
 importlib.reload(MapleGato)
+importlib.reload(MakGato)
 importlib.reload(LNYGato)
 importlib.reload(ExampleGato)
 importlib.reload(SeeleGato)
@@ -40,12 +43,14 @@ importlib.reload(GuinaifenGato)
 importlib.reload(KafkaGato)
 importlib.reload(HimekoGato)
 importlib.reload(ArgentiGato)
+importlib.reload(DanHengGato)
 importlib.reload(NormalGato)
 
 Gato = ABaseGato.ABaseGato
-ReiGato = ReiGato.ReiGato
 SwedeGato = SwedeGato.SwedeGato
+ReiGato = ReiGato.ReiGato
 MapleGato = MapleGato.MapleGato
+MakGato = MakGato.MakGato
 LNYGato = LNYGato.LNYGato
 ExampleGato = ExampleGato.ExampleGato
 SeeleGato = SeeleGato.SeeleGato
@@ -58,12 +63,14 @@ GuinaifenGato = GuinaifenGato.GuinaifenGato
 KafkaGato = KafkaGato.KafkaGato
 HimekoGato = HimekoGato.HimekoGato
 ArgentiGato = ArgentiGato.ArgentiGato
+DanHengGato = DanHengGato.DanHengGato
 NormalGato = NormalGato.NormalGato
 
 GATOS: list[Gato] = [
-    ReiGato,
     SwedeGato,
+    ReiGato,
     MapleGato,
+    MakGato,
     LNYGato,
     ExampleGato,
     SeeleGato,
@@ -76,6 +83,7 @@ GATOS: list[Gato] = [
     KafkaGato,
     HimekoGato,
     ArgentiGato,
+    DanHengGato,
     NormalGato
 ]
 

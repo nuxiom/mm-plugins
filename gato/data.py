@@ -247,7 +247,7 @@ class Data:
     FOUR_STAR_GATOS = [g for g in GATOS if g.RARITY == 4]
     SIX_STAR_GATOS = [g for g in GATOS if g.RARITY == 6]
     PERMANENT_FIVE_STARS = [
-        ExampleGato
+        MakGato
     ]
     THREE_STARS = [i for i in ALL_ITEMS if i.RARITY == 3]
 
