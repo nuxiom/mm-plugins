@@ -1,4 +1,4 @@
-from random import random
+from random import random, randint
 
 from ABaseGato import ABaseGato, require_alive
 
@@ -60,7 +60,7 @@ class MakGato(ABaseGato):
 
         eidolon_chance = 2*min(self.eidolon, 5)
 
-        attempt = random.randint(1, 100)  # Random number between 1 and 100 for 1% granularity
+        attempt = randint(1, 100)  # Random number between 1 and 100 for 1% granularity
         if attempt <= 15+eidolon_chance:  # 15% + 2per eidolon chance
             found_food = True
         self.find_food_cooldown = 600
