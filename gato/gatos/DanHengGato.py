@@ -12,7 +12,7 @@ class DanHengGato(ABaseGato):
     """
 
     # Override constants
-    IMAGE = "https://cdn.discordapp.com/attachments/897836545690705950/1209569791564709968/danheng_gato.png"
+    IMAGE = "https://i.ibb.co/KLzR779/danheng-gato.png"
     # ANIMATIONS = "4star"
     DISPLAY_NAME = "Rice Dumpling"
     RARITY = 4
