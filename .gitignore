@@ -10,3 +10,6 @@ test/
 ds-*.bat
 ds-*.sh
 ds-*.py
+
+# Not on this branch, else it makes the bot crash
+.gato_animations_generator
