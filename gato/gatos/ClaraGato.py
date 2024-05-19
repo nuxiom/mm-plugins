@@ -12,6 +12,7 @@ class ClaraGato(ABaseGato):
         > E6: (decreases health decrease by 30%)
     """
 
+    # TODO: art & anim
     IMAGE: str = "https://i.ibb.co/zr82fFH/nuxiom-gato.png"
     ANIMATIONS: str = "claragato"
     DISPLAY_NAME: str = "Pure Sugar Child"
