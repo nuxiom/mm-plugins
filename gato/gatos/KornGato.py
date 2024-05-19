@@ -80,4 +80,4 @@ class KornGato(ABaseGato):
         self.stats_loss_reduction(team)
 
         # Then call the parent simulation (VERY IMPORTANT)
-        super().simulate(seconds)
+        super().simulate(team, seconds)

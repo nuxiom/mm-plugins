@@ -141,4 +141,4 @@ class MakGato(ABaseGato):
 
 
         # Then call the parent simulation (VERY IMPORTANT)
-        super().simulate(seconds)
+        super().simulate(team, seconds)
